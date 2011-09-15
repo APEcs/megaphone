@@ -20,7 +20,7 @@ use Template;
 use Utils qw(path_join is_defined_numeric get_proc_size);
 
 # local modules
-use LDAPAuth;
+use SSHAuth;
 
 my $dbh;                                   # global database handle, required here so that the END block can close the database connection
 my $contact = 'webmaster@starforge.co.uk'; # global contact address, for error messages
