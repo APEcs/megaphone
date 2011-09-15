@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Megaphone: ***title***</title>
+
+    <!-- mootools for effects and javascript sanity -->
+    <script type='text/javascript' src="templates/default/mootools-core.js"></script>
+    <script type='text/javascript' src="templates/default/mootools-more.js"></script>
+
+    <!-- popup stuff, reuses my MediaWiki extension resources -->
+    <link href="TWPopup/popup.css" rel="stylesheet" type="text/css" />
+    <script type='text/javascript' src="TWPopup/webtoolkit.base64.js"></script>
+    <script type='text/javascript' src="TWPopup/popup.js"></script>
+
+    <!-- automatic table colouring -->
+    <script type='text/javascript' src="zebratables/zebra.js"></script>
+
+    <!-- any site-specific javascriptery and styles -->
+    <script type='text/javascript' src="templates/default/site.js"></script>
+    <link href="templates/default/site.css" rel="stylesheet" type="text/css" />
+
+    <!--[if IE]>
+    <style type="text/css"> 
+        /* place css fixes for all versions of IE in this conditional comment */
+        .megaphone #sidebar2, .megaphone #sidebar1 { padding-top: 30px; }
+        .megaphone #mainContent { zoom: 1; padding-top: 15px; }
+        /* the above proprietary zoom property gives IE the hasLayout it needs to avoid several bugs */
+    </style>
+    <![endif]-->
+</head>
+
+<body class="megaphone">
+<div id="container">
+    <div id="header">
+        <div id="siteLogo">
+            <h1>Megaphone</h1>
+            <div id="siteSub">School of CS message portal</div>
+        </div>
+    </div> <!-- #header -->
+
+    <div id="mainContent">
+***content***
+    </div> <!-- #mainContent -->
+
+    <div class="cleared"></div>
+
+    <div id="footer">
+        <div>
+            <div class="small center">
+                Icons taken from the <a href="http://www.icon-king.com/files/nuvola-1.0.tar.gz">Nuvola icon set</a> by David Vignoni under LGPL.<br/>
+                Website code by Chris Page. Contact <a href="mailto:moodlesupport@cs.man.ac.uk">moodlesupport@cs.man.ac.uk</a> if you encounter any problems using this site.<br/>
+                ***debug***
+            </div>
+        </div>
+    </div><!--#footer -->
+</div><!-- #container -->
+</body>
+</html>
