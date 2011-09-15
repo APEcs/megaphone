@@ -25,8 +25,6 @@ use base qw(Block); # This class extends Block
 # ============================================================================
 #  Select list generators
 
-## @method $ build_recipients($selected)
-#
 
 
 # ============================================================================
@@ -63,8 +61,7 @@ sub generate_message {
                                                                          "***subject***"     => $args -> {"subject"},
                                                                          "***message***"     => $args -> {"message"},
                                                                          "***delaysend***"   => $args -> {"delaysend"} ? 'checked="checked"' : "",
-                                                                         "***recipients***"  => $self -> build_recipients($args -> {"recipients"}),
-                                                                         "***targets***"     => $self -> build_targets($args -> {"targets"}),
+                                                                         "***targmatrix***"  => $self -> build_target_matrix($args -> {"targset"}),
                                                                          "***prefix***"      => $self -> build_prefix($args -> {"prefix"}),
                                                                      });
 }

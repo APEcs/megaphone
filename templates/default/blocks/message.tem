@@ -5,20 +5,7 @@
 ***error***
                 <div>{L_MESSAGE_INTRO}</div>
                 <table class="formtable">
-                    <tr>
-                        <td class="label top"><label class="required" for="recipients">{L_MESSAGE_RECIPIENTS}:</label></td>
-                        <td class="field"><select size="5" name="recipients" id="recipients" multiple="multiple">
-***recipients***
-                                          </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="label top"><label class="required" for="targets">TARGETS:</label></td>
-                        <td class="field"><select size="3" name="targets" id="targets" multiple="multiple">
-***targets***
-                                          </select>
-                        </td>
-                    </tr>
+***targmatrix***
                     <tr>
                         <td class="label"><label for="cc1">{L_MESSAGE_CC}:</label></td>
                         <td class="field"><input type="text" name="cc1" id="cc1" size="64" maxlength="255" value="***cc1***" />
