@@ -1,5 +1,5 @@
 ## @file
-# This file contains the implementation of the perl session class.
+# This file contains the implementation of the SSH authentication class.
 #
 # @author  Chris Page &lt;chris@starforge.co.uk&gt;
 # @version 1.0
