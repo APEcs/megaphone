@@ -112,7 +112,6 @@ my $content = $pageobj -> page_display();
 
 print $out -> header(-charset => 'utf-8',
                      -cookie  => $session -> session_cookies());
-print Encode::encode_utf8($content);
 
 my $endtime = time();
 my ($user, $system, $cuser, $csystem) = times();
