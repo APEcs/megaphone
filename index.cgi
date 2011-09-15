@@ -49,26 +49,6 @@ END {
 # =============================================================================
 #  Core page code and dispatcher
 
-## @fn $ page_display($sysvars)
-# Generate the contents of the page based on the current step in the wizard.
-#
-# @param sysvars A reference to a hash containing references to the template,
-#                database, settings, and cgi objects.
-# @return A string containing the page to display.
-sub page_display {
-    my $sysvars = shift;
-    my ($title, $body, $extrahead) = ("", "", "");
-
-    # Do we have a function?
-    my $func = $stages -> [$stage] -> {"func"}; # these two lines could be done in one, but it would look horrible...
-    ($title, $body, $extrahead) = $func -> ($sysvars) if($func);
-
-    return $sysvars -> {"template"} -> load_template("page.tem",
-                                                     { "***title***"     => $title,
-                                                       "***extrahead***" => $extrahead,
-                                                       "***core***"      => $body || '<p class="error">No page content available, this should not happen.</p>'});
-}
-
 my $starttime = time();
 
 # Create a new CGI object to generate page content through
