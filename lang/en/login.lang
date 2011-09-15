@@ -1,0 +1,5 @@
+LOGIN_MESSAGE   = Please enter your LDAP/teaching domain login here. The information you enter <strong>is not stored</strong>, and is used for authentication only. Both fields are required.
+LOGIN_USERNAME  = Username
+LOGIN_PASSWORD  = Password
+LOGIN_REMEMBER  = Remember my login on this browser (for a maximum of ***persistlen***)
+PERSIST_WARNING = <strong>WARNING</strong>: do not enable the "Remember my login" option on shared, cluster, or public computers. This option should only be enabled on machines you have exclusive access to.
