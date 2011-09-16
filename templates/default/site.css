@@ -182,3 +182,51 @@ label.required {
 img.control {
     padding-left: 3px;
 }
+
+div.matrix {
+    width: 100%;
+    max-height: 12em;
+    overflow: auto;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+/* CSS for zebratables */
+.alt1 {
+    background: #f7f7ff;
+    color: #000000;
+    vertical-align: middle;
+}
+
+.alt2 {
+    color: #000000;
+    background-color: #ffffff;
+    vertical-align: middle;
+}
+
+.alth {
+    color: #000000;
+    background-color:  #d4d4ff;
+    vertical-align: middle;
+}
+
+.hover {
+    color: #000000;
+    background-color: #d5fcdc;
+    vertical-align: middle;
+}
+
+td.zebra {
+    border: 1pt solid #ADB9CC;
+    padding: 0.25em 0.5em;
+}
+
+th.zebra {
+    border: 1pt solid #ADB9CC;
+    padding: 0.25em 0.5em;
+    vertical-align: middle;
+}
+
+table.zebra {
+    border-collapse: collapse;
+}
