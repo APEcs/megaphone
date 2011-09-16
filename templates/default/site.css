@@ -175,7 +175,7 @@ div.mbody {
     padding-top: 5px;
 }
 
-label.required {
+.required {
     color: red;
 }
 
@@ -189,6 +189,13 @@ div.matrix {
     overflow: auto;
     overflow-x: auto;
     overflow-y: auto;
+}
+
+table.matrix {
+}
+
+table.matrix th.help {
+    text-align: left;
 }
 
 /* CSS for zebratables */
