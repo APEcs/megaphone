@@ -5,7 +5,10 @@
 ***error***
                 <div>{L_MESSAGE_INTRO}</div>
                 <table class="formtable">
-***targmatrix***
+                    <tr>
+                        <td class="label top required">{L_MESSAGE_DESTS}:</td>
+                        <td class="field">***targmatrix***</td>
+                    </tr>
                     <tr>
                         <td class="label"><label for="cc1">{L_MESSAGE_CC}:</label></td>
                         <td class="field"><input type="text" name="cc1" id="cc1" size="64" maxlength="255" value="***cc1***" />
@@ -67,7 +70,7 @@
                     </tr>
                     <tr>
                         <td class="label"><label class="required" for="subject">{L_MESSAGE_SUBJECT}:</LABEL></TD>
-                        <TD CLASS="FIELD"><input type="text" name="subject" id="subject" size="64" maxlength="255" value="***subject***" /></td>
+                        <TD CLASS="FIELD"><input type="text" name="subject" id="subject" size="64" maxlength="255" value="***subject***" /> {L_MESSAGE_SUBJWARN}</td>
                     </tr>
                     <tr>
                         <td class="label top"><label class="required" for="message">{L_MESSAGE_MESSAGE}:</label></td>
@@ -75,11 +78,11 @@
                     </tr>
                     <tr>
                         <td class="label"></td>
-                        <td class="field"><input name="delaysend" id="delaysend" type="checkbox" ***delaysend*** /><label for="delaysend">{L_MESSAGE_DELAY}</label></td>
+                        <td class="field"><input name="delaysend" id="delaysend" type="checkbox" ***delaysend*** /><label for="delaysend">{L_MESSAGE_DELAY} ***delay***</label></td>
                     </tr>
                     <tr>
                         <td class="label"></td>
-                        <td class="field"><input type="submit" name="submit" id="submit" value="{L_MESSAGE_SEND}" /></td>
+                        <td class="field"><input type="submit" name="sendmsg" id="sendmsg" value="{L_MESSAGE_SEND}" /></td>
                     </tr>
                 </table>
             </div>
