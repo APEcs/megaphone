@@ -1,5 +1,6 @@
 MESSAGE_TITLE      = Message
 MESSAGE_INTRO      = Enter the message you wish to send to students here. The information you enter here will be sent to the recipients and target systems you select, and recorded in a database for auditing and future reference. Fields in red are required.
+MESSAGE_DESTS      = Destinations
 MESSAGE_RECIPIENTS = Recipients
 MESSAGE_TARGETS    = Targets
 MESSAGE_CC         = CC
@@ -7,9 +8,10 @@ MESSAGE_BCC        = BCC
 MESSAGE_PREFIX     = Subject Prefix
 MESSAGE_CUSTPREFIX = Custom prefix =&gt;
 MESSAGE_SUBJECT    = Subject
+MESSAGE_SUBJWARN   = <span class="small">(Do not include a prefix in your subject, it will be added for you.)</span>
 MESSAGE_MESSAGE    = Message
-MESSAGE_DELAY      = Delay sending message for ***delay***
+MESSAGE_DELAY      = Delay sending message for
 MESSAGE_SEND       = Send message
 MESSAGE_ADD_RECIP  = Add another recipient
 MESSAGE_DEL_RECIP  = Remove this recipient
-MESSAGE_NOTARGET   = Unable to send to this recipient via this target.
+MESSAGE_NOTARGET   = Unable to send to this recipient via this system.
