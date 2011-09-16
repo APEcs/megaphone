@@ -1,7 +1,7 @@
-<div class="matrix"
+<div class="matrix">
 <table class="matrix zebra">
     <tr>
-        <th>***help***</th>
+        <th class="help">***help***</th>
 ***targets***
     </tr>
 ***matrix***
