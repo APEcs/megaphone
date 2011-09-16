@@ -17,6 +17,8 @@ use ConfigMicro;
 use Logging qw(start_log end_log die_log);
 use HTMLValidator;
 use Template;
+use SessionHandler;
+use Modules;
 use Utils qw(path_join is_defined_numeric get_proc_size);
 
 # local modules
@@ -92,7 +94,6 @@ my $session = SessionHandler -> new(cgi      => $out,
 # And now we can make the module handler
 my $modules = Modules -> new(cgi      => $out,
                              dbh      => $dbh,
-                             phpbb    => $phpbb,
                              settings => $settings,
                              template => $template,
                              session  => $session,
