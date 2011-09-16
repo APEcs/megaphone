@@ -316,7 +316,7 @@ sub page_display {
         $content = $self -> generate_message_form();
 
     # User has submitted the message form, process it.
-    } elsif($self -> {"cgi"} -> param("sendmsg") {
+    } elsif($self -> {"cgi"} -> param("sendmsg")) {
         my ($user, $login_errors, $args, $form_errors);
 
         # If we have no real user in the session, the first thing to do is validate the login

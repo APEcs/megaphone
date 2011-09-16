@@ -1,4 +1,4 @@
-    <tr>
+    <tr class="recip">
         <td id="recip_***id***">***name***</td>
 ***targets***
     </tr>
