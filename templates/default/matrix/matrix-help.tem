@@ -1,0 +1,5 @@
+<div>{L_MATRIX_HELP}</div>
+<ul>
+<li>{L_MATRIX_HELP_ACTIVE}</li>
+<li>{L_MATRIX_HELP_INACTIVE}</li>
+</ul>

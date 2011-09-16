@@ -1,0 +1,4 @@
+MATRIX_HELP_TITLE    = Help
+MATRIX_HELP          = This table allows you to view the potential message recipients, and the methods you may use to contact them. Click on a recipient name in the left column of the table to toggle on or off all the potential methods to contact that recipient. Alternatively, you may selectively turn on or off contact methods for each recipient via the checkboxes in the table.
+MATRIX_HELP_ACTIVE   = If a cell in the table contains a checkbox, you have the option to contact the recipient using the method the column corresponds to.
+MATRIX_HELP_INACTIVE = If a cell in the table contains <img src="templates/default/images/delete.png" width="16" height="16" alt="inactive" title="{L_MESSAGE_NOTARGET}" />, you can not contact the recipient using this method.
