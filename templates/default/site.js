@@ -12,7 +12,7 @@ function persistWarning() {
 function prefixMode() {
     var prefix = $('prefix').options[$('prefix').selectedIndex].value;
 
-    if(prefix == "custom") {
+    if(prefix == "0") {
         $('prefixother').disabled = false;
     } else {
         $('prefixother').disabled = true;
