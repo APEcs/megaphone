@@ -12,3 +12,4 @@ MESSAGE_DELAY      = Delay sending message for ***delay***
 MESSAGE_SEND       = Send message
 MESSAGE_ADD_RECIP  = Add another recipient
 MESSAGE_DEL_RECIP  = Remove this recipient
+MESSAGE_NOTARGET   = Unable to send to this recipient via this target.
