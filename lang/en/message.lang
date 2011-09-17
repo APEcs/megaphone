@@ -17,5 +17,10 @@ MESSAGE_DEL_RECIP  = Remove this recipient
 MESSAGE_NOTARGET   = Unable to send to this recipient via this system.
 
 MESSAGE_ERRORS        = Message validation failed. The following error(s) were encountered during validation:
+MESSAGE_ERR_NOMATRIX  = No destinations have been selected for your message.
 MESSAGE_ERR_BADMATRIX = One or more selected destinations are invalid.
 MESSAGE_ERR_BADEMAIL  = Email field '***name***' does not contain a valid email address.
+
+MESSAGE_DONE_TITLE    = Message accepted
+MESSAGE_DONE_MESSAGE  = Your message has been sucessfully processed. If you selected the 'Delay sending message' option, your message will be held and can be edited before it is sent. If you did not select the delay option, your message is being sent as you read this.
+MESSAGE_DONE_OPTIONS  = You can <a href="index.cgi?block={B_[msglist]}">view a list of messages</a> you have written, and you can edit the message you have just written there too, if you selected the delayed send option. Alternatively, you can <a href="index.cgi">send another message</a>.
