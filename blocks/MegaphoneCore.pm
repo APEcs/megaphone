@@ -21,8 +21,63 @@
 package MegaphoneCore;
 
 use strict;
-use base qw(Block); # This class extends Block
+use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
 use MIME::Base64;   # Needed for base64 encoding of popup bodies.
+use Logging qw(die_log);
+use Utils qw(is_defined_numeric);
+
+# ============================================================================
+#  Storage
+
+## @method $ store_message($args, $user)
+# Store the contents of the message in the database, marked as 'incomplete' so that
+# the system can not autosend it yet.
+#
+# @params args A reference to a hash containing the message data.
+# @params user A reference to a user's data.
+# @return The message id on success, dies on failure.
+sub store_message {
+    my $self = shift;
+    my $args = shift;
+    my $user = shift;
+
+    # First we need to create the message itself
+    my $messh = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"messages"}."
+                                             (user_id, prefix_id, prefix_other, subject, message, delaysend, created, updated)
+                                             VALUES(?, ?, ?, ?, ?, ?, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())");
+    $messh -> execute($user -> {"user_id"},
+                      $args -> {"prefix"},
+                      $args -> {"prefixother"},
+                      $args -> {"subject"},
+                      $args -> {"message"},
+                      $args -> {"delaysend"})
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message insert: ".$self -> {"dbh"} -> errstr);
+
+    # Get the id of the newly created message. This is messy, but DBI's last_insert_id() is flakey as hell
+    my $messid = $self -> {"dbh"} -> {"mysql_insertid"};
+    die_log($self -> {"cgi"} -> remote_host(), "Unable to get ID of new message. This should not happen.") if(!$messid);
+
+    # Now we can store the cc, bcc, and destinations
+    my $desth = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"messages_dests"}."
+                                             VALUES(?, ?)");
+    foreach my $destid (@{$args -> {"targset"}}) {
+        $desth -> execute($messid, $destid)
+            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute destination insert: ".$self -> {"dbh"} -> errstr);
+    }
+
+    foreach my $mode ("cc", "bcc") {
+        my $insh = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"messages_$mode"}."
+                                                VALUES(?, ?)");
+        foreach my $address (@{$args -> {$mode}}) {
+            next if(!$address); # skip ""
+
+            $insh -> execute($messid, $address)
+                or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute $mode insert: ".$self -> {"dbh"} -> errstr);
+        }
+    }
+
+    return $messid;
+}
 
 
 # ============================================================================
@@ -240,6 +295,10 @@ sub validate_message {
     # Store the checked settings we have..
     $args -> {"targset"} = \@checked_targs;
 
+    # We need to have some destinations selected!
+    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_NOMATRIX")})
+        if(!scalar(@checked_targs));
+
     # Check the cc and bcc fields are valid emails, if set
     my $addressre = '[\w\.-]+\@([\w-]+\.)+\w+'; # regexp used to check email addresses...
     foreach my $mode ("cc", "bcc") {
@@ -250,13 +309,19 @@ sub validate_message {
                                                                                      "default"    => "",
                                                                                      "nicename"   => $self -> {"template"} -> replace_langvar("MESSAGE_".uc($mode)),
                                                                                      "maxlen"     => 255});
+            # Fix up <, >, and "
+            $args -> {$mode} -> [$i - 1] =~ s/&lt;/</g;
+            $args -> {$mode} -> [$i - 1] =~ s/&gt;/>/g;
+            $args -> {$mode} -> [$i - 1] =~ s/&quot;/\"/g;
+            $args -> {$mode} -> [$i - 1] =~ s/&amp;/&/g;
+
             # If we have an error, store it, otherwise check the address is valid
             if($error) {
                 $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error});
             } else {
                 # Emails can have 'real name' junk as well as straight addresses
-                if($args -> {$mode} -> [$i - 1] !~ /^.*?<$addressre>$/ && $args -> {$mode} -> [$i - 1] !~ /^$addressre$/) {
-                    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_BADEMAIL", {"***name***" => $self -> {"template"} -> replace_langvar("MESSAGE_".uc($mode))." $i"})});
+                if($args -> {$mode} -> [$i - 1] && $args -> {$mode} -> [$i - 1] !~ /^.*<$addressre>$/ && $args -> {$mode} -> [$i - 1] !~ /^$addressre$/) {
+                    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_BADEMAIL", {"***name***" => $self -> {"template"} -> replace_langvar("MESSAGE_".uc($mode))." $i (".$self -> {"template"} -> html_clean($args ->{$mode} -> [$i -1]).")" })});
                 }
             }
         }
@@ -272,27 +337,26 @@ sub validate_message {
                                                                                       "maxlen"   => 20});
     # User has selected a prefix, check it is valid
     } else {
-        $args -> {"prefixother"} = '';
+        $args -> {"prefixother"} = undef;
         ($args -> {"prefix"}, $error) = $self -> validate_options("prefix", {"required" => 1,
                                                                              "source"   => $self -> {"settings"} -> {"database"} -> {"prefixes"},
                                                                              "where"    => "WHERE id = ?",
                                                                              "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_PREFIX")});
     }
-    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error});
+    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error}) if($error);
 
     # Make sure that we have a subject...
     ($args -> {"subject"}, $error) = $self -> validate_string("subject", {"required" => 1,
                                                                           "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_SUBJECT"),
                                                                           "minlen"   => 1,
                                                                           "maxlen"   => 20});
-    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error});
+    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error}) if($error);
 
     #... and a message, too
     ($args -> {"message"}, $error) = $self -> validate_string("message", {"required" => 1,
                                                                           "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_MESSAGE"),
-                                                                          "minlen"   => 1,
-                                                                          "maxlen"   => 20});
-    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error});
+                                                                          "minlen"   => 1});
+    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error}) if($error);
 
     $args -> {"delaysend"} = $self -> {"cgi"} -> param("delaysend") ? 1 : 0;
 
@@ -321,7 +385,7 @@ sub generate_message {
     my $error = shift;
 
     # Wrap the error message in a message box if we have one.
-    $error = $self -> {"template"} -> load_template("blocks/error.tem", {"***message***" => $error})
+    $error = $self -> {"template"} -> load_template("blocks/error_box.tem", {"***message***" => $error})
         if($error);
 
     # And build the message block itself. Kinda big and messy, this...
@@ -356,7 +420,7 @@ sub generate_login {
     my $error = shift;
 
     # Wrap the error message in a message box if we have one.
-    $error = $self -> {"template"} -> load_template("blocks/error.tem", {"***message***" => $error})
+    $error = $self -> {"template"} -> load_template("blocks/error_box.tem", {"***message***" => $error})
         if($error);
 
     my $persist_length = $self -> {"session"} -> {"auth"} -> get_config("max_autologin_time");
@@ -397,7 +461,8 @@ sub generate_message_form {
     $content .= $self -> generate_message($args, $form_errors);
 
     return $self -> {"template"} -> load_template("form.tem", {"***content***" => $content,
-                                                               "***args***"    => ""});
+                                                               "***args***"    => "",
+                                                               "***block***"   => $self -> {"block"}});
 }
 
 
@@ -443,13 +508,62 @@ sub page_display {
 
         # Form contents are good. Now we can store the message...
         } else {
-            my $msgid = $self -> store_message($user, $args);
+            my $msgid = $self -> store_message($args, $user);
 
+            # If we have user name and role set, we're done
+            if($user -> {"realname"} && $user -> {"rolename"}) {
+                $title   = $self -> {"template"} -> replace_langvar("MESSAGE_CONFIRM");
+                $content = $self -> {"template"} -> load_template("blocks/message_confirm.tem");
 
+            # No user details - we need to poke the user to get the details set
+            } else {
+                $title   = $self -> {"template"} -> replace_langvar("DETAILS_TITLES");
+                $content = $self -> generate_userdetails_form({"msgid" => $msgid,
+                                                               "block" => $self -> {"block"}}, undef, $self -> {"template"} -> load_template("blocks/new_user.tem"));
+            }
         }
-    # user has submitted the name/role form...
-    } elsif($self -> {"cgi"} -> param("setname")) {
 
+    # Everything else requires a non-anonymous session
+    } elsif($self -> {"session"} -> {"sessuser"} && ($self -> {"session"} -> {"sessuser"} != $self -> {"session"} -> {"auth"} -> {"ANONYMOUS"})) {
+
+        # user has submitted the name/role form...
+        if($self -> {"cgi"} -> param("setname")) {
+            # Check the details the user submitted, send back the form if they messed up...
+            my ($args, $errors) = $self -> validate_userdetails();
+
+            # We need to make sure we have a few values in $args, even if validation failed, so add them now
+            $args -> {"msgid"} = is_defined_numeric($self -> {"cgi"}, "msgid");
+            die_log($self -> {"cgi"} -> remote_host(), "Message Id vanished during user details form. This should not happen!") if(!$args -> {"msgid"});
+
+            $args -> {"block"}   = $self -> {"block"};
+            $args -> {"user_id"} = $self -> {"session"} -> {"sessuser"};
+
+            if($errors) {
+                $title   = $self -> {"template"} -> replace_langvar("DETAILS_TITLES");
+                $content = $self -> generate_userdetails_form($args, $errors);
+            } else {
+                $self -> update_userdetails($args);
+
+                $title   = $self -> {"template"} -> replace_langvar("MESSAGE_CONFIRM");
+            $content = $self -> {"template"} -> load_template("blocks/message_confirm.tem");
+            }
+
+            # Has the user confirmed message send?
+        } elsif($self -> {"cgi"} -> param("dosend")) {
+            # Get the message id...
+            my $msgid = is_defined_numeric($self -> {"cgi"}, "msgid");
+            die_log($self -> {"cgi"} -> remote_host(), "Message Id vanished during confirm form. This should not happen!") if(!$msgid);
+
+            $self -> send_message($msgid);
+
+            $title   = $self -> {"template"} -> replace_langvar("MESSAGE_COMPLETE");
+            $content = $self -> {"template"} -> load_template("blocks/message_done.tem");
+        }
+
+    # Has the user's session borken?
+    } else {
+        $title   = $self -> {"template"} -> replace_langvar("MESSAGE_TITLE");
+        $content = $self -> generate_message_form();
     }
 
     # Done generating the page content, return the filled in page template
