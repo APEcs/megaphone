@@ -22,7 +22,6 @@ package MegaphoneCore;
 
 use strict;
 use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
-use MIME::Base64;   # Needed for base64 encoding of popup bodies.
 use Logging qw(die_log);
 use Utils qw(is_defined_numeric);
 
