@@ -1,0 +1,8 @@
+        <div class="message">
+            <h2>{L_MESSAGE_DONE_TITLE}</h2>
+            <div class="mbody">
+                <img src="templates/default/images/done.png" width="48" height="48" alt="done" class="fltrt" />
+                <p>{L_MESSAGE_DONE_MESSAGE}</p>
+                <p>{L_MESSAGE_DONE_OPTIONS}</p>
+             </div>
+        </div>
