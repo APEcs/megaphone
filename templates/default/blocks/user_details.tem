@@ -1,0 +1,23 @@
+        <div class="message">
+            <h2>{L_DETAILS_TITLE}</h2>
+            <div class="mbody">
+                <img src="templates/default/images/personal.png" width="48" height="48" alt="details" class="fltrt" />
+                ***info***
+                ***error***
+                <div>{L_DETAILS_MESSAGE}</div>
+                <table class="formtable">
+                    <tr>
+                        <td class="label"><label class="required" for="name">{L_DETAILS_NAME}:</label></td>
+                        <td class="field"><input name="name" id="name" type="text" size="50" maxlength="255" value="***name***"/></td>
+                    </tr>
+                    <tr>
+                        <td class="label"><label class="required" for="role">{L_DETAILS_ROLE}:</label></td>
+                        <td class="field"><input name="role" id="role" type="text" size="50" maxlength="255" value="***role***"/></td>
+                    </tr>
+                    <tr>
+                        <td class="label"></td>
+                        <td class="field"><input type="submit" name="setname" id="setname" value="{L_DETAILS_SET}" /></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
