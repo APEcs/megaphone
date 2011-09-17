@@ -1,7 +1,7 @@
 
 function toggleRecipient(element) 
 {
-    element.getChildren('td').each(function(el, i) {
+    element.getAllNext('td').each(function(el, i) {
         el.getChildren('input').each(function(inel, ini) {
             inel.checked = !inel.checked;
         });
@@ -9,7 +9,7 @@ function toggleRecipient(element)
 }
 
 window.addEvent('domready', function() {
-    $$('tr.recip').each(function(element, index) {
+    $$('td.recip').each(function(element, index) {
         element.addEvent('click', function() { toggleRecipient(element) });
     });
 });
