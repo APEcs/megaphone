@@ -11,6 +11,7 @@ use CGI qw/:standard -utf8/; # Can't use CGI::Compress::Gzip because CentOS is a
 use CGI::Carp qw(fatalsToBrowser set_message); # Catch as many fatals as possible and send them to the user as well as stderr
 use DBI;
 use Encode;
+use Time::HiRes qw(time);
 
 # Webperl modules
 use ConfigMicro;
