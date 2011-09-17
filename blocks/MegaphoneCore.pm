@@ -157,7 +157,7 @@ sub build_prefix {
 # ============================================================================
 #  Validation functions
 
-## @method $ validate_login()
+## @method @ validate_login()
 # Determine whether the username and password provided by the user are valid. If
 # they are, return the user's data.
 #
@@ -199,6 +199,108 @@ sub validate_login {
 
     # Nothing useful, just return a fallback
     return (undef, $self -> {"template"} -> process_template($errtem, {"***reason***" => $self -> {"template"} -> replace_langvar("LOGIN_INVALID")}));
+}
+
+
+## @method @ validate_message()
+# Check whether the fields selected by the user are valid, and return as much as possible.
+#
+# @return An array of two values: the first is a reference to a hash of arguments
+#         representing the submitted data, the second is an error message or undef.
+sub validate_message {
+    my $self   = shift;
+    my $errors = shift;
+    my $args   = {};
+    my $error;
+
+    # template for errors...
+    my $errtem = $self -> {"template"} -> load_template("blocks/error_entry.tem");
+
+    # Query used to check that destinations are valid
+    my $matrixh = $self -> {"dbh"} -> prepare("SELECT id FROM ".$self -> {"settings"} -> {"database"} -> {"recip_targs"}."
+                                               WHERE id = ?");
+
+    # check that we have some seleted destinations, and they are valid
+    my @targset = $self -> {"cgi"} -> param('matrix');
+    my @checked_targs;
+    foreach my $targ (@targset) {
+        $matrixh -> execute($targ)
+            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute recipient/target validation check: ".$self -> {"dbh"} -> errstr);
+
+        # do we have a match?
+        if($matrixh -> fetchrow_hashref()){
+            push(@checked_targs, $targ);
+
+        # Not found, produce an error...
+        } else {
+            $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_BADMATRIX")});
+            last;
+        }
+    }
+    # Store the checked settings we have..
+    $args -> {"targset"} = \@checked_targs;
+
+    # Check the cc and bcc fields are valid emails, if set
+    my $addressre = '[\w\.-]+\@([\w-]+\.)+\w+'; # regexp used to check email addresses...
+    foreach my $mode ("cc", "bcc") {
+        $args -> {$mode} = [];
+        # Four field each for cc and bcc...
+        for(my $i = 1; $i <= 4; ++$i) {
+            ($args -> {$mode} -> [$i - 1], $error) = $self -> validate_string($mode.$i, {"required"   => 0,
+                                                                                     "default"    => "",
+                                                                                     "nicename"   => $self -> {"template"} -> replace_langvar("MESSAGE_".uc($mode)),
+                                                                                     "maxlen"     => 255});
+            # If we have an error, store it, otherwise check the address is valid
+            if($error) {
+                $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error});
+            } else {
+                # Emails can have 'real name' junk as well as straight addresses
+                if($args -> {$mode} -> [$i - 1] !~ /^.*?<$addressre>$/ && $args -> {$mode} -> [$i - 1] !~ /^$addressre$/) {
+                    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_BADEMAIL", {"***name***" => $self -> {"template"} -> replace_langvar("MESSAGE_".uc($mode))." $i"})});
+                }
+            }
+        }
+    }
+
+    # Check that the selected prefix is valid...
+    # Has the user selected the 'other prefix' option? If so, check they enetered a prefixe
+    if($self -> {"cgi"} -> param("prefix") == 0) {
+        $args -> {"prefix"} = 0;
+        ($args -> {"prefixother"}, $error) = $self -> validate_string("prefixother", {"required" => 1,
+                                                                                      "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_PREFIX"),
+                                                                                      "minlen"   => 1,
+                                                                                      "maxlen"   => 20});
+    # User has selected a prefix, check it is valid
+    } else {
+        $args -> {"prefixother"} = '';
+        ($args -> {"prefix"}, $error) = $self -> validate_options("prefix", {"required" => 1,
+                                                                             "source"   => $self -> {"settings"} -> {"database"} -> {"prefixes"},
+                                                                             "where"    => "WHERE id = ?",
+                                                                             "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_PREFIX")});
+    }
+    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error});
+
+    # Make sure that we have a subject...
+    ($args -> {"subject"}, $error) = $self -> validate_string("subject", {"required" => 1,
+                                                                          "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_SUBJECT"),
+                                                                          "minlen"   => 1,
+                                                                          "maxlen"   => 20});
+    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error});
+
+    #... and a message, too
+    ($args -> {"message"}, $error) = $self -> validate_string("message", {"required" => 1,
+                                                                          "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_MESSAGE"),
+                                                                          "minlen"   => 1,
+                                                                          "maxlen"   => 20});
+    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error});
+
+    $args -> {"delaysend"} = $self -> {"cgi"} -> param("delaysend") ? 1 : 0;
+
+    # Wrap the errors up, if we have any
+    $errors = $self -> {"template"} -> load_template("blocks/error.tem", {"***errors***" => $errors})
+        if($errors);
+
+    return ($args, $errors);
 }
 
 
