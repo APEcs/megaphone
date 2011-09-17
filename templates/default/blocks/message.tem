@@ -69,8 +69,8 @@
                                           &nbsp; <input type="text" name="prefixother" id="prefixother" size="20" maxlength="20" value="***prefixother***" /></td>
                     </tr>
                     <tr>
-                        <td class="label"><label class="required" for="subject">{L_MESSAGE_SUBJECT}:</LABEL></TD>
-                        <TD CLASS="FIELD"><input type="text" name="subject" id="subject" size="64" maxlength="255" value="***subject***" /> {L_MESSAGE_SUBJWARN}</td>
+                        <td class="label"><label class="required" for="subject">{L_MESSAGE_SUBJECT}:</label></td>
+                        <td class="field"><input type="text" name="subject" id="subject" size="64" maxlength="255" value="***subject***" /> {L_MESSAGE_SUBJWARN}</td>
                     </tr>
                     <tr>
                         <td class="label top"><label class="required" for="message">{L_MESSAGE_MESSAGE}:</label></td>
