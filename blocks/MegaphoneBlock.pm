@@ -80,6 +80,53 @@ sub store_message {
 }
 
 
+## @method $ get_message($msgid)
+# Obtain the data for the specified message.
+#
+# @param msgid The ID of the message to retrieve.
+# @return A hash containing the message data.
+sub get_message {
+    my $self  = shift;
+    my $msgid = shift;
+
+    # First get the message...
+    my $msgh = $self -> {"dbh"} -> prepare("SELECT * FROM ".$self -> {"settings"} -> {"database"} -> {"messages"}."
+                                            WHERE id = ?");
+    $msgh -> execute($msgid)
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message lookup query: ".$self -> {"dbh"} -> errstr);
+
+    my $message = $msgh -> fetchrow_hashref();
+    return undef if(!$message);
+
+    # Fetch the destinations
+    $message -> {"targset"} = [];
+    my $targh = $self -> {"dbh"} -> prepare("SELECT dest_id FROM ".$self -> {"settings"} -> {"database"} ->  {"messages_dests"}."
+                                             WHERE message_id = ?");
+    $targh -> execute($msgid)
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute destination lookup query: ".$self -> {"dbh"} -> errstr);
+
+    while(my $targ = $targh -> fetchrow_arrayref()) {
+        push(@{$message -> {"targset"}}, $targ -> [0]);
+    }
+
+    # now get the cc/bcc lists
+    foreach my $mode ("cc", "bcc") {
+        my $cch = $self -> {"dbh"} -> prepare("SELECT address FROM ".$self -> {"settings"} -> {"database"} -> {"messages_$mode"}."
+                                               WHERE message_id = ?");
+        $cch -> execute($msgid)
+            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute $mode lookup query: ".$self -> {"dbh"} -> errstr);
+
+        $message -> {$mode} = [];
+        while(my $cc = $cch -> fetchrow_arrayref()) {
+            push(@{$message -> {$mode}}, $cc -> [0]);
+        }
+    }
+
+    # Done, return the data...
+    return $message;
+}
+
+
 ## @method void update_userdetails($args)
 # Update the details for the specified user. The args hash must minimally contain
 # the user's realname, rolename, and user_id.
@@ -100,7 +147,7 @@ sub update_userdetails {
 # ============================================================================
 #  Frgment generators
 
-## @method $ build_target_matrix($activelist)
+## @method $ build_target_matrix($activelist, $readonly)
 # Generate the table containing the target/recipient matrix. This will generate
 # a table listing the supported targets horizontally, and the supported recipients
 # vertically. Each cell in the table may either contain a checkbox (indicating
@@ -108,10 +155,12 @@ sub update_userdetails {
 # that the recipient can not be contacted via that system).
 #
 # @param activelist A reference to an array of selected target/recipient combinations.
+# @param readonly   If true, the table will be generated with images rather than checkboxes.
 # @return A string containing the target/recipient matrix
 sub build_target_matrix {
     my $self       = shift;
     my $activelist = shift;
+    my $readonly   = shift;
 
     # Make sure that activelist is usable as an arrayref
     $activelist = [] if(!$activelist);
@@ -147,10 +196,12 @@ sub build_target_matrix {
 
     # Now we can build the matrix itself
     my $matrix = "";
-    my $reciptem      = $self -> {"template"} -> load_template("matrix/recipient.tem");
-    my $recipentrytem = $self -> {"template"} -> load_template("matrix/reciptarg.tem");
-    my $recipacttem   = $self -> {"template"} -> load_template("matrix/reciptarg-active.tem");
-    my $recipinacttem = $self -> {"template"} -> load_template("matrix/reciptarg-inactive.tem");
+    my $reciptem        = $self -> {"template"} -> load_template("matrix/recipient.tem");
+    my $recipentrytem   = $self -> {"template"} -> load_template("matrix/reciptarg.tem");
+    my $recipacttem     = $self -> {"template"} -> load_template("matrix/reciptarg-active.tem");
+    my $recipinacttem   = $self -> {"template"} -> load_template("matrix/reciptarg-inactive.tem");
+    my $recipact_ontem  = $self -> {"template"} -> load_template("matrix/reciptarg-active_ticked.tem");
+    my $recipact_offtem = $self -> {"template"} -> load_template("matrix/reciptarg-active_unticked.tem");
 
     $reciph -> execute()
         or die_log($self -> {"cgi"} -> remote_host(), "Unable to obtain list of recipients: ".$self -> {"dbh"} -> errstr);
@@ -165,9 +216,13 @@ sub build_target_matrix {
             # Do we have the ability to send to this recipient at this target?
             my $matrow = $matrixh -> fetchrow_arrayref();
             if($matrow) {
-                # Yes, output a checkbox...
-                $data .= $self -> {"template"} -> process_template($recipentrytem, {"***data***" => $self -> {"template"} -> process_template($recipacttem, {"***id***"      => $matrow -> [0],
-                                                                                                                                                             "***checked***" => $activehash -> {$matrow -> [0]} ? 'checked="checked"' : ""})});
+                # Yes, output either a checkbox or a marker...
+                if(!$readonly) {
+                    $data .= $self -> {"template"} -> process_template($recipentrytem, {"***data***" => $self -> {"template"} -> process_template($recipacttem, {"***id***"      => $matrow -> [0],
+                                                                                                                                                                 "***checked***" => $activehash -> {$matrow -> [0]} ? 'checked="checked"' : ""})});
+                } else {
+                    $data .= $self -> {"template"} -> process_template($recipentrytem, {"***data***" => ($activehash -> {$matrow -> [0]} ? $recipact_ontem : $recipact_offtem)});
+                }
             } else {
                 # Nope, output a X marker
                 $data .= $self -> {"template"} -> process_template($recipentrytem, {"***data***" => $recipinacttem});
@@ -420,16 +475,18 @@ sub validate_message {
 # ============================================================================
 #  Content generation functions
 
-## @method $ generate_message($args, $error)
-# Generate the 'message' block to send to the user. This will wrap any specified
+## @method $ generate_message_editform($msgid, $args, $error)
+# Generate the message edit form to send to the user. This will wrap any specified
 # error in an appropriate block before inserting it into the message block. Any
 # arguments set in the provided args hash are filled in on the form.
 #
+# @param msgid The ID of the message being edited.
 # @param args  A reference to a hash containing the default values to show in the form.
 # @param error An error message to show at the start of the form.
-# @return A string containing the message block.
-sub generate_message {
+# @return A string containing the message form.
+sub generate_message_editform {
     my $self  = shift;
+    my $msgid = shift;
     my $args  = shift || { };
     my $error = shift;
 
@@ -438,23 +495,99 @@ sub generate_message {
         if($error);
 
     # And build the message block itself. Kinda big and messy, this...
-    return $self -> {"template"} -> load_template("blocks/message.tem", {"***error***"       => $error,
-                                                                         "***cc1***"         => $args -> {"cc"}  ? $args -> {"cc"} -> [0]  : "",
-                                                                         "***cc2***"         => $args -> {"cc"}  ? $args -> {"cc"} -> [1]  : "",
-                                                                         "***cc3***"         => $args -> {"cc"}  ? $args -> {"cc"} -> [2]  : "",
-                                                                         "***cc4***"         => $args -> {"cc"}  ? $args -> {"cc"} -> [3]  : "",
-                                                                         "***bcc1***"        => $args -> {"bcc"} ? $args -> {"bcc"} -> [0] : "",
-                                                                         "***bcc2***"        => $args -> {"bcc"} ? $args -> {"bcc"} -> [1] : "",
-                                                                         "***bcc3***"        => $args -> {"bcc"} ? $args -> {"bcc"} -> [2] : "",
-                                                                         "***bcc4***"        => $args -> {"bcc"} ? $args -> {"bcc"} -> [3] : "",
-                                                                         "***prefixother***" => $args -> {"prefixother"},
-                                                                         "***subject***"     => $args -> {"subject"},
-                                                                         "***message***"     => $args -> {"message"},
-                                                                         "***delaysend***"   => $args -> {"delaysend"} ? 'checked="checked"' : "",
-                                                                         "***delay***"       => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delaysend"}),
-                                                                         "***targmatrix***"  => $self -> build_target_matrix($args -> {"targset"}),
-                                                                         "***prefix***"      => $self -> build_prefix($args -> {"prefix"}),
-                                                                     });
+    my $body = $self -> {"template"} -> load_template("blocks/message_edit.tem", {"***error***"       => $error,
+                                                                                  "***cc1***"         => $args -> {"cc"}  ?  $args -> {"cc"} -> [0]  : "",
+                                                                                  "***cc2***"         => $args -> {"cc"}  ?  $args -> {"cc"} -> [1]  : "",
+                                                                                  "***cc3***"         => $args -> {"cc"}  ?  $args -> {"cc"} -> [2]  : "",
+                                                                                  "***cc4***"         => $args -> {"cc"}  ?  $args -> {"cc"} -> [3]  : "",
+                                                                                  "***bcc1***"        => $args -> {"bcc"} ?  $args -> {"bcc"} -> [0] : "",
+                                                                                  "***bcc2***"        => $args -> {"bcc"} ?  $args -> {"bcc"} -> [1] : "",
+                                                                                  "***bcc3***"        => $args -> {"bcc"} ?  $args -> {"bcc"} -> [2] : "",
+                                                                                  "***bcc4***"        => $args -> {"bcc"} ?  $args -> {"bcc"} -> [3] : "",
+                                                                                  "***cc2hide***"     => $args -> {"cc"}  ? ($args -> {"cc"} -> [1]  ? "" : "hide") : "hide",
+                                                                                  "***cc3hide***"     => $args -> {"cc"}  ? ($args -> {"cc"} -> [2]  ? "" : "hide") : "hide",
+                                                                                  "***cc4hide***"     => $args -> {"cc"}  ? ($args -> {"cc"} -> [3]  ? "" : "hide") : "hide",
+                                                                                  "***bcc2hide***"    => $args -> {"bcc"} ? ($args -> {"bcc"} -> [1] ? "" : "hide") : "hide",
+                                                                                  "***bcc3hide***"    => $args -> {"bcc"} ? ($args -> {"bcc"} -> [2] ? "" : "hide") : "hide",
+                                                                                  "***bcc4hide***"    => $args -> {"bcc"} ? ($args -> {"bcc"} -> [3] ? "" : "hide") : "hide",
+                                                                                  "***prefixother***" => $args -> {"prefixother"},
+                                                                                  "***subject***"     => $args -> {"subject"},
+                                                                                  "***message***"     => $args -> {"message"},
+                                                                                  "***delaysend***"   => $args -> {"delaysend"} ? 'checked="checked"' : "",
+                                                                                  "***delay***"       => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delaysend"}),
+                                                                                  "***targmatrix***"  => $self -> build_target_matrix($args -> {"targset"}),
+                                                                                  "***prefix***"      => $self -> build_prefix($args -> {"prefix"}),
+                                                                              });
+    # Need to store the message id, so the code knows which message to update.
+    my $hiddenargs = $self -> {"template"} -> load_template("hiddenarg.tem", {"***name***"  => "msgid",
+                                                                              "***value***" => $msgid});
+
+    # Send back the form.
+    return $self -> {"template"} -> load_template("form.tem", {"***content***" => $body,
+                                                               "***args***"    => $hiddenargs,
+                                                               "***block***"   => $self -> {"block"}});
+}
+
+
+## @method $ generate_message_confirmform($msgid, $args)
+# Generate a form from which the user may opt to send the message, or go back and edit it.
+#
+# @param msgid The ID of the message being viewed.
+# @param args  A reference to a hash containing the message data.
+# @return A form the user may used to confirm the message or go to edit it.
+sub generate_message_confirmform {
+    my $self  = shift;
+    my $msgid = shift;
+    my $args  = shift || { };
+    my $tem;
+
+    $tem -> {"cc"}  = $self -> {"template"} -> load_template("blocks/message_confirm_cc.tem");
+    $tem -> {"bcc"} = $self -> {"template"} -> load_template("blocks/message_confirm_bcc.tem");
+
+    my $outfields;
+    # work out the bcc/cc fields....
+    foreach my $mode ("cc", "bcc") {
+        for(my $i = 0; $i < 4; ++$i) {
+            # Append the cc/bcc if it is set...
+            $outfields -> {$mode} .= $self -> {"template"} -> process_template($tem -> {$mode}, {"***data***" => $args -> {$mode} -> [$i]})
+                if($args -> {$mode} -> [$i]);
+        }
+    }
+
+    # Get the prefix sorted
+    if($args -> {"prefix"} == 0) {
+        $outfields -> {"prefix"} = $args -> {"prefixother"};
+    } else {
+        my $prefixh = $self -> {"dbh"} -> prepare("SELECT prefix FROM ".$self -> {"settings"} -> {"database"} -> {"prefixes"}."
+                                                   WHERE id = ?");
+        $prefixh -> execute($args -> {"prefix"})
+            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute prefix query: ".$self -> {"dbh"} -> errstr);
+
+        my $prefixr = $prefixh -> fetchrow_arrayref();
+        $outfields -> {"prefix"} = $prefixr ? $prefixr -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADPREFIX");
+    }
+
+    $outfields -> {"delaysend"} = $self -> {"template"} -> load_template($args -> {"delaysend"} ? "blocks/message_edit_delay.tem" : "blocks/message_edit_nodelay.tem",
+                                                                         {"***delay***" => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delaysend"})});
+
+    # And build the message block itself. Kinda big and messy, this...
+    my $body = $self -> {"template"} -> load_template("blocks/message_confirm.tem", {"***targmatrix***"  => $self -> build_target_matrix($args -> {"targset"}, 1),
+                                                                                     "***cc***"          => $outfields -> {"cc"},
+                                                                                     "***bcc***"         => $outfields -> {"bcc"},
+                                                                                     "***prefix***"      => $outfields -> {"prefix"},
+                                                                                     "***subject***"     => $args -> {"subject"},
+                                                                                     "***message***"     => $args -> {"message"},
+                                                                                     "***delaysend***"   => $outfields -> {"delaysend"},
+                                                                                 });
+
+    # Need to store the message id, so the code knows which message to update.
+    my $hiddenargs = $self -> {"template"} -> load_template("hiddenarg.tem", {"***name***"  => "msgid",
+                                                                              "***value***" => $msgid});
+
+    # Send back the form.
+    return $self -> {"template"} -> load_template("form.tem", {"***content***" => $body,
+                                                               "***args***"    => $hiddenargs,
+                                                               "***block***"   => $self -> {"block"}});
 }
 
 
@@ -517,7 +650,7 @@ sub generate_userdetails_form {
     # If we have a messageid in the args, add it as a hidden value
     $hiddenargs = $self -> {"template"} -> load_template("hiddenarg.tem", {"***name***"  => "msgid",
                                                                            "***value***" => $args -> {"msgid"}});
-    
+
     return $self -> {"template"} -> load_template("form.tem", {"***content***" => $content,
                                                                "***block***"   => $args -> {"block"},
                                                                "***args***"    => $hiddenargs});
