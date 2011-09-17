@@ -1,0 +1,35 @@
+        <div class="message">
+            <h2>{L_MESSAGE_CONFTITLE}</h2>
+            <div class="mbody">
+                <img src="templates/default/images/message.png" width="48" height="48" alt="message" class="fltrt" />
+                <div>{L_MESSAGE_CONFINTRO}</div>
+                <table class="formtable">
+                    <tr>
+                        <td class="label top">{L_MESSAGE_DESTS}:</td>
+                        <td class="field">***targmatrix***</td>
+                    </tr>
+***cc***
+***bcc***
+                    <tr>
+                        <td class="label">{L_MESSAGE_PREFIX}:</td>
+                        <td class="field">***prefix***</td>
+                    </tr>
+                    <tr>
+                        <td class="label">{L_MESSAGE_SUBJECT}:</td>
+                        <td class="field">***subject***</td>
+                    </tr>
+                    <tr>
+                        <td class="label top">{L_MESSAGE_MESSAGE}:</td>
+                        <td class="field"><div class="messageview">***message***</div></td>
+                    </tr>
+                    <tr>
+                        <td class="label">{L_MESSAGE_CONFDELAY}:</td>
+                        <td class="field">***delaysend***</td>
+                    </tr>
+                    <tr>
+                        <td class="label"></td>
+                        <td class="field"><input type="submit" name="dosend" id="dosend" value="{L_MESSAGE_SEND}" /> <input type="submit" name="editmsg" id="editmsg" value="{L_MESSAGE_EDIT}" /></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
