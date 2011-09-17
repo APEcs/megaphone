@@ -15,6 +15,8 @@ MESSAGE_SEND       = Send message
 MESSAGE_ADD_RECIP  = Add another recipient
 MESSAGE_DEL_RECIP  = Remove this recipient
 MESSAGE_NOTARGET   = Unable to send to this recipient via this system.
+MESSAGE_NOSEND     = The message will not be sent to the recipient via this system.
+MESSAGE_SENDING    = The message will be sent to the recipient via this system.
 
 MESSAGE_ERRORS        = Message validation failed. The following error(s) were encountered during validation:
 MESSAGE_ERR_NOMATRIX  = No destinations have been selected for your message.
@@ -24,3 +26,14 @@ MESSAGE_ERR_BADEMAIL  = Email field '***name***' does not contain a valid email 
 MESSAGE_DONE_TITLE    = Message accepted
 MESSAGE_DONE_MESSAGE  = Your message has been sucessfully processed. If you selected the 'Delay sending message' option, your message will be held and can be edited before it is sent. If you did not select the delay option, your message is being sent as you read this.
 MESSAGE_DONE_OPTIONS  = You can <a href="index.cgi?block={B_[msglist]}">view a list of messages</a> you have written, and you can edit the message you have just written there too, if you selected the delayed send option. Alternatively, you can <a href="index.cgi">send another message</a>.
+
+MESSAGE_EDITTITLE     = Edit a message
+MESSAGE_EDITINTRO     = Here you may edit the settings and contents of a previously written message. When you save this message, the delay send timer will be reset (if you have enabled delayed sending). Fields in red are required.
+MESSAGE_EDIT          = Update message
+MESSAGE_BADPREFIX     = <span class="error">Unable to locate selected prefix.</span>
+MESSAGE_WILLDELAY     = Message will be held for
+MESSAGE_NODELAY       = Message will be sent immediately.
+
+MESSAGE_CONFIRM       = Confirm message
+MESSAGE_CONFINTRO     = <strong>Your message has not been sent yet!</strong> Please check through the contents of your message as shown here, and either click 'Send message' to confirm that it should be sent, or click 'Update message' to edit it.
+MESSAGE_CONFDELAY     = Delay sending
