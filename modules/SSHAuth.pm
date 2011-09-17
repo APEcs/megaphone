@@ -33,6 +33,7 @@ use Net::SSH::Perl;
 
 # Custom module imports
 use Logging qw(die_log);
+use Utils qw(blind_untaint);
 
 # ============================================================================
 #  Constructor
@@ -214,12 +215,14 @@ sub _ssh_valid_user {
 
     $self -> {"lasterr"} = "";
     if($username && $password) {
-        my $ssh = Net::SSH::Expect -> new(host     => $self -> {"settings"} -> {"config"} -> {"SSHAuth:server"},
-                                          user     => $username,
-                                          password => $password,
+        my $ssh = Net::SSH::Expect -> new(host     => blind_untaint($self -> {"settings"} -> {"config"} -> {"SSHAuth:server"}),
+                                          user     => blind_untaint($username),
+                                          password => blind_untaint($password),
                                           raw_pty  => 1,
-                                          timeout  => $self -> {"settings"} -> {"config"} -> {"SSHAuth:timeout"},
-                                          binary   => $self -> {"settings"} -> {"config"} -> {"SSHAuth:binary"});
+                                          log_file => "/tmp/logintest",
+                                          exp_debug => 1,
+                                          timeout  => blind_untaint($self -> {"settings"} -> {"config"} -> {"SSHAuth:timeout"}),
+                                          binary   => blind_untaint($self -> {"settings"} -> {"config"} -> {"SSHAuth:binary"}));
         my $resp = $ssh -> login();
         $resp =~ s/\s//g;
         $ssh -> close();
