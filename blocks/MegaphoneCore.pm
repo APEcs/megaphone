@@ -29,6 +29,44 @@ use Utils qw(is_defined_numeric);
 # ============================================================================
 #  Content generation functions
 
+## @method $ generate_message($args, $error)
+# Generate the 'message' block to send to the user. This will wrap any specified
+# error in an appropriate block before inserting it into the message block. Any
+# arguments set in the provided args hash are filled in on the form.
+#
+# @param args  A reference to a hash containing the default values to show in the form.
+# @param error An error message to show at the start of the form.
+# @return A string containing the message block.
+sub generate_message {
+    my $self  = shift;
+    my $args  = shift || { };
+    my $error = shift;
+
+    # Wrap the error message in a message box if we have one.
+    $error = $self -> {"template"} -> load_template("blocks/error_box.tem", {"***message***" => $error})
+        if($error);
+
+    # And build the message block itself. Kinda big and messy, this...
+    return $self -> {"template"} -> load_template("blocks/message.tem", {"***error***"       => $error,
+                                                                         "***cc1***"         => $args -> {"cc"}  ? $args -> {"cc"} -> [0]  : "",
+                                                                         "***cc2***"         => $args -> {"cc"}  ? $args -> {"cc"} -> [1]  : "",
+                                                                         "***cc3***"         => $args -> {"cc"}  ? $args -> {"cc"} -> [2]  : "",
+                                                                         "***cc4***"         => $args -> {"cc"}  ? $args -> {"cc"} -> [3]  : "",
+                                                                         "***bcc1***"        => $args -> {"bcc"} ? $args -> {"bcc"} -> [0] : "",
+                                                                         "***bcc2***"        => $args -> {"bcc"} ? $args -> {"bcc"} -> [1] : "",
+                                                                         "***bcc3***"        => $args -> {"bcc"} ? $args -> {"bcc"} -> [2] : "",
+                                                                         "***bcc4***"        => $args -> {"bcc"} ? $args -> {"bcc"} -> [3] : "",
+                                                                         "***prefixother***" => $args -> {"prefixother"},
+                                                                         "***subject***"     => $args -> {"subject"},
+                                                                         "***message***"     => $args -> {"message"},
+                                                                         "***delaysend***"   => $args -> {"delaysend"} ? 'checked="checked"' : "",
+                                                                         "***delay***"       => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delaysend"}),
+                                                                         "***targmatrix***"  => $self -> build_target_matrix($args -> {"targset"}),
+                                                                         "***prefix***"      => $self -> build_prefix($args -> {"prefix"}),
+                                                                     });
+}
+
+
 ## @method $ generate_message_form($args, $login_errors, $form_errors)
 # Generate the content of the message form, optionally including the login block
 # if the user has not yet logged in.
@@ -103,7 +141,7 @@ sub page_display {
             # If we have user name and role set, we're done
             if($user -> {"realname"} && $user -> {"rolename"}) {
                 $title   = $self -> {"template"} -> replace_langvar("MESSAGE_CONFIRM");
-                $content = $self -> {"template"} -> load_template("blocks/message_confirm.tem");
+                $content = $self -> generate_message_confirmform($msgid, $args);
 
             # No user details - we need to poke the user to get the details set
             } else {
@@ -128,17 +166,33 @@ sub page_display {
             $args -> {"block"}   = $self -> {"block"};
             $args -> {"user_id"} = $self -> {"session"} -> {"sessuser"};
 
+            # Did the user mess up their details?
             if($errors) {
                 $title   = $self -> {"template"} -> replace_langvar("DETAILS_TITLES");
                 $content = $self -> generate_userdetails_form($args, $errors);
             } else {
+                # Details were valid, update them and then give the user the confirm form.
                 $self -> update_userdetails($args);
 
                 $title   = $self -> {"template"} -> replace_langvar("MESSAGE_CONFIRM");
-            $content = $self -> {"template"} -> load_template("blocks/message_confirm.tem");
+                $content = $self -> generate_message_confirmform($args -> {"msgid"}, $args);
             }
+        # Has the user asked to update the message?
+        } elsif($self -> {"cgi"} -> param("editmsg")) {
+            # Get the message id...
+            my $msgid = is_defined_numeric($self -> {"cgi"}, "msgid");
+            die_log($self -> {"cgi"} -> remote_host(), "Message Id vanished during confirm form. This should not happen!") if(!$msgid);
 
-            # Has the user confirmed message send?
+            my $args = $self -> get_message($msgid);
+            die_log($self -> {"cgi"} -> remote_host(), "Message id is invalid. This should not happen!") if(!$args);
+
+            # Check that the user isn't trying to be a smartarse and edit an old message here...
+            die_log($self -> {"cgi"} -> remote_host(), "Message has been sent, unable to edit it. This should not happen!") if($args -> {"sent"});
+
+            $title   = $self -> {"template"} -> replace_langvar("MESSAGE_EDIT");
+            $content = $self -> generate_message_editform($args -> {"msgid"}, $args);
+
+        # Has the user confirmed message send?
         } elsif($self -> {"cgi"} -> param("dosend")) {
             # Get the message id...
             my $msgid = is_defined_numeric($self -> {"cgi"}, "msgid");
