@@ -15,3 +15,7 @@ MESSAGE_SEND       = Send message
 MESSAGE_ADD_RECIP  = Add another recipient
 MESSAGE_DEL_RECIP  = Remove this recipient
 MESSAGE_NOTARGET   = Unable to send to this recipient via this system.
+
+MESSAGE_ERRORS        = Message validation failed. The following error(s) were encountered during validation:
+MESSAGE_ERR_BADMATRIX = One or more selected destinations are invalid.
+MESSAGE_ERR_BADEMAIL  = Email field '***name***' does not contain a valid email address.
