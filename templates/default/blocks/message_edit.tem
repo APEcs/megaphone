@@ -82,7 +82,7 @@
                     </tr>
                     <tr>
                         <td class="label"></td>
-                        <td class="field"><input type="submit" name="editmsg" id="editmsg" value="{L_MESSAGE_EDIT}" /></td>
+                        <td class="field"><input type="submit" name="updatemsg" id="updatemsg" value="{L_MESSAGE_EDIT}" /></td>
                     </tr>
                 </table>
             </div>
