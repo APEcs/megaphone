@@ -20,7 +20,7 @@
                 </table>
                 <table class="notebox notebox-warning hide" id="persistwarn">
                     <tr>
-                        <td class="nbox-image"><img src="templates/default/images/important.png" width="48" height="40" alt="important" /></td>
+                        <td class="nbox-image"><img src="templates/default/images/important.png" width="48" height="48" alt="important" /></td>
                         <td class="nbox-text">{L_PERSIST_WARNING}</td>
                     </tr>
                 </table>  
