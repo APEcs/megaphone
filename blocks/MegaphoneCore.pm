@@ -156,7 +156,22 @@ sub page_display {
 
         # Get the message id...
         my $msgid = is_defined_numeric($self -> {"cgi"}, "msgid");
-        die_log($self -> {"cgi"} -> remote_host(), "Message Id vanished. This should not happen!") if(!$msgid);
+        return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_NOMSGID")) if(!$msgid);
+
+        # We need the user's details too
+        my $user = $self -> {"session"} -> {"auth"} -> get_user_byid($self -> {"session"} -> {"sessuser"});
+
+        # Get the message data
+        my $message = $self -> get_message($msgid);
+        return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_BADMSGID")) if(!$message);
+
+        # Check that the user isn't trying to be a smartarse and mess with an old message here...
+        return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_MSGSENT")) 
+            unless($message -> {"status"} eq "incomplete" || $message -> {"status"} eq "pending");
+
+        # Check that the user actually has permission to edit the message (message owner, or admin)...
+        return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_MSGEDIT_PERMERROR")) 
+            unless($message -> {"user_id"} == $user -> {"user_id"} || $user -> {"user_type"} == 3);
 
         # user has submitted the name/role form...
         if($self -> {"cgi"} -> param("setname")) {
@@ -177,18 +192,12 @@ sub page_display {
                 $self -> update_userdetails($args);
 
                 $title   = $self -> {"template"} -> replace_langvar("MESSAGE_CONFIRM");
-                $content = $self -> generate_message_confirmform($msgid, $args);
+                $content = $self -> generate_message_confirmform($msgid, $message);
             }
         # Has the user asked to update the message?
         } elsif($self -> {"cgi"} -> param("editmsg")) {
-            my $args = $self -> get_message($msgid);
-            die_log($self -> {"cgi"} -> remote_host(), "Message id is invalid. This should not happen!") if(!$args);
-
-            # Check that the user isn't trying to be a smartarse and edit an old message here...
-            die_log($self -> {"cgi"} -> remote_host(), "Message has been sent, unable to edit it. This should not happen!") if($args -> {"sent"});
-
             $title   = $self -> {"template"} -> replace_langvar("MESSAGE_EDIT");
-            $content = $self -> generate_message_editform($msgid, $args);
+            $content = $self -> generate_message_editform($msgid, $message);
 
         # Has the user submitted the update form?
         } elsif($self -> {"cgi"} -> param("updatemsg")) {
@@ -202,7 +211,8 @@ sub page_display {
 
             # Otherwise, update the message and send back the confirm
             } else {
-                $self -> update_message($msgid, $args);
+                # Update the message, note the change to the msgid here!!
+                $msgid = $self -> update_message($msgid, $args, $user);
 
                 $title   = $self -> {"template"} -> replace_langvar("MESSAGE_CONFIRM");
                 $content = $self -> generate_message_confirmform($msgid, $args);

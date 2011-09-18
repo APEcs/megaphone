@@ -23,6 +23,7 @@ package MegaphoneBlock;
 use strict;
 use base qw(Block); # This class extends Block
 use MIME::Base64;   # Needed for base64 encoding of popup bodies.
+use HTML::Entities;
 use Logging qw(die_log);
 
 
@@ -124,6 +125,49 @@ sub get_message {
 
     # Done, return the data...
     return $message;
+}
+
+
+## @method void set_message_status($msgid, $status)
+# Update the status for the specified message.
+#
+# @param msgid  The ID of the message to update.
+# @param status The new status to set, should be 'incomplete', 'pending', 'sent',
+#               'edited', or 'aborted'
+sub set_message_status {
+    my $self   = shift;
+    my $msgid  = shift;
+    my $status = shift;
+
+    my $updateh = $self -> {"dbh"} -> prepare("UPDATE ".$self -> {"settings"} -> {"database"} -> {"messages"}."
+                                               SET status = ?, updated = UNIX_TIMESTAMP()
+                                               WHERE id = ?");
+    $updateh -> execute($status, $msgid)
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message update query: ".$self -> {"dbh"} -> errstr);
+}
+
+
+## @method $ update_message($msgid, $args, $user)
+# Update the specified message to contain the values specified in the new args
+# hash. This will die outright if the message has state is 'sent' or 'aborted'.
+# Note that, for security and auditing purposes, this does not actually update 
+# the message as such - it marks the old message as "edited" and creates a new one.
+#
+# @param msgid The ID of the message to update.
+# @param args  A reference to a hash containing the new settings for the message.
+# @param user  A reference to a hash containing the user's data.
+# @return A new message ID
+sub update_message {
+    my $self  = shift;
+    my $msgid = shift;
+    my $args  = shift;
+    my $user  = shift;
+  
+    # Switch the old message to 'edited' status
+    $self -> set_message_status($msgid, "edited");
+
+    # Create a new message
+    return $self -> store_message($args, $user);
 }
 
 
@@ -414,10 +458,7 @@ sub validate_message {
                                                                                      "nicename"   => $self -> {"template"} -> replace_langvar("MESSAGE_".uc($mode)),
                                                                                      "maxlen"     => 255});
             # Fix up <, >, and "
-            $args -> {$mode} -> [$i - 1] =~ s/&lt;/</g;
-            $args -> {$mode} -> [$i - 1] =~ s/&gt;/>/g;
-            $args -> {$mode} -> [$i - 1] =~ s/&quot;/\"/g;
-            $args -> {$mode} -> [$i - 1] =~ s/&amp;/&/g;
+            $args -> {$mode} -> [$i - 1] = decode_entities($args -> {$mode} -> [$i - 1]);
 
             # If we have an error, store it, otherwise check the address is valid
             if($error) {
@@ -453,7 +494,7 @@ sub validate_message {
     ($args -> {"subject"}, $error) = $self -> validate_string("subject", {"required" => 1,
                                                                           "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_SUBJECT"),
                                                                           "minlen"   => 1,
-                                                                          "maxlen"   => 20});
+                                                                          "maxlen"   => 255});
     $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error}) if($error);
 
     #... and a message, too
@@ -549,7 +590,7 @@ sub generate_message_confirmform {
     foreach my $mode ("cc", "bcc") {
         for(my $i = 0; $i < 4; ++$i) {
             # Append the cc/bcc if it is set...
-            $outfields -> {$mode} .= $self -> {"template"} -> process_template($tem -> {$mode}, {"***data***" => $args -> {$mode} -> [$i]})
+            $outfields -> {$mode} .= $self -> {"template"} -> process_template($tem -> {$mode}, {"***data***" => encode_entities($args -> {$mode} -> [$i])})
                 if($args -> {$mode} -> [$i]);
         }
     }
@@ -570,13 +611,16 @@ sub generate_message_confirmform {
     $outfields -> {"delaysend"} = $self -> {"template"} -> load_template($args -> {"delaysend"} ? "blocks/message_edit_delay.tem" : "blocks/message_edit_nodelay.tem",
                                                                          {"***delay***" => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delaysend"})});
 
+    # Simple HTML fix for the message...
+    ($outfields -> {"message"} = $args -> {"message"}) =~ s/\n/<br \/>\n/g;
+
     # And build the message block itself. Kinda big and messy, this...
     my $body = $self -> {"template"} -> load_template("blocks/message_confirm.tem", {"***targmatrix***"  => $self -> build_target_matrix($args -> {"targset"}, 1),
                                                                                      "***cc***"          => $outfields -> {"cc"},
                                                                                      "***bcc***"         => $outfields -> {"bcc"},
                                                                                      "***prefix***"      => $outfields -> {"prefix"},
                                                                                      "***subject***"     => $args -> {"subject"},
-                                                                                     "***message***"     => $args -> {"message"},
+                                                                                     "***message***"     => $outfields -> {"message"},
                                                                                      "***delaysend***"   => $outfields -> {"delaysend"},
                                                                                  });
 
@@ -654,6 +698,24 @@ sub generate_userdetails_form {
     return $self -> {"template"} -> load_template("form.tem", {"***content***" => $content,
                                                                "***block***"   => $args -> {"block"},
                                                                "***args***"    => $hiddenargs});
+}
+
+
+## @method $ generate_fatal($error)
+# Generate a page containing a fatal error. This will produce a complete page, 
+# excluding HTTP response header, and should be used to bypass normal page generation.
+#
+# @parma error The error to show in the page.
+# @return a complete error page.
+sub generate_fatal {
+    my $self = shift;
+    my $error = shift;
+
+    my $content = $self -> {"template"} -> load_template("fatal_error.tem", {"***error***" => $error});
+
+    # return the filled in page template
+    return $self -> {"template"} -> load_template("page.tem", {"***title***"   => $self -> {"template"} -> replace_langvar("FATAL_TITLE"),
+                                                               "***content***" => $content});
 }
 
 
