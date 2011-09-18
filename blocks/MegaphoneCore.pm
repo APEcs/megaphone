@@ -129,8 +129,8 @@ sub page_display {
         # Now check the form contents...
         ($args, $form_errors) = $self -> validate_message();
 
-        # Okay, if we have form or login errors, we need to send the form back...
-        if($login_errors || $form_errors) {
+        # Okay, if we have form or login errors, or we're still anonymous, we need to send the form back...
+        if($login_errors || $form_errors || !$user || ($self -> {"session"} -> {"sessuser"} == $self -> {"session"} -> {"auth"} -> {"ANONYMOUS"})) {
             $title   = $self -> {"template"} -> replace_langvar("MESSAGE_TITLE");
             $content = $self -> generate_message_form($args, $login_errors, $form_errors);
 
@@ -154,15 +154,17 @@ sub page_display {
     # Everything else requires a non-anonymous session
     } elsif($self -> {"session"} -> {"sessuser"} && ($self -> {"session"} -> {"sessuser"} != $self -> {"session"} -> {"auth"} -> {"ANONYMOUS"})) {
 
+        # Get the message id...
+        my $msgid = is_defined_numeric($self -> {"cgi"}, "msgid");
+        die_log($self -> {"cgi"} -> remote_host(), "Message Id vanished. This should not happen!") if(!$msgid);
+
         # user has submitted the name/role form...
         if($self -> {"cgi"} -> param("setname")) {
             # Check the details the user submitted, send back the form if they messed up...
             my ($args, $errors) = $self -> validate_userdetails();
 
             # We need to make sure we have a few values in $args, even if validation failed, so add them now
-            $args -> {"msgid"} = is_defined_numeric($self -> {"cgi"}, "msgid");
-            die_log($self -> {"cgi"} -> remote_host(), "Message Id vanished during user details form. This should not happen!") if(!$args -> {"msgid"});
-
+            $args -> {"msgid"}   = $msgid;
             $args -> {"block"}   = $self -> {"block"};
             $args -> {"user_id"} = $self -> {"session"} -> {"sessuser"};
 
@@ -175,14 +177,10 @@ sub page_display {
                 $self -> update_userdetails($args);
 
                 $title   = $self -> {"template"} -> replace_langvar("MESSAGE_CONFIRM");
-                $content = $self -> generate_message_confirmform($args -> {"msgid"}, $args);
+                $content = $self -> generate_message_confirmform($msgid, $args);
             }
         # Has the user asked to update the message?
         } elsif($self -> {"cgi"} -> param("editmsg")) {
-            # Get the message id...
-            my $msgid = is_defined_numeric($self -> {"cgi"}, "msgid");
-            die_log($self -> {"cgi"} -> remote_host(), "Message Id vanished during confirm form. This should not happen!") if(!$msgid);
-
             my $args = $self -> get_message($msgid);
             die_log($self -> {"cgi"} -> remote_host(), "Message id is invalid. This should not happen!") if(!$args);
 
@@ -190,14 +188,27 @@ sub page_display {
             die_log($self -> {"cgi"} -> remote_host(), "Message has been sent, unable to edit it. This should not happen!") if($args -> {"sent"});
 
             $title   = $self -> {"template"} -> replace_langvar("MESSAGE_EDIT");
-            $content = $self -> generate_message_editform($args -> {"msgid"}, $args);
+            $content = $self -> generate_message_editform($msgid, $args);
 
+        # Has the user submitted the update form?
+        } elsif($self -> {"cgi"} -> param("updatemsg")) {
+            # check the form contents...
+            my ($args, $form_errors) = $self -> validate_message();
+
+            # If we have errors, send back the edit form...
+            if($form_errors) {
+                $title   = $self -> {"template"} -> replace_langvar("MESSAGE_EDIT");
+                $content = $self -> generate_message_editform($msgid, $args, $form_errors);
+
+            # Otherwise, update the message and send back the confirm
+            } else {
+                $self -> update_message($msgid, $args);
+
+                $title   = $self -> {"template"} -> replace_langvar("MESSAGE_CONFIRM");
+                $content = $self -> generate_message_confirmform($msgid, $args);
+            }
         # Has the user confirmed message send?
         } elsif($self -> {"cgi"} -> param("dosend")) {
-            # Get the message id...
-            my $msgid = is_defined_numeric($self -> {"cgi"}, "msgid");
-            die_log($self -> {"cgi"} -> remote_host(), "Message Id vanished during confirm form. This should not happen!") if(!$msgid);
-
             $self -> send_message($msgid);
 
             $title   = $self -> {"template"} -> replace_langvar("MESSAGE_COMPLETE");
