@@ -1,0 +1,7 @@
+<tr>
+    <td><img src="templates/default/images/msgstates/***state***.png" width="16" height="16" alt="***state***" /></td>
+    <td><a href="index.cgi?block={B_[msglist]}&amp;msgid=***id***&amp;sort=***sort***&amp;way=***way***&amp;page=***page***&amp;viewmsg">***subject***</a></td>
+    <td>***updated***</td>
+    <td>***sent***</td>
+    <td>***ops***</td>
+</tr>
