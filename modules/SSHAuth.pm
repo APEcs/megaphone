@@ -215,21 +215,35 @@ sub _ssh_valid_user {
 
     $self -> {"lasterr"} = "";
     if($username && $password) {
-        my $ssh = Net::SSH::Expect -> new(host     => blind_untaint($self -> {"settings"} -> {"config"} -> {"SSHAuth:server"}),
-                                          user     => blind_untaint($username),
-                                          password => blind_untaint($password),
-                                          raw_pty  => 1,
-                                          log_file => "/tmp/logintest",
-                                          exp_debug => 1,
-                                          timeout  => blind_untaint($self -> {"settings"} -> {"config"} -> {"SSHAuth:timeout"}),
-                                          binary   => blind_untaint($self -> {"settings"} -> {"config"} -> {"SSHAuth:binary"}));
-        my $resp = $ssh -> login();
-        $resp =~ s/\s//g;
-        $ssh -> close();
+        my $resp;
 
-        if($resp =~ /Welcome/ || $resp =~ /Last\s*login/s) {
+        eval {
+            my $ssh = Net::SSH::Expect -> new(host     => blind_untaint($self -> {"settings"} -> {"config"} -> {"SSHAuth:server"}),
+                                              user     => blind_untaint($username),
+                                              password => blind_untaint($password),
+                                              raw_pty  => 1,
+                                              log_file => "/tmp/logintest",
+                                              exp_debug => 1,
+                                              timeout  => blind_untaint($self -> {"settings"} -> {"config"} -> {"SSHAuth:timeout"}),
+                                              binary   => blind_untaint($self -> {"settings"} -> {"config"} -> {"SSHAuth:binary"}));
+            $resp = $ssh -> login();
+            $resp =~ s/\s//g;
+            $ssh -> close();
+        };
+
+        # Did the ssh fail horribly?
+        if($@) {
+            $self -> {"lasterr"} = "ssh login to ".$self -> {"settings"} -> {"config"} -> {"SSHAuth:server"}." failed. Error was: $@";
+
+        # Did the user log in?
+        } elsif($resp =~ /Welcome/ || $resp =~ /Last\s*login/s) {
             return 1;
+
+        # something broke, just not /hideously/
         } else {
+            # Fix the simple 'Password:' prompt response...
+            $resp =~ s/^Password:$/Incorrect username or password./;
+
             $self -> {"lasterr"} = "ssh login to ".$self -> {"settings"} -> {"config"} -> {"SSHAuth:server"}." failed. Response was: $resp";
         }
     }
