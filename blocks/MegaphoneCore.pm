@@ -119,7 +119,7 @@ sub page_display {
             ($user, $login_errors) = $self -> validate_login();
 
             # If we have a user, create the new session
-            $self -> {"session"} -> create_session($user -> {"user_id"}, $self -> {"cgi"} -> {"persist"});
+            $self -> {"session"} -> create_session($user -> {"user_id"}, $self -> {"cgi"} -> {"persist"}) if($user);
 
         # We already have a user, get their data as we need it later...
         } else {
@@ -232,8 +232,9 @@ sub page_display {
     }
 
     # Done generating the page content, return the filled in page template
-    return $self -> {"template"} -> load_template("page.tem", {"***title***"   => $title,
-                                                               "***content***" => $content});
+    return $self -> {"template"} -> load_template("page.tem", {"***title***"     => $title,
+                                                               "***extrahead***" => "",
+                                                               "***content***"   => $content});
 
 }
 
