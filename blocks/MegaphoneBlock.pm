@@ -150,7 +150,7 @@ sub set_message_status {
 ## @method $ update_message($msgid, $args, $user)
 # Update the specified message to contain the values specified in the new args
 # hash. This will die outright if the message has state is 'sent' or 'aborted'.
-# Note that, for security and auditing purposes, this does not actually update 
+# Note that, for security and auditing purposes, this does not actually update
 # the message as such - it marks the old message as "edited" and creates a new one.
 #
 # @param msgid The ID of the message to update.
@@ -162,7 +162,7 @@ sub update_message {
     my $msgid = shift;
     my $args  = shift;
     my $user  = shift;
-  
+
     # Switch the old message to 'edited' status
     $self -> set_message_status($msgid, "edited");
 
@@ -180,8 +180,11 @@ sub update_userdetails {
     my $self = shift;
     my $args = shift;
 
+    die_log($self -> {"cgi"} -> remote_host(), "Realname is not set. This should not happen!") unless($args -> {"realname"});
+    die_log($self -> {"cgi"} -> remote_host(), "Rolename is not set. This should not happen!") unless($args -> {"rolename"});
+
     my $updateh = $self -> {"dbh"} -> prepare("UPDATE ".$self -> {"settings"} -> {"database"} -> {"users"}."
-                                               SET realname = ?, rolename = ?
+                                               SET realname = ?, rolename = ?, updated = UNIX_TIMESTAMP()
                                                WHERE user_id = ?");
     $updateh -> execute($args -> {"realname"}, $args -> {"rolename"}, $args -> {"user_id"})
         or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute user details update: ".$self -> {"dbh"} -> errstr);
@@ -705,7 +708,7 @@ sub generate_userdetails_form {
 
 
 ## @method $ generate_fatal($error)
-# Generate a page containing a fatal error. This will produce a complete page, 
+# Generate a page containing a fatal error. This will produce a complete page,
 # excluding HTTP response header, and should be used to bypass normal page generation.
 #
 # @parma error The error to show in the page.
@@ -720,6 +723,25 @@ sub generate_fatal {
     return $self -> {"template"} -> load_template("page.tem", {"***title***"     => $self -> {"template"} -> replace_langvar("FATAL_TITLE"),
                                                                "***extrahead***" => "",
                                                                "***content***"   => $content});
+}
+
+
+## @method $ generate_topright()
+# Generate the username/login/logout links at the top right of the page, based on
+# whether the user has logged in yet or not.
+sub generate_topright {
+    my $self = shift;
+
+    # Has the user logged in?
+    if($self -> {"session"} -> {"sessuser"} && $self -> {"session"} -> {"sessuser"} != $self -> {"session"} -> {"auth"} -> {"ANONYMOUS"}) {
+        # We need the user's details
+        my $user = $self -> {"session"} -> {"auth"} -> get_user_byid($self -> {"session"} -> {"sessuser"});
+
+        return $self -> {"template"} -> load_template("topright_loggedin.tem", {"***user***" => $user -> {"realname"} || $user -> {"username"}});
+    }
+
+    # User hasn't logged in, return the basic login stuff
+    return $self -> {"template"} -> load_template("topright_loggedout.tem");
 }
 
 
