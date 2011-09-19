@@ -53,6 +53,29 @@ body  {
     border-bottom: 1px solid #aaa;
 }
 
+#header #topright {
+  text-align: right;
+  float: right;
+  margin: 5px 0 0 0;
+  width: 600px;
+}
+
+#header #topright ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  }
+
+#header #topright li {
+  display: inline;
+  }
+
+#header #topright li a {
+  font-size: 9pt;
+  padding: 0 0 0 1.5em;
+  text-decoration: none;
+  }
+
 .megaphone #footer {
     padding: 0 10px;
 } 

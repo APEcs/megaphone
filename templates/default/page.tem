@@ -39,6 +39,9 @@
             <h1>{L_PAGE_TITLE}</h1>
             <div id="siteSub">{L_PAGE_SUBTITLE}</div>
         </div>
+        <div id="topright">
+            <ul>***topright***</ul>
+        </div>
     </div> <!-- #header -->
 
     <div id="mainContent">
