@@ -222,8 +222,8 @@ sub _ssh_valid_user {
                                               user     => blind_untaint($username),
                                               password => blind_untaint($password),
                                               raw_pty  => 1,
-                                              log_file => "/tmp/logintest",
-                                              exp_debug => 1,
+                                              #log_file => "/tmp/logintest",
+                                              #exp_debug => 1,
                                               timeout  => blind_untaint($self -> {"settings"} -> {"config"} -> {"SSHAuth:timeout"}),
                                               binary   => blind_untaint($self -> {"settings"} -> {"config"} -> {"SSHAuth:binary"}));
             $resp = $ssh -> login();
