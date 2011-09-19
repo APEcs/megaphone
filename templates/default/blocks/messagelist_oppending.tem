@@ -1,0 +1,3 @@
+<a href="index.cgi?block={B_[msglist]}&amp;sort=***sort***&amp;way=***way***&amp;page=***page***&amp;msgid=***id***&amp;editmsg"><img src="templates/default/images/msgops/edit_msg.png" width="16" height="16" alt="edit" title="{L_MSGLIST_EDIT}" /></a>&nbsp;
+<a href="index.cgi?block={B_[msglist]}&amp;sort=***sort***&amp;way=***way***&amp;page=***page***&amp;msgid=***id***&amp;abortmsg"><img src="templates/default/images/msgops/cancel_msg.png" width="16" height="16" alt="abort" title="{L_MSGLIST_ABORT}" /></a>&nbsp;
+<a href="index.cgi?block={B_[msglist]}&amp;sort=***sort***&amp;way=***way***&amp;page=***page***&amp;msgid=***id***&amp;sendmsg"><img src="templates/default/images/msgops/send_msg.png" width="16" height="16" alt="send" title="{L_MSGLIST_SEND}" /></a>

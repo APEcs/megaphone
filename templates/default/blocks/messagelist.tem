@@ -5,12 +5,12 @@
 ***error***
                 <div>{L_MSGLIST_INTRO}</div>
 ***navigation***
-                <table class="zebra">
+                <table class="zebra messagelist" style="width: 100%">
                 <tr>
-                    <th>***statepopup***</th>
-                    <th>***subject***</th>
-                    <th>***updated***</th>
-                    <th>***sent***</th>
+                    <th>***statepopup*** ***sortstate***</th>
+                    <th style="width: 100%">{L_MSGLIST_SUBJECT} ***sortsubject***</th>
+                    <th>{L_MSGLIST_UPDATED} ***sortupdated***</th>
+                    <th>{L_MSGLIST_SENT} ***sortsent***</th>
                     <th>{L_MSGLIST_OPS}</th>
                 </tr>
 ***messages***

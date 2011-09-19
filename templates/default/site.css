@@ -284,3 +284,19 @@ a:active {
 a:hover, a:focus {
     text-decoration: underline;
 }
+
+table.messagelist {
+    width: 100%;
+}
+
+table.messagelist td {
+    white-space: nowrap;
+}
+
+table.messagelist th {
+    white-space: nowrap;
+}
+
+ul#states li {
+    padding-bottom: 0.5em;
+}
