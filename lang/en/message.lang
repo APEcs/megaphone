@@ -15,7 +15,7 @@ MESSAGE_SEND       = Send message
 MESSAGE_ADD_RECIP  = Add another recipient
 MESSAGE_DEL_RECIP  = Remove this recipient
 MESSAGE_NOTARGET   = Unable to send to this recipient via this system.
-MESSAGE_NOSEND     = The message will not be sent to the recipient via this system.
+MESSAGE_NOTSEND    = The message will not be sent to the recipient via this system.
 MESSAGE_SENDING    = The message will be sent to the recipient via this system.
 
 MESSAGE_ERRORS        = Message validation failed. The following error(s) were encountered during validation:
@@ -34,6 +34,7 @@ MESSAGE_BADPREFIX     = <span class="error">Unable to locate selected prefix.</s
 MESSAGE_WILLDELAY     = Message will be held for
 MESSAGE_NODELAY       = Message will be sent immediately.
 
+MESSAGE_CONFTITLE     = Confirm message
 MESSAGE_CONFIRM       = Confirm message
 MESSAGE_CONFINTRO     = <strong>Your message has not been sent yet!</strong> Please check through the contents of your message as shown here, and either click 'Send message' to confirm that it should be sent, or click 'Update message' to edit it.
 MESSAGE_CONFDELAY     = Delay sending
