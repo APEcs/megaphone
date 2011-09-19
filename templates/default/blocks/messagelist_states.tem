@@ -1,0 +1,7 @@
+<p>{L_MSGLIST_STATE_DESC}</p>
+<ul>
+<li><img src="templates/default/images/msgstates/pending.png" width="16" height="16" alt="pending" /> {L_MSGLIST_STATE_PENDING}</li>
+<li><img src="templates/default/images/msgstates/sent.png"    width="16" height="16" alt="sent" /> {L_MSGLIST_STATE_SENT}</li>
+<li><img src="templates/default/images/msgstates/edited.png"  width="16" height="16" alt="edited" /> {L_MSGLIST_STATE_EDITED}</li>
+<li><img src="templates/default/images/msgstates/aborted.png" width="16" height="16" alt="aborted" /> {L_MSGLIST_STATE_ABORTED}</li>
+</ul>

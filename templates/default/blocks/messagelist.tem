@@ -1,0 +1,19 @@
+        <div class="message">
+            <h2>{L_MSGLIST_TITLE}</h2>
+            <div class="mbody">
+                <img src="templates/default/images/messagelist.png" width="48" height="48" alt="message list" class="fltrt" />
+***error***
+                <div>{L_MSGLIST_INTRO}</div>
+***navigation***
+                <table class="zebra">
+                <tr>
+                    <th>***statepopup***</th>
+                    <th>***subject***</th>
+                    <th>***updated***</th>
+                    <th>***sent***</th>
+                    <th>{L_MSGLIST_OPS}</th>
+                </tr>
+***messages***
+                </table>
+            </div>
+        </div>
