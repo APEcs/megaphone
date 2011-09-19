@@ -687,7 +687,7 @@ sub generate_userdetails_form {
     my $args  = shift;
     my $error = shift;
     my $info  = shift;
-    my $hiddenargs;
+    my $hiddenargs = "";
 
     # Wrap the error message in a message box if we have one.
     $error = $self -> {"template"} -> load_template("blocks/error_box.tem", {"***message***" => $error})
@@ -697,9 +697,15 @@ sub generate_userdetails_form {
                                                                                      "***error***" => $error,
                                                                                      "***name***"  => $args -> {"realname"},
                                                                                      "***role***"  => $args -> {"rolename"}});
-    # If we have a messageid in the args, add it as a hidden value
-    $hiddenargs = $self -> {"template"} -> load_template("hiddenarg.tem", {"***name***"  => "msgid",
-                                                                           "***value***" => $args -> {"msgid"}});
+    # If we have args, add them as a hidden values
+    my $hidetem = $self -> {"template"} -> load_template("hiddenarg.tem");
+    foreach my $arg (keys(%{$args})) {
+        # skip 'known' args...
+        next if($arg eq "block" || $arg eq "realname" || $arg eq "rolename");
+
+        $hiddenargs .= $self -> {"template"} -> process_template($hidetem, {"***name***"  => $arg,
+                                                                            "***value***" => $args -> {$arg}});
+    }
 
     return $self -> {"template"} -> load_template("form.tem", {"***content***" => $content,
                                                                "***block***"   => $args -> {"block"},

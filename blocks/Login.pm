@@ -67,10 +67,15 @@ sub generate_login_form {
     my $self         = shift;
     my $login_errors = shift;
 
+    # Store the back if we have it
+    my $args = "";
+    $args =  $self -> {"template"} -> load_template("hiddenarg.tem", {"***name***"  => "back",
+                                                                      "***value***" => $self -> get_back()});
+
     return ($self -> {"template"} -> replace_langvar("LOGIN_TITLE"),
             $self -> {"template"} -> load_template("form.tem", {"***content***" => $self -> generate_login($login_errors, 1),
-                                                               "***args***"    => "",
-                                                               "***block***"   => $self -> {"block"}}),
+                                                                "***args***"    => $args,
+                                                                "***block***"   => $self -> {"block"}}),
             "");
 }
 
@@ -164,7 +169,8 @@ sub page_display {
             # missing user details...
             } else {
                 $title = $self -> {"template"} -> replace_langvar("DETAILS_TITLES");
-                $body  = $self -> generate_userdetails_form({"block" => $self -> {"block"}}, undef, $self -> {"template"} -> load_template("blocks/new_user.tem"));
+                $body  = $self -> generate_userdetails_form({"block" => $self -> {"block"},
+                                                             "back" => $self -> get_back()}, undef, $self -> {"template"} -> load_template("blocks/new_user.tem"));
             }
         }
 
