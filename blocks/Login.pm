@@ -87,7 +87,7 @@ sub generate_loggedin {
 
     my $content = $self -> {"template"} -> load_template("blocks/login_done.tem", {"***url***"    => $url,
                                                                                    "***return***" => $self -> {"template"} -> replace_langvar("LOGIN_REDIRECT", {"***url***" => $url})});
-    
+
     # return the title, content, and extraheader
     return ($self -> {"template"} -> replace_langvar("LOGIN_TITLE"),
             $content,
@@ -107,7 +107,7 @@ sub generate_loggedout {
 
     my $content = $self -> {"template"} -> load_template("blocks/logout_done.tem", {"***url***"    => $url,
                                                                                     "***return***" => $self -> {"template"} -> replace_langvar("LOGOUT_REDIRECT", {"***url***" => $url})});
-    
+
     # return the title, content, and extraheader
     return ($self -> {"template"} -> replace_langvar("LOGOUT_TITLE"),
             $content,
@@ -124,11 +124,11 @@ sub page_display {
     my $self = shift;
 
     # We need to determine what the page title should be, and the content to shove in it...
-    my ($title, $body, $extrahead);
+    my ($title, $body, $extrahead) = ("", "", "");
 
-    # If the user is not anonymous, they have logged in already
-    if($self -> {"session"} -> {"sessuser"} && ($self -> {"session"} -> {"sessuser"} != $self -> {"session"} -> {"auth"} -> {"ANONYMOUS"})) {
-        
+    # If the user is not anonymous, they have logged in already. Bypass for 'setname' though
+    if($self -> {"session"} -> {"sessuser"} && ($self -> {"session"} -> {"sessuser"} != $self -> {"session"} -> {"auth"} -> {"ANONYMOUS"}) && !$self -> {"cgi"} -> param("setname")) {
+
         # Is the user requesting a logout? If so, doo eet.
         if(defined($self -> {"cgi"} -> param("logout"))) {
             if($self -> {"session"} -> delete_session()) {
@@ -141,7 +141,7 @@ sub page_display {
         } else {
             ($title, $body, $extrahead) = $self -> generate_loggedin();
         }
-    
+
     # User is anonymous - do we have a login?
     } elsif(defined($self -> {"cgi"} -> param("login"))) {
 
@@ -157,6 +157,35 @@ sub page_display {
             # create the new logged-in session
             $self -> {"session"} -> create_session($user -> {"user_id"}, $self -> {"cgi"} -> {"persist"}) if($user);
 
+            # Do we have realname/rolename for the user? If so, send the loggedin message...
+            if($user -> {"realname"} && $user -> {"rolename"}) {
+                ($title, $body, $extrahead) = $self -> generate_loggedin();
+
+            # missing user details...
+            } else {
+                $title = $self -> {"template"} -> replace_langvar("DETAILS_TITLES");
+                $body  = $self -> generate_userdetails_form({"block" => $self -> {"block"}}, undef, $self -> {"template"} -> load_template("blocks/new_user.tem"));
+            }
+        }
+
+    # Has user submitted the userdetails form?
+    } elsif($self -> {"cgi"} -> param("setname")) {
+
+        # Check the details the user submitted, send back the form if they messed up...
+        my ($args, $errors) = $self -> validate_userdetails();
+
+        # We need to make sure we have a few values in $args, even if validation failed, so add them now
+        $args -> {"block"}   = $self -> {"block"};
+        $args -> {"user_id"} = $self -> {"session"} -> {"sessuser"};
+
+        # Did the user mess up their details?
+        if($errors) {
+            $title = $self -> {"template"} -> replace_langvar("DETAILS_TITLES");
+            $body  = $self -> generate_userdetails_form($args, $errors);
+        } else {
+            # Details were valid, update them and then give the user the loggedin form.
+            $self -> update_userdetails($args);
+
             ($title, $body, $extrahead) = $self -> generate_loggedin();
         }
 
@@ -167,6 +196,7 @@ sub page_display {
 
     # Done generating the page content, return the filled in page template
     return $self -> {"template"} -> load_template("page.tem", {"***title***"     => $title,
+                                                               "***topright***"  => $self -> generate_topright(),
                                                                "***extrahead***" => $extrahead,
                                                                "***content***"   => $body});
 }
