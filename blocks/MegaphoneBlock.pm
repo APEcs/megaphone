@@ -635,15 +635,18 @@ sub generate_message_confirmform {
 }
 
 
-## @method $generate_login($error)
+## @method $generate_login($error, $full)
 # Generate the 'login' block to send to the user. This will not prepopulate the form fields, even
 # after the user has submitted and received an error - the user must fill in the details each time.
 #
 # @param error An error message to display in the login form.
+# @param full  If set, generate the full login form body including submit button (defaults to false,
+#              so the login form can be embedded in the message form)
 # @return A string containing the login block.
 sub generate_login {
     my $self  = shift;
     my $error = shift;
+    my $full  = shift;
 
     # Wrap the error message in a message box if we have one.
     $error = $self -> {"template"} -> load_template("blocks/error_box.tem", {"***message***" => $error})
@@ -660,8 +663,8 @@ sub generate_login {
     $persist_length =~ s/y$/ years/;
 
     # And build the login block
-    return $self -> {"template"} -> load_template("blocks/login.tem", {"***error***"      => $error,
-                                                                       "***persistlen***" => $persist_length});
+    return $self -> {"template"} -> load_template("blocks/login".($full ? "_full" : "").".tem", {"***error***"      => $error,
+                                                                                                 "***persistlen***" => $persist_length});
 }
 
 
@@ -714,8 +717,9 @@ sub generate_fatal {
     my $content = $self -> {"template"} -> load_template("fatal_error.tem", {"***error***" => $error});
 
     # return the filled in page template
-    return $self -> {"template"} -> load_template("page.tem", {"***title***"   => $self -> {"template"} -> replace_langvar("FATAL_TITLE"),
-                                                               "***content***" => $content});
+    return $self -> {"template"} -> load_template("page.tem", {"***title***"     => $self -> {"template"} -> replace_langvar("FATAL_TITLE"),
+                                                               "***extrahead***" => "",
+                                                               "***content***"   => $content});
 }
 
 
