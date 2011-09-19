@@ -7,3 +7,10 @@ LOGIN_MAX       = for a maximum of
 PERSIST_WARNING = <strong>WARNING</strong>: do not enable the "Remember my login" option on shared, cluster, or public computers. This option should only be enabled on machines you have exclusive access to.
 LOGIN_FAILED    = Login failed
 LOGIN_INVALID   = Username or password are not valid.
+
+LOGIN_DONE      = You have successfully logged into the system, and you will be redirected shortly.
+LOGIN_REDIRECT  = <p>If you do not want to wait, <a href="***url***">click here</a>.</p><p><a href="index.cgi">Click here</a> to return to the front page.</p>
+
+LOGOUT_TITLE    = Logged out
+LOGOUT_DONE     = You have successfully logged out of the system, and you will be redirected shortly.
+LOGOUT_REDIRECT = <p>If you do not want to wait, <a href="***url***">click here</a>.</p><p><a href="index.cgi">Click here</a> to return to the front page.</p>
