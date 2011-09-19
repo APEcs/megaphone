@@ -1,10 +1,19 @@
-MSGLIST_TITLE  = User Messages and Settings
-MSGLIST_INTRO  = Here you may view the complete history of messages you are responsible for in the system. If a message is still in a pending state, you may edit it, abort it, or force it to be sent immediately.
-MSGLIST_OPS    = &nbsp;
+MSGLIST_TITLE   = User Messages and Settings
+MSGLIST_INTRO   = Here you may view the complete history of messages you are responsible for in the system. If a message is still in a pending state, you may edit it, abort it, or force it to be sent immediately.
+MSGLIST_OPS     = &nbsp;
+MSGLIST_SUBJECT = Subject
+MSGLIST_UPDATED = Updated
+MSGLIST_SENT    = Sent
+MSGLIST_NOTSENT = Not sent
 
-MSGLIST_STATE_TITLE   = States
-MSGLIST_STATE_DESC    = Messages in the system can be in one of several different states. The states are shown here as icons, with the following meanings:
-MSGLIST_STATE_PENDING = This message is in a 'pending' state, meaning that it is ready to be sent but is waiting for its delayed send time to expire. You can edit it, abandon sending it entirely, or force it to be sent.
-MSGLIST_STATE_SENT    = This message has been sent. You can view it, but you won't be able to edit it or prevent it from being sent. <strong>YOU SENT IT. YOU CAN'T UN-SEND IT!</strong>
-MSGLIST_STATE_EDITED  = This is an old version of a message that has been edited. All your message edits are retained for reference and auditing. You can not edit an edited message, and it will never be sent in its current form.
-MSGLIST_STATE_ABORTED = This is an aborted message, one that was cancelled during its pending period. Aborted messages may be edited to create a new sendable message.
+MSGLIST_EDIT    = Edit this message
+MSGLIST_ABORT   = Cancel this message
+MSGLIST_SEND    = Send this message immediately
+
+MSGLIST_STATE_TITLE      = States
+MSGLIST_STATE_DESC       = Messages in the system can be in one of several different states. The states are shown here as icons, with the following meanings:
+MSGLIST_STATE_INCOMPLETE = This message has not been confirmed for sending yet; either you are working on it in another tab, or you closed your browser or navigated away before confirming it. You can edit it to continue working on it.
+MSGLIST_STATE_PENDING    = This message is in a 'pending' state, meaning that it is ready to be sent but is waiting for its delayed send time to expire. You can edit it, abandon sending it entirely, or force it to be sent.
+MSGLIST_STATE_SENT       = This message has been sent. You can view it, but you won't be able to edit it or prevent it from being sent. <strong>YOU SENT IT. YOU CAN'T UN-SEND IT!</strong>
+MSGLIST_STATE_EDITED     = This is an old version of a message that has been edited. All your message edits are retained for reference and auditing. You can not edit an edited message, and it will never be sent in its current form.
+MSGLIST_STATE_ABORTED    = This is an aborted message, one that was cancelled during its pending period. Aborted messages may be edited to create a new sendable message.
