@@ -194,6 +194,53 @@ sub sortfn_sent_desc {
     return $subjb cmp $subja;
 }
 
+sub sortfn_visible_asc {
+    my $visa = $a ? ($a -> {"sent"} || 0) : 0;
+    my $visb = $b ? ($b -> {"sent"} || 0) : 0;
+    my $res = $visa <=> $visb;
+    return $res if($res); # If the result is non-zero, the sent times differ
+
+    my $updatea = $a ? $a -> {"updated"} : 0;
+    my $updateb = $b ? $b -> {"updated"} : 0;
+    $res = $updatea <=> $updateb;
+    return $res if($res); # If the result is non-zero, the update times differ
+
+    # update times match, check states
+    my $statea = $a ? $stateweight -> {$a -> {"status"}} : 0;
+    my $stateb = $b ? $stateweight -> {$b -> {"status"}} : 0;
+    $res = $statea <=> $stateb;
+    return $res if($res); # If the result is non-zero, the states differ
+
+    # States match, check subjects
+    my $subja = $a ? $a -> {"subject"} : "";
+    my $subjb = $b ? $b -> {"subject"} : "";
+    return $subja cmp $subjb;
+}
+
+sub sortfn_visible_desc {
+    my $visa = $a ? ($a -> {"sent"} || 0) : 0;
+    my $visb = $b ? ($b -> {"sent"} || 0) : 0;
+    my $res = $visb <=> $visa;
+    return $res if($res); # If the result is non-zero, the sent times differ
+
+    my $updatea = $a ? $a -> {"updated"} : 0;
+    my $updateb = $b ? $b -> {"updated"} : 0;
+    $res = $updateb <=> $updatea;
+    return $res if($res); # If the result is non-zero, the update times differ
+
+    # update times match, check states
+    my $statea = $a ? $stateweight -> {$a -> {"status"}} : 0;
+    my $stateb = $b ? $stateweight -> {$b -> {"status"}} : 0;
+    $res = $stateb <=> $statea;
+    return $res if($res); # If the result is non-zero, the states differ
+
+    # States match, check subjects
+    my $subja = $a ? $a -> {"subject"} : "";
+    my $subjb = $b ? $b -> {"subject"} : "";
+    return $subjb cmp $subja;
+}
+
+
 # Store references to the sort functions in a hash so that we can call them
 # using sort { $sortfns -> {$sort} -> {$way} -> () } @{$values} rather than
 # needing a mess of if()/elsif()/else code.
@@ -204,18 +251,201 @@ my $sortfns = { "status"  => {"asc"  => \&sortfn_state_asc,
                 "updated" => {"asc"  => \&sortfn_updated_asc,
                               "desc" => \&sortfn_updated_desc},
                 "sent"    => {"asc"  => \&sortfn_sent_asc,
-                              "desc" => \&sortfn_sent_desc}
-              };
+                              "desc" => \&sortfn_sent_desc},
+                "visible" => {"asc"  => \&sortfn_visible_asc,
+                              "desc" => \&sortfn_visible_desc},
+            };
+
+
+# ============================================================================
+#  Validation functions
+
+## @method $ check_abort()
+# Determine whether the message selected by the user can be aborted, including
+# verifying that the message has been specified, and is cancellable.
+#
+# @return A reference to the message data if it can be cancelled, or a string
+#         containing an error page if it can't
+sub check_abort {
+    my $self = shift;
+
+    # Get the message id...
+    my $msgid = is_defined_numeric($self -> {"cgi"}, "msgid");
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_NOMSGID")) if(!$msgid);
+
+    # Get the message data
+    my $message = $self -> get_message($msgid);
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_BADMSGID")) if(!$message);
+
+    # Can't cancel messages unless they are 'pending'
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_BADMSGSTATE")) unless($message -> {"status"} eq "pending");
+
+    return $message;
+}
+
+
+# ============================================================================
+#  Fragment generators
+
+## @method $ build_navigation($maxpage, $pagenum, $sort, $way)
+# Generate the navigation/pagination box for the message list. This will generate
+# a series of boxes and controls to allow users to move between pages of message
+# list.
+#
+# @param maxpage The last page number (first is page 0).
+# @param pagenum The selected page (first is page 0!!)
+# @param sort    The current sort mode.
+# @param way     The direction to sort in.
+# @return A string containing the navigation block.
+sub build_navigation {
+    my $self    = shift;
+    my $maxpage = shift;
+    my $pagenum = shift;
+    my $sort    = shift;
+    my $way     = shift;
+
+    # If there is more than one page, generate a full set of page controls
+    if($maxpage > 0) {
+        my $pagelist = "";
+
+        # If the user is not on the first page, we need to add the left jump controls
+        $pagelist .= $self -> {"template"} -> load_template("blocks/messagelist_jumpleft.tem", {"***sort***"   => $sort,
+                                                                                                "***way***"    => $way,
+                                                                                                "***prev***"   => $pagenum - 1})
+            if($pagenum > 0);
+
+        # load some templates to speed up page list generation...
+        my $pagetem = $self -> {"template"} -> load_template("blocks/messagelist_jumppage.tem", {"***sort***"   => $sort,
+                                                                                                 "***way***"    => $way});
+        my $pageacttem = $self -> {"template"} -> load_template("blocks/messagelist_page.tem");
+
+        # Generate the list of pages
+        for(my $pnum = 0; $pnum <= $maxpage; ++$pnum) {
+            $pagelist .= $self -> {"template"} -> process_template(($pagenum == $pnum) ? $pageacttem : $pagetem,
+                                                                   {"***pagenum***" => $pnum + 1,
+                                                                    "***pageid***"  => $pnum});
+        }
+
+        # Append the right jump controls if we're not on the last page
+        $pagelist .= $self -> {"template"} -> load_template("blocks/messagelist_jumpright.tem", {"***sort***"   => $sort,
+                                                                                                 "***way***"    => $way,
+                                                                                                 "***next***"   => $pagenum + 1,
+                                                                                                 "***last***"   => $maxpage})
+            if($pagenum < $maxpage);
+
+        return $self -> {"template"} -> load_template("blocks/messagelist_paginate.tem", {"***pagenum***" => $pagenum + 1,
+                                                                                          "***maxpage***" => $maxpage + 1,
+                                                                                          "***pages***"   => $pagelist});
+    # If there's only one page, a simple "Page 1 of 1" will do the trick.
+    } else { # if($maxpage > 0) 
+        return $self -> {"template"} -> load_template("blocks/messagelist_paginate.tem", {"***pagenum***" => 1,
+                                                                                          "***maxpage***" => 1,
+                                                                                          "***pages***"   => ""});
+    }
+}
+
 
 # ============================================================================
 #  Content generation functions
 
+## @method $ generate_basic_messagepage($user, $info)
+# A convenience function to generate the message list and userdetails page. This will
+# create a basic view of the page, with optional info box. No errors can be shown
+# via this.
+#
+# @param $user A reference to a hash containing the user's data.
+# @param $info An optional info block to show in the page.
+# @return The messagelist page content.
+sub generate_basic_messagepage {
+    my $self = shift;
+    my $user = shift;
+    my $info = shift;
+
+    my $content = $self -> generate_messagelist(undef, $info);
+    $content .= $self -> generate_userdetails_form({"realname" => $user -> {"realname"},
+                                                    "rolename" => $user -> {"rolename"},
+                                                    "block"    => $self -> {"block"}});
+
+    return $content;
+}
+
+
+## @method $ generate_abort_form($message)
+# Generate a form prompting the user to confirm that a message should be aborted.
+#
+# @param messge A reference to a hash containing the message the user has selected to abort.
+# @return The message abort confirmation form.
+sub generate_abort_form {
+    my $self    = shift;
+    my $message = shift;
+    my $tem;
+
+    $tem -> {"cc"}  = $self -> {"template"} -> load_template("blocks/message_confirm_cc.tem");
+    $tem -> {"bcc"} = $self -> {"template"} -> load_template("blocks/message_confirm_bcc.tem");
+
+    my $outfields;
+    # work out the bcc/cc fields....
+    foreach my $mode ("cc", "bcc") {
+        for(my $i = 0; $i < 4; ++$i) {
+            # Append the cc/bcc if it is set...
+            $outfields -> {$mode} .= $self -> {"template"} -> process_template($tem -> {$mode}, {"***data***" => encode_entities($message -> {$mode} -> [$i])})
+                if($message -> {$mode} -> [$i]);
+        }
+    }
+
+    # Get the prefix sorted
+    if($message -> {"prefix_id"} == 0) {
+        $outfields -> {"prefix"} = $message -> {"prefixother"};
+    } else {
+        my $prefixh = $self -> {"dbh"} -> prepare("SELECT prefix FROM ".$self -> {"settings"} -> {"database"} -> {"prefixes"}."
+                                                   WHERE id = ?");
+        $prefixh -> execute($message -> {"prefix_id"})
+            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute prefix query: ".$self -> {"dbh"} -> errstr);
+
+        my $prefixr = $prefixh -> fetchrow_arrayref();
+        $outfields -> {"prefix"} = $prefixr ? $prefixr -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADPREFIX");
+    }
+
+    $outfields -> {"delaysend"} = $self -> {"template"} -> load_template($message -> {"delaysend"} ? "blocks/message_edit_delay.tem" : "blocks/message_edit_nodelay.tem",
+                                                                         {"***delay***" => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delaysend"})});
+
+    # Simple HTML fix for the message...
+    ($outfields -> {"message"} = $message -> {"message"}) =~ s/\n/<br \/>\n/g;
+
+    # And build the message block itself. Kinda big and messy, this...
+    my $body = $self -> {"template"} -> load_template("blocks/message_abort.tem", {"***targmatrix***"  => $self -> build_target_matrix($message -> {"targset"}, 1),
+                                                                                   "***cc***"          => $outfields -> {"cc"},
+                                                                                   "***bcc***"         => $outfields -> {"bcc"},
+                                                                                   "***prefix***"      => $outfields -> {"prefix"},
+                                                                                   "***subject***"     => $message -> {"subject"},
+                                                                                   "***message***"     => $outfields -> {"message"},
+                                                                                   "***delaysend***"   => $outfields -> {"delaysend"},
+                                                                               });
+
+    # Need to store the message id, so the code knows which message to update.
+    my $hiddenargs = $self -> {"template"} -> load_template("hiddenarg.tem", {"***name***"  => "msgid",
+                                                                              "***value***" => $message -> {"id"}});
+
+    # Send back the form.
+    return $self -> {"template"} -> load_template("form.tem", {"***content***" => $body,
+                                                               "***args***"    => $hiddenargs,
+                                                               "***block***"   => $self -> {"block"}});
+}
+
+
+## @method $ generate_messagelist($error, $info)
+# Generate the list of messages to show to the user, including navigation controls.
+#
+# @param error An error message to show on the page. This will be wrapped in an error box for you.
+# @param info An info box to show on the page. Will not be wrapped!
+# @return A string containing the message list.
 sub generate_messagelist {
     my $self  = shift;
     my $error = shift;
+    my $info  = shift;
 
     # First stage; we need to get a list of the user's messages. All of them.
-    # We can't rely on SQL LIMIT and ORDER BY to get it right, unfortunately. 
+    # We can't rely on SQL LIMIT and ORDER BY to get it right, unfortunately.
     my $messh = $self -> {"dbh"} -> prepare("SELECT id, status, subject, updated, sent
                                              FROM ".$self -> {"settings"} -> {"database"} -> {"messages"}."
                                              WHERE user_id = ?");
@@ -239,15 +469,15 @@ sub generate_messagelist {
     # Now the viewable splice can be extracted.
     # Find out how many pages there are...
     my $maxpage = int(scalar(@sorted) / $self -> {"settings"} -> {"config"} -> {"UserMessages:pagelength"});
-    
+
     # And which page the user is looking at
-    my $pagenum   = is_defined_numeric($self -> {"cgi"}, "page") || 0;                                                                                                               
+    my $pagenum   = is_defined_numeric($self -> {"cgi"}, "page") || 0;
     $pagenum = 0        if($pagenum < 0);
     $pagenum = $maxpage if($pagenum > $maxpage);
 
     # Get the splice. Probably a nicer way to do this, but hell, it works.
     my @spliced = splice(@sorted, $pagenum * $self -> {"settings"} -> {"config"} -> {"UserMessages:pagelength"}, $self -> {"settings"} -> {"config"} -> {"UserMessages:pagelength"});
-    
+
     # Precache the row template to speed things up
     my $rowtem = $self -> {"template"} -> load_template("blocks/messagelist_row.tem", {"***sort***" => $sort,
                                                                                        "***way***"  => $way,
@@ -260,6 +490,10 @@ sub generate_messagelist {
                                                                                                           "***page***" => $pagenum});
     }
 
+    # Visibility templates
+    my @vistem = ($self -> {"template"} -> load_template("blocks/messagelist_invisible.tem"),
+                  $self -> {"template"} -> load_template("blocks/messagelist_visible.tem"));
+
     # Process the rows...
     my $rows = "";
     foreach my $message (@spliced) {
@@ -267,9 +501,13 @@ sub generate_messagelist {
                                                                      "***status***"  => $message -> {"status"},
                                                                      "***subject***" => $message -> {"subject"},
                                                                      "***updated***" => $self -> {"template"} -> format_time($message -> {"updated"}),
+                                                                     "***visible***" => $vistem[$message -> {"visible"}],
                                                                      "***sent***"    => $message -> {"sent"} ? $self -> {"template"} -> format_time($message -> {"sent"}) : $self -> {"template"} -> replace_langvar("MSGLIST_NOTSENT"),
                                                                      "***ops***"     => $self -> {"template"} -> process_template($optems -> {$message -> {"status"}}, {"***id***" => $message -> {"id"}})});
     }
+
+    # If there are no rows, output a "No messages" row
+    $rows = $self -> {"template"} -> load_template("blocks/messagelist_empty.tem") if(!$rows);
 
     # Preload the sort templates
     my $sorttems = {};
@@ -279,7 +517,7 @@ sub generate_messagelist {
 
     # Work out the sort controls for each column
     my $sortcols = {};
-    foreach my $colname ("state", "subject", "updated", "sent") {
+    foreach my $colname ("state", "subject", "updated", "sent", "visible") {
         if($sort eq $colname) {
             $sortcols -> {$colname} = $self -> {"template"} -> process_template($sorttems -> {$way}, {"***sort***" => $colname});
         } else {
@@ -297,12 +535,14 @@ sub generate_messagelist {
 
     # Put the table together
     return $self -> {"template"} -> load_template("blocks/messagelist.tem", {"***error***"       => $error,
-                                                                             "***naviation***"   => "", # FIXME: PAGINATION
+                                                                             "***info***"        => $info,
+                                                                             "***navigation***"  => $self -> build_navigation($maxpage, $pagenum, $sort, $way), # FIXME: PAGINATION
                                                                              "***statepopup***"  => $statepopup,
                                                                              "***sortstate***"   => $sortcols -> {"state"},
                                                                              "***sortsubject***" => $sortcols -> {"subject"},
                                                                              "***sortupdated***" => $sortcols -> {"updated"},
                                                                              "***sortsent***"    => $sortcols -> {"sent"},
+                                                                             "***sortvisible***" => $sortcols -> {"visible"},
                                                                              "***messages***"    => $rows});
 }
 
@@ -321,7 +561,6 @@ sub page_display {
     # User must be logged in before we can do anything else
     if($self -> {"session"} -> {"sessuser"} && $self -> {"session"} -> {"sessuser"} != $self -> {"session"} -> {"auth"} -> {"ANONYMOUS"}) {
         $title    = $self -> {"template"} -> replace_langvar("MSGLIST_TITLE");
-        $content .= $self -> generate_messagelist();
 
         # Get the user's data, as it'll be needed...
         my $user = $self -> {"session"} -> {"auth"} -> get_user_byid($self -> {"session"} -> {"sessuser"});
@@ -333,7 +572,7 @@ sub page_display {
             # Check the details the user submitted, send back the form if they messed up...
             ($userargs, $usererrors) = $self -> validate_userdetails();
 
-            # We need to make sure we have a few values in $args, even if validation failed, so add them now
+            # We need to make sure we have a few values in $userargs, even if validation failed, so add them now
             $userargs -> {"block"}   = $self -> {"block"};
             $userargs -> {"user_id"} = $self -> {"session"} -> {"sessuser"};
 
@@ -343,18 +582,33 @@ sub page_display {
             } else {
                 # Details were valid, update them and then give the user the loggedin form.
                 $self -> update_userdetails($userargs);
-                $content  .= $self -> generate_userdetails_form($userargs, $usererrors);
+                $content .= $self -> generate_messagelist();
+                $content .= $self -> generate_userdetails_form($userargs, $usererrors);
             }
+
+        # Has the user asked to cancel a message? If so, send the cancel form
+        } elsif(defined($self -> {"cgi"} -> {"abortmsg"})) {
+            # Check that the message can be cancelled...
+            my $message = $self -> check_abort();
+            return $message unless(ref($message) eq "HASH");
+
+            $content = $self -> generate_abort_form($message);
+
+        # Has the user confirmed the abort?
+        } elsif($self -> {"cgi"} -> param("killmsg")) {
+            # Check that the message can be cancelled...
+            my $message = $self -> check_abort();
+            return $message unless(ref($message) eq "HASH");
+
+            # Okay, we can cancel!
+            $self -> set_message_status($message -> {"id"}, "aborted");
+
+            $content = $self -> generate_basic_messagepage($user, $self -> {"template"} -> load_template("blocks/messagelist_aborted.tem"));
 
         # No recognised operations in progress - send the basic list and user details box
         } else {
-            $userargs = {"realname" => $user -> {"realname"},
-                         "rolename" => $user -> {"rolename"},
-                         "block"    => $self -> {"block"}};
-            $title    = $self -> {"template"} -> replace_langvar("MSGLIST_TITLE");
-            $content .= $self -> generate_userdetails_form($userargs, $usererrors);
+            $content = $self -> generate_basic_messagepage($user);
         }
-
 
     # User has not logged in, force them to
     } else {
