@@ -141,7 +141,7 @@ sub page_display {
             # If we have user name and role set, we're done
             if($user -> {"realname"} && $user -> {"rolename"}) {
                 $title   = $self -> {"template"} -> replace_langvar("MESSAGE_CONFIRM");
-                $content = $self -> generate_message_confirmform($msgid, $args);
+                $content = $self -> generate_message_confirmform($msgid, $args, {"msgid" => $msgid});
 
             # No user details - we need to poke the user to get the details set
             } else {
@@ -192,12 +192,12 @@ sub page_display {
                 $self -> update_userdetails($args);
 
                 $title   = $self -> {"template"} -> replace_langvar("MESSAGE_CONFIRM");
-                $content = $self -> generate_message_confirmform($msgid, $message);
+                $content = $self -> generate_message_confirmform($msgid, $message, {"msgid" => $msgid});
             }
         # Has the user asked to update the message?
         } elsif($self -> {"cgi"} -> param("editmsg")) {
             $title   = $self -> {"template"} -> replace_langvar("MESSAGE_EDIT");
-            $content = $self -> generate_message_editform($msgid, $message);
+            $content = $self -> generate_message_editform($msgid, $message, {"msgid" => $msgid});
 
         # Has the user submitted the update form?
         } elsif($self -> {"cgi"} -> param("updatemsg")) {
@@ -207,7 +207,7 @@ sub page_display {
             # If we have errors, send back the edit form...
             if($form_errors) {
                 $title   = $self -> {"template"} -> replace_langvar("MESSAGE_EDIT");
-                $content = $self -> generate_message_editform($msgid, $args, $form_errors);
+                $content = $self -> generate_message_editform($msgid, $args, {"msgid" => $msgid}, $form_errors);
 
             # Otherwise, update the message and send back the confirm
             } else {
@@ -215,7 +215,7 @@ sub page_display {
                 $msgid = $self -> update_message($msgid, $args, $user);
 
                 $title   = $self -> {"template"} -> replace_langvar("MESSAGE_CONFIRM");
-                $content = $self -> generate_message_confirmform($msgid, $args);
+                $content = $self -> generate_message_confirmform($msgid, $args, {"msgid" => $msgid});
             }
         # Has the user confirmed message send?
         } elsif($self -> {"cgi"} -> param("dosend")) {

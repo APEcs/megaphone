@@ -524,20 +524,22 @@ sub validate_message {
 # ============================================================================
 #  Content generation functions
 
-## @method $ generate_message_editform($msgid, $args, $error)
+## @method $ generate_message_editform($msgid, $args, $hidden, $error)
 # Generate the message edit form to send to the user. This will wrap any specified
 # error in an appropriate block before inserting it into the message block. Any
 # arguments set in the provided args hash are filled in on the form.
 #
 # @param msgid The ID of the message being edited.
 # @param args  A reference to a hash containing the default values to show in the form.
+# @param hidden A reference to a hash of keys and values to store in hidden input fields.
 # @param error An error message to show at the start of the form.
 # @return A string containing the message form.
 sub generate_message_editform {
-    my $self  = shift;
-    my $msgid = shift;
-    my $args  = shift || { };
-    my $error = shift;
+    my $self   = shift;
+    my $msgid  = shift;
+    my $args   = shift || { };
+    my $hidden = shift;
+    my $error  = shift;
 
     # Wrap the error message in a message box if we have one.
     $error = $self -> {"template"} -> load_template("blocks/error_box.tem", {"***message***" => $error})
@@ -567,9 +569,14 @@ sub generate_message_editform {
                                                                                   "***targmatrix***"  => $self -> build_target_matrix($args -> {"targset"}),
                                                                                   "***prefix***"      => $self -> build_prefix($args -> {"prefix_id"}),
                                                                               });
-    # Need to store the message id, so the code knows which message to update.
-    my $hiddenargs = $self -> {"template"} -> load_template("hiddenarg.tem", {"***name***"  => "msgid",
-                                                                              "***value***" => $msgid});
+
+    # store any hidden args...
+    my $hiddenargs = "";
+    my $hidetem = $self -> {"template"} -> load_template("hiddenarg.tem");
+    foreach my $key (keys(%{$hidden})) {
+        $hiddenargs .= $self -> {"template"} -> process_template($hidetem, {"***name***"  => $key,
+                                                                            "***value***" => $hidden -> {$key}});
+    }
 
     # Send back the form.
     return $self -> {"template"} -> load_template("form.tem", {"***content***" => $body,
@@ -578,16 +585,18 @@ sub generate_message_editform {
 }
 
 
-## @method $ generate_message_confirmform($msgid, $args)
+## @method $ generate_message_confirmform($msgid, $args, $hidden)
 # Generate a form from which the user may opt to send the message, or go back and edit it.
 #
-# @param msgid The ID of the message being viewed.
-# @param args  A reference to a hash containing the message data.
+# @param msgid  The ID of the message being viewed.
+# @param args   A reference to a hash containing the message data.
+# @param hidden A reference to a hash of keys and values to store in hidden input fields.
 # @return A form the user may used to confirm the message or go to edit it.
 sub generate_message_confirmform {
-    my $self  = shift;
-    my $msgid = shift;
-    my $args  = shift || { };
+    my $self   = shift;
+    my $msgid  = shift;
+    my $args   = shift || { };
+    my $hidden = shift;
     my $tem;
 
     $tem -> {"cc"}  = $self -> {"template"} -> load_template("blocks/message_confirm_cc.tem");
@@ -632,9 +641,13 @@ sub generate_message_confirmform {
                                                                                      "***delaysend***"   => $outfields -> {"delaysend"},
                                                                                  });
 
-    # Need to store the message id, so the code knows which message to update.
-    my $hiddenargs = $self -> {"template"} -> load_template("hiddenarg.tem", {"***name***"  => "msgid",
-                                                                              "***value***" => $msgid});
+    # store any hidden args...
+    my $hiddenargs = "";
+    my $hidetem = $self -> {"template"} -> load_template("hiddenarg.tem");
+    foreach my $key (keys(%{$hidden})) {
+        $hiddenargs .= $self -> {"template"} -> process_template($hidetem, {"***name***"  => $key,
+                                                                            "***value***" => $hidden -> {$key}});
+    }
 
     # Send back the form.
     return $self -> {"template"} -> load_template("form.tem", {"***content***" => $body,
@@ -732,6 +745,7 @@ sub generate_fatal {
 
     # return the filled in page template
     return $self -> {"template"} -> load_template("page.tem", {"***title***"     => $self -> {"template"} -> replace_langvar("FATAL_TITLE"),
+                                                               "***topright***"  => $self -> generate_topright(),
                                                                "***extrahead***" => "",
                                                                "***content***"   => $content});
 }
