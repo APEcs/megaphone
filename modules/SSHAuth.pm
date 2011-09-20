@@ -97,7 +97,7 @@ sub get_config {
 sub get_user_byid {
     my $self     = shift;
     my $userid   = shift;
-    my $onlyreal = shift;
+    my $onlyreal = shift || 0;
 
     my $userh = $self -> {"dbh"} -> prepare("SELECT * FROM ".$self -> {"settings"} -> {"database"} -> {"users"}."
                                              WHERE user_id = ?".
@@ -105,7 +105,14 @@ sub get_user_byid {
     $userh -> execute($userid)
         or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute user lookup query. Error was: ".$self -> {"dbh"} -> errstr);
 
-    return $userh -> fetchrow_hashref();
+    my $user = $userh -> fetchrow_hashref();
+
+    # We have a 'real' user, but are they listed in the authorised users?
+    my $type = $self -> _authorised_user($user -> {"username"});
+    return undef if(!defined($type));
+
+    # Authorised user!
+    return $user;
 }
 
 
