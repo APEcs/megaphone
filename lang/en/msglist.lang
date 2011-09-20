@@ -3,12 +3,16 @@ MSGLIST_INTRO   = Here you may view the complete history of messages you are res
 MSGLIST_OPS     = &nbsp;
 MSGLIST_SUBJECT = Subject
 MSGLIST_UPDATED = Updated
+MSGLIST_VISIBLE = Visible?
 MSGLIST_SENT    = Sent
 MSGLIST_NOTSENT = Not sent
+MSGLIST_EMPTY   = You have not composed any messages yet.
 
 MSGLIST_EDIT    = Edit this message
 MSGLIST_ABORT   = Cancel this message
 MSGLIST_SEND    = Send this message immediately
+
+MSGLIST_ABORTED = The selected message has been cancelled and will not be sent.
 
 MSGLIST_STATE_TITLE      = States
 MSGLIST_STATE_DESC       = Messages in the system can be in one of several different states. The states are shown here as icons, with the following meanings:
@@ -17,3 +21,11 @@ MSGLIST_STATE_PENDING    = This message is in a 'pending' state, meaning that it
 MSGLIST_STATE_SENT       = This message has been sent. You can view it, but you won't be able to edit it or prevent it from being sent. <strong>YOU SENT IT. YOU CAN'T UN-SEND IT!</strong>
 MSGLIST_STATE_EDITED     = This is an old version of a message that has been edited. All your message edits are retained for reference and auditing. You can not edit an edited message, and it will never be sent in its current form.
 MSGLIST_STATE_ABORTED    = This is an aborted message, one that was cancelled during its pending period. Aborted messages may be edited to create a new sendable message.
+
+
+NAVBOX_FIRST  = First
+NAVBOX_PREV   = Prev
+NAVBOX_NEXT   = Next
+NAVBOX_LAST   = Last
+NAVBOX_PAGE   = Page
+NAVBOX_PAGEOF = of
