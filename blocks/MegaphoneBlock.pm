@@ -163,8 +163,13 @@ sub update_message {
     my $args  = shift;
     my $user  = shift;
 
-    # Switch the old message to 'edited' status
-    $self -> set_message_status($msgid, "edited");
+    # Check that the message can be edited.
+    my $message = $self -> get_message($msgid);
+    die_log($self -> {"cgi"} -> remote_host(), "Attempt to edit message $msgid when it is in an uneditable state. Giving up in disgust.")
+        unless($message -> {"status"} eq "incomplete" || $message -> {"status"} eq "pending" || $message -> {"status"} eq "aborted");
+
+    # Switch the old message to 'edited' status if needed (we don't want to change aborted messages)
+    $self -> set_message_status($msgid, "edited") unless($message -> {"status"} eq "aborted");
 
     # Create a new message
     return $self -> store_message($args, $user);
