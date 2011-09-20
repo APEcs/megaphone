@@ -642,6 +642,41 @@ sub page_display {
 
             $content = $self -> generate_message_editform($message -> {"id"}, $message);
 
+        # User submitted update, check it and send back the confirm page
+        } elsif($self -> {"cgi"} -> param("updatemsg")) {
+            # Check that the message can be edited...
+            my $message = $self -> check_edit();
+            return $message unless(ref($message) eq "HASH");
+
+            # check the form contents...
+            my ($args, $form_errors) = $self -> validate_message();
+
+            # If we have errors, send back the edit form...
+            if($form_errors) {
+                $title   = $self -> {"template"} -> replace_langvar("MESSAGE_EDIT");
+                $content = $self -> generate_message_editform($message -> {"id"}, $args, $form_errors);
+
+            # Otherwise, update the message and send back the confirm
+            } else {
+                # Update the message, note the change to the msgid here!!
+                my $msgid = $self -> update_message($message -> {"id"}, $args, $user);
+
+                $title   = $self -> {"template"} -> replace_langvar("MESSAGE_CONFIRM");
+                $content = $self -> generate_message_confirmform($msgid, $args);
+            }
+
+        # Has the user confirmed message send?
+        } elsif($self -> {"cgi"} -> param("dosend")) {
+            # Check that the message can be edited...
+            my $message = $self -> check_edit();
+            return $message unless(ref($message) eq "HASH");
+
+            # push the message to "pending" and then send it
+            $self -> set_message_status($message -> {"id"}, "pending");
+            $self -> send_message($message ->{"id"});
+
+            $content = $self -> generate_basic_messagepage($user, $self -> {"template"} -> load_template("blocks/messagelist_edited.tem"));
+
         # No recognised operations in progress - send the basic list and user details box
         } else {
             $content = $self -> generate_basic_messagepage($user);
