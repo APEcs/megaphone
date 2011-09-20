@@ -47,7 +47,7 @@ sub store_message {
                                              (user_id, prefix_id, prefix_other, subject, message, delaysend, created, updated)
                                              VALUES(?, ?, ?, ?, ?, ?, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())");
     $messh -> execute($user -> {"user_id"},
-                      $args -> {"prefix"},
+                      $args -> {"prefix_id"},
                       $args -> {"prefixother"},
                       $args -> {"subject"},
                       $args -> {"message"},
@@ -478,7 +478,7 @@ sub validate_message {
     # Check that the selected prefix is valid...
     # Has the user selected the 'other prefix' option? If so, check they enetered a prefixe
     if($self -> {"cgi"} -> param("prefix") == 0) {
-        $args -> {"prefix"} = 0;
+        $args -> {"prefix_id"} = 0;
         ($args -> {"prefixother"}, $error) = $self -> validate_string("prefixother", {"required" => 1,
                                                                                       "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_PREFIX"),
                                                                                       "minlen"   => 1,
@@ -486,10 +486,10 @@ sub validate_message {
     # User has selected a prefix, check it is valid
     } else {
         $args -> {"prefixother"} = undef;
-        ($args -> {"prefix"}, $error) = $self -> validate_options("prefix", {"required" => 1,
-                                                                             "source"   => $self -> {"settings"} -> {"database"} -> {"prefixes"},
-                                                                             "where"    => "WHERE id = ?",
-                                                                             "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_PREFIX")});
+        ($args -> {"prefix_id"}, $error) = $self -> validate_options("prefix", {"required" => 1,
+                                                                                "source"   => $self -> {"settings"} -> {"database"} -> {"prefixes"},
+                                                                                "where"    => "WHERE id = ?",
+                                                                                "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_PREFIX")});
     }
     $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error}) if($error);
 
@@ -560,7 +560,7 @@ sub generate_message_editform {
                                                                                   "***delaysend***"   => $args -> {"delaysend"} ? 'checked="checked"' : "",
                                                                                   "***delay***"       => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delaysend"}),
                                                                                   "***targmatrix***"  => $self -> build_target_matrix($args -> {"targset"}),
-                                                                                  "***prefix***"      => $self -> build_prefix($args -> {"prefix"}),
+                                                                                  "***prefix***"      => $self -> build_prefix($args -> {"prefix_id"}),
                                                                               });
     # Need to store the message id, so the code knows which message to update.
     my $hiddenargs = $self -> {"template"} -> load_template("hiddenarg.tem", {"***name***"  => "msgid",
@@ -599,12 +599,12 @@ sub generate_message_confirmform {
     }
 
     # Get the prefix sorted
-    if($args -> {"prefix"} == 0) {
+    if($args -> {"prefix_id"} == 0) {
         $outfields -> {"prefix"} = $args -> {"prefixother"};
     } else {
         my $prefixh = $self -> {"dbh"} -> prepare("SELECT prefix FROM ".$self -> {"settings"} -> {"database"} -> {"prefixes"}."
                                                    WHERE id = ?");
-        $prefixh -> execute($args -> {"prefix"})
+        $prefixh -> execute($args -> {"prefix_id"})
             or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute prefix query: ".$self -> {"dbh"} -> errstr);
 
         my $prefixr = $prefixh -> fetchrow_arrayref();
@@ -755,8 +755,24 @@ sub generate_topright {
 #  Message send functions
 
 sub send_message {
-    my $self = shift;
+    my $self  = shift;
+    my $msgid = shift;
+    my $force = shift;
 
+    # Get the message data, so we know what to do with it
+    my $message = $self -> get_message($msgid);
+
+    # If the message is set to "incomplete", push it to "pending"
+    $self -> set_message_status($msgid, "pending") if($message -> {"status"} eq "incomplete");
+
+    # We can only work with "pending" messages
+    die_log($self -> {"cgi"} -> remote_host(), "Attempt to send a message that is not in a sendable state. This should not happen.")
+        unless($message -> {"status"} eq "pending" || $message -> {"status"} eq "incomplete"); # need to check for incomplete, as the set above won't change $message
+
+    # If the message has no delay, or force is enabled, send it
+    if($force || !$message -> {"delaysend"}) {
+        # TODO: SEND MESSAGE
+    }
 }
 
 1;
