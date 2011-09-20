@@ -304,3 +304,26 @@ ul#states li {
 .cleared {
     clear: both;
 }
+
+div.paginate {                                                                                                                                        
+    text-align: right;                                                                                                                                
+    height: 1.5em;                                                                                                                                    
+    margin-bottom: 0.5em;                                                                                                                             
+    margin-top: 0.5em;
+}                                                                                                                                                     
+                                                                                                                                                      
+span.pagebox {                                                                                                                                        
+    border: 1px solid #cedfeb;                                                                                                                        
+    vertical-align: middle;                                                                                                                           
+    padding: 3px;                                                                                                                                     
+    background-color: #e2e6f8;                                                                                                                        
+    margin-left: 1px;                                                                                                                                 
+}                                                                                                                                                     
+                                                                                                                                                      
+span.active {                                                                                                                                         
+    background-color: #c1c1ff;                                                                                                                        
+}                                                                                                                                                     
+                                                                                                                                                      
+img.pageimg {                                                                                                                                         
+    vertical-align: middle;                                                                                                                           
+}
