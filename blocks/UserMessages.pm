@@ -278,10 +278,36 @@ sub check_abort {
     return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_BADMSGID")) if(!$message);
 
     # Can't cancel messages unless they are 'pending'
-    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_BADMSGSTATE")) unless($message -> {"status"} eq "pending");
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_MSGNOKILL")) unless($message -> {"status"} eq "pending");
 
     return $message;
 }
+
+
+## @method $ check_edit()
+# Determine whether the message selected by the user can be edited, including
+# verifying that the message has been specified, and is editable.
+#
+# @return A reference to the message data if it can be edited, or a string
+#         containing an error page if it can't
+sub check_edit {
+    my $self = shift;
+
+    # Get the message id...
+    my $msgid = is_defined_numeric($self -> {"cgi"}, "msgid");
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_NOMSGID")) if(!$msgid);
+
+    # Get the message data
+    my $message = $self -> get_message($msgid);
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_BADMSGID")) if(!$message);
+
+    # Can't edit messages unless they are incomplete, pending, or aborted
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_MSGNOEDIT"))
+        unless($message -> {"status"} eq "incomplete" || $message -> {"status"} eq "pending" || $message -> {"status"} eq "aborted");
+
+    return $message;
+}
+
 
 
 # ============================================================================
@@ -337,7 +363,7 @@ sub build_navigation {
                                                                                           "***maxpage***" => $maxpage + 1,
                                                                                           "***pages***"   => $pagelist});
     # If there's only one page, a simple "Page 1 of 1" will do the trick.
-    } else { # if($maxpage > 0) 
+    } else { # if($maxpage > 0)
         return $self -> {"template"} -> load_template("blocks/messagelist_paginate.tem", {"***pagenum***" => 1,
                                                                                           "***maxpage***" => 1,
                                                                                           "***pages***"   => ""});
@@ -604,6 +630,17 @@ sub page_display {
             $self -> set_message_status($message -> {"id"}, "aborted");
 
             $content = $self -> generate_basic_messagepage($user, $self -> {"template"} -> load_template("blocks/messagelist_aborted.tem"));
+
+        # Has the user asked to edit a message? If so, send the message edit form
+        } elsif(defined($self -> {"cgi"} -> param("editmsg"))) {
+            # Check that the message can be edited...
+            my $message = $self -> check_edit();
+            return $message unless(ref($message) eq "HASH");
+
+            # If the message is 'pending', switch it to 'incomplete' to make sure it doesn't get sent while the user is editing it!
+            $self -> set_message_status($message -> {"id"}, "incomplete") if($message -> {"status"} eq "pending");
+
+            $content = $self -> generate_message_editform($message -> {"id"}, $message);
 
         # No recognised operations in progress - send the basic list and user details box
         } else {
