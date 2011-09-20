@@ -154,7 +154,14 @@ sub valid_user {
     # First, determine whether the user is valid
     return undef unless($self -> _ssh_valid_user($username, $password));
 
-    # User is valid, can we get their data?
+    # User is valid, are they authorised?
+    my $usertype = $self -> _authorised_user($username);
+    if(!defined($usertype)) {
+        $self -> {"lasterr"} = "You are not authorised to use this web application. If you feel this is incorrect, please contact moodlesupport.";
+        return undef;
+    }
+
+    # can we get their data?
     my $user = $self -> _get_user_byusername($username);
 
     # If we have a user, our work is done
@@ -162,9 +169,9 @@ sub valid_user {
 
     # No record for this user, need to make one...
     my $newuser = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"users"}."
-                                               (username, created, updated) 
-                                               VALUES(?, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())");
-    $newuser -> execute($username)
+                                               (username, user_type, created, updated) 
+                                               VALUES(?, ?, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())");
+    $newuser -> execute($username, $usertype)
         or die_log($self -> {"cgi"} -> remote_host(), "FATAL: Unable to create new user record: ".$self -> {"dbh"} -> errstr);
 
     $user =  $self -> _get_user_byusername($username);
@@ -249,6 +256,32 @@ sub _ssh_valid_user {
     }
 
     return 0;
+}
+
+
+## @method $ _authorised_user($username)
+# Determine whether the user is allowed to use the web application.
+# This will check the username against the authorised users table, and if the
+# user is present this will return their user type. If the user is not listed
+# in the authorised users table, this returns undef and they should not get
+# access!
+#
+# @param username The username to check.
+# @return the user's initial type if found, undef otherwise.
+sub _authorised_user {
+    my $self     = shift;
+    my $username = shift;
+
+    my $userh = $self -> {"dbh"} -> prepare("SELECT user_type FROM ".$self -> {"settings"} -> {"database"} -> {"authorised"}."
+                                             WHERE username LIKE ?");
+    $userh -> execute($username)
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to look up user authorisation: ".$self -> {"dbh"} -> errstr);
+
+    # If we have a user entry, return their type
+    my $user = $userh -> fetchrow_arrayref();
+    return $user -> [0] if($user);
+
+    return undef;
 }
 
 1;
