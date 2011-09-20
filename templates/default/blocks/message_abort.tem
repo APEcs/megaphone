@@ -1,0 +1,36 @@
+        <div class="message">
+            <h2>{L_MESSAGE_ABORTTITLE}</h2>
+            <div class="mbody">
+                <img src="templates/default/images/abortmessage.png" width="48" height="48" alt="abort" class="fltrt" />
+                <div>{L_MESSAGE_ABORTINTRO}</div>
+                <div class="cleared"></div>
+                <table class="formtable">
+                    <tr>
+                        <td class="label top">{L_MESSAGE_DESTS}:</td>
+                        <td class="field">***targmatrix***</td>
+                    </tr>
+***cc***
+***bcc***
+                    <tr>
+                        <td class="label">{L_MESSAGE_PREFIX}:</td>
+                        <td class="field">***prefix***</td>
+                    </tr>
+                    <tr>
+                        <td class="label">{L_MESSAGE_SUBJECT}:</td>
+                        <td class="field">***subject***</td>
+                    </tr>
+                    <tr>
+                        <td class="label top">{L_MESSAGE_MESSAGE}:</td>
+                        <td class="field"><div class="messageview">***message***</div></td>
+                    </tr>
+                    <tr>
+                        <td class="label">{L_MESSAGE_CONFDELAY}:</td>
+                        <td class="field">***delaysend***</td>
+                    </tr>
+                    <tr>
+                        <td class="label"></td>
+                        <td class="field"><input type="submit" name="killmsg" id="killmsg" value="{L_MESSAGE_ABORT}" /> <input type="submit" name="cancel" id="cancel" value="{L_MESSAGE_CANCEL}" /></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
