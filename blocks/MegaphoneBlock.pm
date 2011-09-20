@@ -762,12 +762,9 @@ sub send_message {
     # Get the message data, so we know what to do with it
     my $message = $self -> get_message($msgid);
 
-    # If the message is set to "incomplete", push it to "pending"
-    $self -> set_message_status($msgid, "pending") if($message -> {"status"} eq "incomplete");
-
     # We can only work with "pending" messages
     die_log($self -> {"cgi"} -> remote_host(), "Attempt to send a message that is not in a sendable state. This should not happen.")
-        unless($message -> {"status"} eq "pending" || $message -> {"status"} eq "incomplete"); # need to check for incomplete, as the set above won't change $message
+        unless($message -> {"status"} eq "pending");
 
     # If the message has no delay, or force is enabled, send it
     if($force || !$message -> {"delaysend"}) {

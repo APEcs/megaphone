@@ -219,6 +219,8 @@ sub page_display {
             }
         # Has the user confirmed message send?
         } elsif($self -> {"cgi"} -> param("dosend")) {
+            # push the message to "pending" and then send it
+            $self -> set_message_status($msgid, "pending");
             $self -> send_message($msgid);
 
             $title   = $self -> {"template"} -> replace_langvar("MESSAGE_DONE_TITLE");
