@@ -1,0 +1,3 @@
+<div class="paginate">
+<span class="pagebox">{L_NAVBOX_PAGE} ***pagenum*** {L_NAVBOX_PAGEOF} ***maxpage***</span>***pages***
+</div>
