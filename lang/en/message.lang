@@ -38,3 +38,9 @@ MESSAGE_CONFTITLE     = Confirm message
 MESSAGE_CONFIRM       = Confirm message
 MESSAGE_CONFINTRO     = <strong>Your message has not been sent yet!</strong> Please check through the contents of your message as shown here, and either click 'Send message' to confirm that it should be sent, or click 'Update message' to edit it.
 MESSAGE_CONFDELAY     = Delay sending
+
+MESSAGE_ABORT         = Abort message
+MESSAGE_CANCEL        = Cancel
+MESSAGE_ABORTTITLE    = Cancel a message
+MESSAGE_ABORTINTRO    = You have selected the option to prevent the message below from being sent. Please check to confirm that this is the message you want to cancel, if so click "Abort message". Otherwise click "Cancel" to return to the message list.
+
