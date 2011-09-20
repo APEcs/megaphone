@@ -6,3 +6,4 @@ FATAL_BADMSGID  = Message id is invalid. This should not happen!
 FATAL_MSGSENT   = Message has already been sent or aborted, unable to edit it. This should not happen!
 FATAL_MSGNOKILL = The selected message can not be aborted. Only messages currently in the 'pending' state may be aborted.
 FATAL_MSGNOEDIT = The selected message can not be edited. Only messages currently in the 'incomplete', 'pending', or 'aborted' state may be edited.
+FATAL_MSGNOSEND = The selected message can not be sent. Only messages currently in the 'pending' state may be sent immediately.

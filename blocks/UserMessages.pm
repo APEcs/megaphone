@@ -308,6 +308,29 @@ sub check_edit {
     return $message;
 }
 
+## @method $ check_send()
+# Determine whether the message selected by the user can be sent immediately including
+# verifying that the message has been specified, and is sendable.
+#
+# @return A reference to the message data if it can be sent, or a string
+#         containing an error page if it can't
+sub check_send {
+    my $self = shift;
+
+    # Get the message id...
+    my $msgid = is_defined_numeric($self -> {"cgi"}, "msgid");
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_NOMSGID")) if(!$msgid);
+
+    # Get the message data
+    my $message = $self -> get_message($msgid);
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_BADMSGID")) if(!$message);
+
+    # Can't send messages unless they are pending
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_MSGNOSEND"))
+        unless($message -> {"status"} eq "pending");
+
+    return $message;
+}
 
 
 # ============================================================================
@@ -543,7 +566,7 @@ sub generate_messagelist {
 
     # Work out the sort controls for each column
     my $sortcols = {};
-    foreach my $colname ("state", "subject", "updated", "sent", "visible") {
+    foreach my $colname ("status", "subject", "updated", "sent", "visible") {
         if($sort eq $colname) {
             $sortcols -> {$colname} = $self -> {"template"} -> process_template($sorttems -> {$way}, {"***sort***" => $colname});
         } else {
@@ -564,7 +587,7 @@ sub generate_messagelist {
                                                                              "***info***"        => $info,
                                                                              "***navigation***"  => $self -> build_navigation($maxpage, $pagenum, $sort, $way), # FIXME: PAGINATION
                                                                              "***statepopup***"  => $statepopup,
-                                                                             "***sortstate***"   => $sortcols -> {"state"},
+                                                                             "***sortstate***"   => $sortcols -> {"status"},
                                                                              "***sortsubject***" => $sortcols -> {"subject"},
                                                                              "***sortupdated***" => $sortcols -> {"updated"},
                                                                              "***sortsent***"    => $sortcols -> {"sent"},
@@ -677,6 +700,15 @@ sub page_display {
 
             $content = $self -> generate_basic_messagepage($user, $self -> {"template"} -> load_template("blocks/messagelist_edited.tem"));
 
+        } elsif(defined($self -> {"cgi"} -> param("sendmsg"))) {
+            my $message = $self -> check_send();
+            return $message unless(ref($message) eq "HASH");
+
+            # Forcibly send the message...
+            $self -> send_message($message ->{"id"}, 1);
+
+            $content = $self -> generate_basic_messagepage($user, $self -> {"template"} -> load_template("blocks/messagelist_sent.tem"));
+            
         # No recognised operations in progress - send the basic list and user details box
         } else {
             $content = $self -> generate_basic_messagepage($user);

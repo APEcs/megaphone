@@ -14,6 +14,7 @@ MSGLIST_SEND    = Send this message immediately
 
 MSGLIST_ABORTED = The selected message has been cancelled and will not be sent.
 MSGLIST_EDITED  = The selected message has been edited. If you selected the delayed send option it is now pending in the list below, otherwise it is being sent as you read this!
+MSGLIST_SENTNOW = The selected message has been sent. The delay timer on the message has been zeroed, and it is being sent as you read this.
 
 MSGLIST_STATE_TITLE      = States
 MSGLIST_STATE_DESC       = Messages in the system can be in one of several different states. The states are shown here as icons, with the following meanings:
