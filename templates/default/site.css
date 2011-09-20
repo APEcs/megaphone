@@ -300,3 +300,7 @@ table.messagelist th {
 ul#states li {
     padding-bottom: 0.5em;
 }
+
+.cleared {
+    clear: both;
+}

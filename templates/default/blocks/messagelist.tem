@@ -4,6 +4,7 @@
                 <img src="templates/default/images/messagelist.png" width="48" height="48" alt="message list" class="fltrt" />
 ***error***
                 <div>{L_MSGLIST_INTRO}</div>
+                <div class="cleared"></div>
 ***navigation***
                 <table class="zebra messagelist" style="width: 100%">
                 <tr>
