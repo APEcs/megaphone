@@ -3,6 +3,7 @@
             <div class="mbody">
                 <img src="templates/default/images/message.png" width="48" height="48" alt="message" class="fltrt" />
                 <div>{L_MESSAGE_CONFINTRO}</div>
+                <div class="cleared"></div>
                 <table class="formtable">
                     <tr>
                         <td class="label top">{L_MESSAGE_DESTS}:</td>
