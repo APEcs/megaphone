@@ -394,6 +394,29 @@ sub build_navigation {
 }
 
 
+## @method $ get_msglist_args($msgid)
+# Create a hash containing the currently set message list options.
+#
+# @param msgid The message id being worked on.
+# @return A reference to a hash containing the message list settings.
+sub get_msglist_args {
+    my $self  = shift;
+    my $msgid = shift;
+
+    my $args = { "msgid" => $msgid,
+                 "sort" => $self -> {"cgi"} -> param("sort") || "updated",
+                 "way"  => $self -> {"cgi"} -> param("way")  || "desc",
+                 "page" => is_defined_numeric($self -> {"cgi"}, "page") || 0 };
+
+    # Make sure the sort preferences are valid
+    $args -> {"sort"} = "updated" unless($args -> {"sort"} eq "status" || $args -> {"sort"} eq "subject" || $args -> {"sort"} eq "updated" || $args -> {"sort"} eq "sent");
+    $args -> {"way"}  = "desc" unless($args -> {"way"} eq "asc" || $args -> {"way"} eq "desc");
+    $args -> {"page"} = 0 if($args -> {"page"} < 0);
+
+    return $args;
+}
+
+
 # ============================================================================
 #  Content generation functions
 
@@ -419,14 +442,16 @@ sub generate_basic_messagepage {
 }
 
 
-## @method $ generate_abort_form($message)
+## @method $ generate_abort_form($message, $extraargs)
 # Generate a form prompting the user to confirm that a message should be aborted.
 #
 # @param messge A reference to a hash containing the message the user has selected to abort.
+# @param extraargs Extra arguments to store in hidden input elements.
 # @return The message abort confirmation form.
 sub generate_abort_form {
-    my $self    = shift;
-    my $message = shift;
+    my $self      = shift;
+    my $message   = shift;
+    my $extraargs = shift;
     my $tem;
 
     $tem -> {"cc"}  = $self -> {"template"} -> load_template("blocks/message_confirm_cc.tem");
@@ -470,10 +495,83 @@ sub generate_abort_form {
                                                                                    "***message***"     => $outfields -> {"message"},
                                                                                    "***delaysend***"   => $outfields -> {"delaysend"},
                                                                                });
+    # store any hidden args...
+    my $hiddenargs = "";
+    my $hidetem = $self -> {"template"} -> load_template("hiddenarg.tem");
+    foreach my $key (keys(%{$extraargs})) {
+        $hiddenargs .= $self -> {"template"} -> process_template($hidetem, {"***name***"  => $key,
+                                                                            "***value***" => $extraargs -> {$key}});
+    }
 
-    # Need to store the message id, so the code knows which message to update.
-    my $hiddenargs = $self -> {"template"} -> load_template("hiddenarg.tem", {"***name***"  => "msgid",
-                                                                              "***value***" => $message -> {"id"}});
+    # Send back the form.
+    return $self -> {"template"} -> load_template("form.tem", {"***content***" => $body,
+                                                               "***args***"    => $hiddenargs,
+                                                               "***block***"   => $self -> {"block"}});
+}
+
+
+## @method $ generate_view_form($message, $extraargs)
+# Generate a form containing a copy of the selected message. Pretty similar to
+# generate_abort_form(), but meh.
+#
+# @param messge    A reference to a hash containing the message the user has selected to abort.
+# @param extraargs Extra arguments to store in hidden input elements.
+# @return The message view form.
+sub generate_view_form {
+    my $self      = shift;
+    my $message   = shift;
+    my $extraargs = shift;
+    my $tem;
+
+    $tem -> {"cc"}  = $self -> {"template"} -> load_template("blocks/message_confirm_cc.tem");
+    $tem -> {"bcc"} = $self -> {"template"} -> load_template("blocks/message_confirm_bcc.tem");
+
+    my $outfields;
+    # work out the bcc/cc fields....
+    foreach my $mode ("cc", "bcc") {
+        for(my $i = 0; $i < 4; ++$i) {
+            # Append the cc/bcc if it is set...
+            $outfields -> {$mode} .= $self -> {"template"} -> process_template($tem -> {$mode}, {"***data***" => encode_entities($message -> {$mode} -> [$i])})
+                if($message -> {$mode} -> [$i]);
+        }
+    }
+
+    # Get the prefix sorted
+    if($message -> {"prefix_id"} == 0) {
+        $outfields -> {"prefix"} = $message -> {"prefixother"};
+    } else {
+        my $prefixh = $self -> {"dbh"} -> prepare("SELECT prefix FROM ".$self -> {"settings"} -> {"database"} -> {"prefixes"}."
+                                                   WHERE id = ?");
+        $prefixh -> execute($message -> {"prefix_id"})
+            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute prefix query: ".$self -> {"dbh"} -> errstr);
+
+        my $prefixr = $prefixh -> fetchrow_arrayref();
+        $outfields -> {"prefix"} = $prefixr ? $prefixr -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADPREFIX");
+    }
+
+    $outfields -> {"delaysend"} = $self -> {"template"} -> load_template($message -> {"delaysend"} ? "blocks/message_edit_delay.tem" : "blocks/message_edit_nodelay.tem",
+                                                                         {"***delay***" => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delaysend"})});
+
+    # Simple HTML fix for the message...
+    ($outfields -> {"message"} = $message -> {"message"}) =~ s/\n/<br \/>\n/g;
+
+    # And build the message block itself. Kinda big and messy, this...
+    my $body = $self -> {"template"} -> load_template("blocks/message_view.tem", {"***targmatrix***"  => $self -> build_target_matrix($message -> {"targset"}, 1),
+                                                                                   "***cc***"          => $outfields -> {"cc"},
+                                                                                   "***bcc***"         => $outfields -> {"bcc"},
+                                                                                   "***prefix***"      => $outfields -> {"prefix"},
+                                                                                   "***subject***"     => $message -> {"subject"},
+                                                                                   "***message***"     => $outfields -> {"message"},
+                                                                                   "***delaysend***"   => $outfields -> {"delaysend"},
+                                                                               });
+
+    # store any hidden args...
+    my $hiddenargs = "";
+    my $hidetem = $self -> {"template"} -> load_template("hiddenarg.tem");
+    foreach my $key (keys(%{$extraargs})) {
+        $hiddenargs .= $self -> {"template"} -> process_template($hidetem, {"***name***"  => $key,
+                                                                            "***value***" => $extraargs -> {$key}});
+    }
 
     # Send back the form.
     return $self -> {"template"} -> load_template("form.tem", {"***content***" => $body,
@@ -641,7 +739,7 @@ sub page_display {
             my $message = $self -> check_abort();
             return $message unless(ref($message) eq "HASH");
 
-            $content = $self -> generate_abort_form($message);
+            $content = $self -> generate_abort_form($message, $self -> get_msglist_args($message -> {"id"}));
 
         # Has the user confirmed the abort?
         } elsif($self -> {"cgi"} -> param("killmsg")) {
@@ -663,7 +761,7 @@ sub page_display {
             # If the message is 'pending', switch it to 'incomplete' to make sure it doesn't get sent while the user is editing it!
             $self -> set_message_status($message -> {"id"}, "incomplete") if($message -> {"status"} eq "pending");
 
-            $content = $self -> generate_message_editform($message -> {"id"}, $message);
+            $content = $self -> generate_message_editform($message -> {"id"}, $message, $self -> get_msglist_args($message -> {"id"}));
 
         # User submitted update, check it and send back the confirm page
         } elsif($self -> {"cgi"} -> param("updatemsg")) {
@@ -677,7 +775,7 @@ sub page_display {
             # If we have errors, send back the edit form...
             if($form_errors) {
                 $title   = $self -> {"template"} -> replace_langvar("MESSAGE_EDIT");
-                $content = $self -> generate_message_editform($message -> {"id"}, $args, $form_errors);
+                $content = $self -> generate_message_editform($message -> {"id"}, $args, $self -> get_msglist_args($message -> {"id"}), $form_errors);
 
             # Otherwise, update the message and send back the confirm
             } else {
@@ -685,7 +783,7 @@ sub page_display {
                 my $msgid = $self -> update_message($message -> {"id"}, $args, $user);
 
                 $title   = $self -> {"template"} -> replace_langvar("MESSAGE_CONFIRM");
-                $content = $self -> generate_message_confirmform($msgid, $args);
+                $content = $self -> generate_message_confirmform($msgid, $args, $self -> get_msglist_args($msgid));
             }
 
         # Has the user confirmed message send?
@@ -700,6 +798,7 @@ sub page_display {
 
             $content = $self -> generate_basic_messagepage($user, $self -> {"template"} -> load_template("blocks/messagelist_edited.tem"));
 
+        # Is user forcing a send?
         } elsif(defined($self -> {"cgi"} -> param("sendmsg"))) {
             my $message = $self -> check_send();
             return $message unless(ref($message) eq "HASH");
@@ -708,7 +807,15 @@ sub page_display {
             $self -> send_message($message ->{"id"}, 1);
 
             $content = $self -> generate_basic_messagepage($user, $self -> {"template"} -> load_template("blocks/messagelist_sent.tem"));
-            
+
+        # Has user selected a message to view?
+        } elsif(defined($self -> {"cgi"} -> param("viewmsg"))) {
+            # Check that the message can be cancelled...
+            my $message = $self -> check_abort();
+            return $message unless(ref($message) eq "HASH");
+
+            $content = $self -> generate_view_form($message, $self -> get_msglist_args($message -> {"id"}));
+
         # No recognised operations in progress - send the basic list and user details box
         } else {
             $content = $self -> generate_basic_messagepage($user);
