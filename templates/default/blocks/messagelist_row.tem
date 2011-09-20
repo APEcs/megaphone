@@ -1,7 +1,8 @@
 <tr>
-    <td><img src="templates/default/images/msgstates/***status***.png" width="16" height="16" alt="***status***" /></td>
+    <td><img src="templates/default/images/msgstates/***status***.png" width="16" height="16" alt="***status***" title="***status***"/></td>
     <td><a href="index.cgi?block={B_[msglist]}&amp;msgid=***id***&amp;sort=***sort***&amp;way=***way***&amp;page=***page***&amp;viewmsg">***subject***</a></td>
     <td>***updated***</td>
     <td>***sent***</td>
+    <td>***visible***</td>
     <td>***ops***</td>
 </tr>
