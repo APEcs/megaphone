@@ -221,7 +221,7 @@ sub page_display {
         } elsif($self -> {"cgi"} -> param("dosend")) {
             $self -> send_message($msgid);
 
-            $title   = $self -> {"template"} -> replace_langvar("MESSAGE_COMPLETE");
+            $title   = $self -> {"template"} -> replace_langvar("MESSAGE_DONE_TITLE");
             $content = $self -> {"template"} -> load_template("blocks/message_done.tem");
         }
 
