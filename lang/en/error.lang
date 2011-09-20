@@ -1,6 +1,8 @@
 FATAL_TITLE   = Fatal error encountered.
 FATAL_MESSAGE = The system has encountered a fatal error and can not continue. The details of the error encountered are:
 
-FATAL_NOMSGID  = Message ID vanished. This should not happen!
-FATAL_BADMSGID = Message id is invalid. This should not happen!
-FATAL_MSGSENT  = Message has already been sent or aborted, unable to edit it. This should not happen!
+FATAL_NOMSGID   = Message ID vanished. This should not happen!
+FATAL_BADMSGID  = Message id is invalid. This should not happen!
+FATAL_MSGSENT   = Message has already been sent or aborted, unable to edit it. This should not happen!
+FATAL_MSGNOKILL = The selected message can not be aborted. Only messages currently in the 'pending' state may be aborted.
+FATAL_MSGNOEDIT = The selected message can not be edited. Only messages currently in the 'incomplete', 'pending', or 'aborted' state may be edited.
