@@ -44,3 +44,6 @@ MESSAGE_CANCEL        = Cancel
 MESSAGE_ABORTTITLE    = Cancel a message
 MESSAGE_ABORTINTRO    = You have selected the option to prevent the message below from being sent. Please check to confirm that this is the message you want to cancel, if so click "Abort message". Otherwise click "Cancel" to return to the message list.
 
+MESSAGE_VIEWTITLE     = View message
+MESSAGE_VIEWINTRO     = Here you can see a copy of the message you have selected.
+MESSAGE_MSGLIST       = Return to the message list
