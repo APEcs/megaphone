@@ -13,6 +13,7 @@
                         <td class="label"><label for="cc1">{L_MESSAGE_CC}:</label></td>
                         <td class="field"><input type="text" name="cc1" id="cc1" size="64" maxlength="255" value="***cc1***" />
                                           <img id="addcc1" src="templates/default/images/add.png" width="16" height="16" class="control" onclick="addExtraRow(1, 'cc')" title="{L_MESSAGE_ADD_RECIP}" alt="add" />
+                                          <span class="small">{L_MESSAGE_CCNOTE}</span>
                         </td>
                     </tr>
                     <tr class="hide" id="cc2row">
@@ -39,6 +40,7 @@
                         <td class="label"><label for="bcc1">{L_MESSAGE_BCC}:</label></td>
                         <td class="field"><input type="text" name="bcc1" id="bcc1" size="64" maxlength="255" value="***bcc1***" />
                                           <img id="addbcc1" src="templates/default/images/add.png" width="16" height="16" class="control" onclick="addExtraRow(1, 'bcc')" title="{L_MESSAGE_ADD_RECIP}" alt="add" />
+                                          <span class="small">{L_MESSAGE_BCCNOTE}</span>
                         </td>
                     </tr>
                     <tr class="hide" id="bcc2row">

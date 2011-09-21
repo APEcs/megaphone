@@ -4,7 +4,9 @@ MESSAGE_DESTS      = Destinations
 MESSAGE_RECIPIENTS = Recipients
 MESSAGE_TARGETS    = Targets
 MESSAGE_CC         = CC
+MESSAGE_CCNOTE     = Note: CC may not be supported by all destinations.
 MESSAGE_BCC        = BCC
+MESSAGE_BCCNOTE    = Note: BCC may not be supported by all destinations.
 MESSAGE_PREFIX     = Subject Prefix
 MESSAGE_CUSTPREFIX = Custom prefix =&gt;
 MESSAGE_SUBJECT    = Subject
