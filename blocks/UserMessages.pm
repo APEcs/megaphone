@@ -670,14 +670,14 @@ sub generate_messagelist {
 
     # Precache the row template to speed things up
     my $rowtem = $self -> {"template"} -> load_template("messagelist/row.tem", {"***sort***" => $sort,
-                                                                                       "***way***"  => $way,
-                                                                                       "***page***" => $pagenum});
+                                                                                "***way***"  => $way,
+                                                                                "***page***" => $pagenum});
     # Precache the ops templates for each status
     my $optems = {};
     foreach my $state (keys(%{$stateweight})) {
         $optems -> {$state} = $self -> {"template"} -> load_template("messagelist/op$state.tem", {"***sort***" => $sort,
-                                                                                                          "***way***"  => $way,
-                                                                                                          "***page***" => $pagenum});
+                                                                                                  "***way***"  => $way,
+                                                                                                  "***page***" => $pagenum});
     }
 
     # Visibility templates
