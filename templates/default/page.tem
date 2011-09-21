@@ -1,6 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<head>
+<head profile="http://www.w3.org/2005/10/profile">
+
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>{L_PAGE_TITLE}: ***title***</title>
 
@@ -28,6 +29,9 @@
         /* the above proprietary zoom property gives IE the hasLayout it needs to avoid several bugs */
     </style>
     <![endif]-->
+
+    <!-- favicon -->
+    <link rel="icon" type="image/png" href="http://moodle.cs.man.ac.uk/megaphone/templates/default/images/favicon.png">
 
     ***extrahead***
 </head>
