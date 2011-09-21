@@ -777,6 +777,35 @@ sub generate_topright {
 # ============================================================================
 #  Message send functions
 
+## @method $ delay_remain($message)
+# Determine how long a message has left before it should be sent.
+#
+# @param message A reference to the message data
+# @return The number of seconds left before the message should be sent,
+#         -1 if the message should be sent immediately, or undef it should
+#         not be sent at all.
+sub delay_remain {
+    my $self = shift;
+    my $message = shift;
+
+    # Only messages in the pending state can ever be sent
+    return undef unless($message -> {"status"} eq "pending");
+
+    # Message is pending, if it has no delay send it now
+    return -1 unless($message -> {"delaysend"});
+
+    # Message is pending with a delay, how long does it have left?
+    my $now      = time();
+    my $sendtime = $message -> {"updated"} + $self -> {"settings"} -> {"config"} -> {"Core:delaysend"};
+
+    # If the current time is after the send time, send immediately
+    return -1 if($now > $sendtime);
+
+    # otherwise, how long do we have left?
+    return $sendtime - $now;
+}
+
+
 sub send_message {
     my $self  = shift;
     my $msgid = shift;
