@@ -358,15 +358,15 @@ sub build_navigation {
         my $pagelist = "";
 
         # If the user is not on the first page, we need to add the left jump controls
-        $pagelist .= $self -> {"template"} -> load_template("blocks/messagelist_jumpleft.tem", {"***sort***"   => $sort,
+        $pagelist .= $self -> {"template"} -> load_template("messagelist/jumpleft.tem", {"***sort***"   => $sort,
                                                                                                 "***way***"    => $way,
                                                                                                 "***prev***"   => $pagenum - 1})
             if($pagenum > 0);
 
         # load some templates to speed up page list generation...
-        my $pagetem = $self -> {"template"} -> load_template("blocks/messagelist_jumppage.tem", {"***sort***"   => $sort,
+        my $pagetem = $self -> {"template"} -> load_template("messagelist/jumppage.tem", {"***sort***"   => $sort,
                                                                                                  "***way***"    => $way});
-        my $pageacttem = $self -> {"template"} -> load_template("blocks/messagelist_page.tem");
+        my $pageacttem = $self -> {"template"} -> load_template("messagelist/page.tem");
 
         # Generate the list of pages
         for(my $pnum = 0; $pnum <= $maxpage; ++$pnum) {
@@ -376,22 +376,43 @@ sub build_navigation {
         }
 
         # Append the right jump controls if we're not on the last page
-        $pagelist .= $self -> {"template"} -> load_template("blocks/messagelist_jumpright.tem", {"***sort***"   => $sort,
+        $pagelist .= $self -> {"template"} -> load_template("messagelist/jumpright.tem", {"***sort***"   => $sort,
                                                                                                  "***way***"    => $way,
                                                                                                  "***next***"   => $pagenum + 1,
                                                                                                  "***last***"   => $maxpage})
             if($pagenum < $maxpage);
 
-        return $self -> {"template"} -> load_template("blocks/messagelist_paginate.tem", {"***pagenum***" => $pagenum + 1,
+        return $self -> {"template"} -> load_template("messagelist/paginate.tem", {"***pagenum***" => $pagenum + 1,
                                                                                           "***maxpage***" => $maxpage + 1,
                                                                                           "***pages***"   => $pagelist});
     # If there's only one page, a simple "Page 1 of 1" will do the trick.
     } else { # if($maxpage > 0)
-        return $self -> {"template"} -> load_template("blocks/messagelist_paginate.tem", {"***pagenum***" => 1,
+        return $self -> {"template"} -> load_template("messagelist/paginate.tem", {"***pagenum***" => 1,
                                                                                           "***maxpage***" => 1,
                                                                                           "***pages***"   => ""});
     }
 }
+
+
+## @method $ build_sent_info($message)
+# Generate a short string indicating when a message is going to be sent.
+#
+# @param message A reference to a hash containing the message's data.
+# @return A string indicating when the message will be sent.
+sub build_sent_info {
+    my $self    = shift;
+    my $message = shift;
+
+    # find out how long is left...
+    my $remain = $self -> delay_remain($message);
+
+    # Unsendables get their own template...
+    return $self -> {"template"} -> load_template("messagelist/unsendable.tem") if(!defined($remain));
+
+    # Not sent yet?
+    return $self -> {"template"} -> load_template("messagelist/notsent.tem") if($remain == -1);
+
+    
 
 
 ## @method $ get_msglist_args($msgid)
@@ -626,20 +647,20 @@ sub generate_messagelist {
     my @spliced = splice(@sorted, $pagenum * $self -> {"settings"} -> {"config"} -> {"UserMessages:pagelength"}, $self -> {"settings"} -> {"config"} -> {"UserMessages:pagelength"});
 
     # Precache the row template to speed things up
-    my $rowtem = $self -> {"template"} -> load_template("blocks/messagelist_row.tem", {"***sort***" => $sort,
+    my $rowtem = $self -> {"template"} -> load_template("messagelist/row.tem", {"***sort***" => $sort,
                                                                                        "***way***"  => $way,
                                                                                        "***page***" => $pagenum});
     # Precache the ops templates for each status
     my $optems = {};
     foreach my $state (keys(%{$stateweight})) {
-        $optems -> {$state} = $self -> {"template"} -> load_template("blocks/messagelist_op$state.tem", {"***sort***" => $sort,
+        $optems -> {$state} = $self -> {"template"} -> load_template("messagelist/op$state.tem", {"***sort***" => $sort,
                                                                                                           "***way***"  => $way,
                                                                                                           "***page***" => $pagenum});
     }
 
     # Visibility templates
-    my @vistem = ($self -> {"template"} -> load_template("blocks/messagelist_invisible.tem"),
-                  $self -> {"template"} -> load_template("blocks/messagelist_visible.tem"));
+    my @vistem = ($self -> {"template"} -> load_template("messagelist/invisible.tem"),
+                  $self -> {"template"} -> load_template("messagelist/visible.tem"));
 
     # Process the rows...
     my $rows = "";
@@ -649,17 +670,17 @@ sub generate_messagelist {
                                                                      "***subject***" => $message -> {"subject"},
                                                                      "***updated***" => $self -> {"template"} -> format_time($message -> {"updated"}),
                                                                      "***visible***" => $vistem[$message -> {"visible"}],
-                                                                     "***sent***"    => $message -> {"sent"} ? $self -> {"template"} -> format_time($message -> {"sent"}) : $self -> {"template"} -> replace_langvar("MSGLIST_NOTSENT"),
+                                                                     "***sent***"    => $message -> {"sent"} ? $self -> {"template"} -> format_time($message -> {"sent"}) : $self -> build_sent_info($message),
                                                                      "***ops***"     => $self -> {"template"} -> process_template($optems -> {$message -> {"status"}}, {"***id***" => $message -> {"id"}})});
     }
 
     # If there are no rows, output a "No messages" row
-    $rows = $self -> {"template"} -> load_template("blocks/messagelist_empty.tem") if(!$rows);
+    $rows = $self -> {"template"} -> load_template("messagelist/empty.tem") if(!$rows);
 
     # Preload the sort templates
     my $sorttems = {};
     foreach my $sorttype ("none", "asc", "desc") {
-        $sorttems -> {$sorttype} = $self -> {"template"} -> load_template("blocks/messagelist_sort_$sorttype.tem", {"***page***" => $pagenum});
+        $sorttems -> {$sorttype} = $self -> {"template"} -> load_template("messagelist/sort_$sorttype.tem", {"***page***" => $pagenum});
     }
 
     # Work out the sort controls for each column
@@ -674,7 +695,7 @@ sub generate_messagelist {
 
     # Make the state help popup
     my $statepopup = $self -> {"template"} -> load_template("popup.tem", {"***title***"   => $self -> {"template"} -> replace_langvar("MSGLIST_STATE_TITLE"),
-                                                                          "***b64body***" => encode_base64($self -> {"template"} -> load_template("blocks/messagelist_states.tem"))});
+                                                                          "***b64body***" => encode_base64($self -> {"template"} -> load_template("messagelist/states.tem"))});
 
     # Wrap the error up if we have one
     $error = $self -> {"template"} -> load_template("blocks/user_details_error.tem", {"***errors***" => $error})
@@ -750,7 +771,7 @@ sub page_display {
             # Okay, we can cancel!
             $self -> set_message_status($message -> {"id"}, "aborted");
 
-            $content = $self -> generate_basic_messagepage($user, $self -> {"template"} -> load_template("blocks/messagelist_aborted.tem"));
+            $content = $self -> generate_basic_messagepage($user, $self -> {"template"} -> load_template("messagelist/aborted.tem"));
 
         # Has the user asked to edit a message? If so, send the message edit form
         } elsif(defined($self -> {"cgi"} -> param("editmsg"))) {
@@ -796,7 +817,7 @@ sub page_display {
             $self -> set_message_status($message -> {"id"}, "pending");
             $self -> send_message($message ->{"id"});
 
-            $content = $self -> generate_basic_messagepage($user, $self -> {"template"} -> load_template("blocks/messagelist_edited.tem"));
+            $content = $self -> generate_basic_messagepage($user, $self -> {"template"} -> load_template("messagelist/edited.tem"));
 
         # Is user forcing a send?
         } elsif(defined($self -> {"cgi"} -> param("sendmsg"))) {
@@ -806,7 +827,7 @@ sub page_display {
             # Forcibly send the message...
             $self -> send_message($message ->{"id"}, 1);
 
-            $content = $self -> generate_basic_messagepage($user, $self -> {"template"} -> load_template("blocks/messagelist_sent.tem"));
+            $content = $self -> generate_basic_messagepage($user, $self -> {"template"} -> load_template("messagelist/sent.tem"));
 
         # Has user selected a message to view?
         } elsif(defined($self -> {"cgi"} -> param("viewmsg"))) {
