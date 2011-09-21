@@ -1,6 +1,7 @@
 DETAILS_TITLE   = User details
-DETAILS_MESSAGE = Please enter your details below. The information you enter here will be used as part of the sender address and body text of messages sent by the system. Both fields are required.
+DETAILS_MESSAGE = Please enter your details below. The information you enter here will be used as part of the sender address and body text of messages sent by the system. All fields are required.
 DETAILS_NAME    = Real name
+DETAILS_EMAIL   = Email address
 DETAILS_ROLE    = SoCS role
 DETAILS_SET     = Set details
 DETAILS_NEWUSER = This appears to be the first time you have logged into the system. Before your message can be sent, the system needs to collect some information about you.

@@ -11,6 +11,10 @@
                         <td class="field"><input name="name" id="name" type="text" size="50" maxlength="255" value="***name***"/></td>
                     </tr>
                     <tr>
+                        <td class="label"><label class="required" for="email">{L_DETAILS_EMAIL}:</label></td>
+                        <td class="field"><input name="email" id="email" type="text" size="50" maxlength="255" value="***email***"/></td>
+                    </tr>
+                    <tr>
                         <td class="label"><label class="required" for="role">{L_DETAILS_ROLE}:</label></td>
                         <td class="field"><input name="role" id="role" type="text" size="50" maxlength="255" value="***role***"/></td>
                     </tr>

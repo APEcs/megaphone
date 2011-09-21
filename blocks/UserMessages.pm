@@ -460,7 +460,8 @@ sub generate_basic_messagepage {
     my $info = shift;
 
     my $content = $self -> generate_messagelist(undef, $info);
-    $content .= $self -> generate_userdetails_form({"realname" => $user -> {"realname"},
+    $content .= $self -> generate_userdetails_form({"email"    => $user -> {"email"},
+                                                    "realname" => $user -> {"realname"},
                                                     "rolename" => $user -> {"rolename"},
                                                     "block"    => $self -> {"block"}});
 

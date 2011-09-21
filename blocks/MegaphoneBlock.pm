@@ -193,9 +193,9 @@ sub update_userdetails {
     die_log($self -> {"cgi"} -> remote_host(), "Rolename is not set. This should not happen!") unless($args -> {"rolename"});
 
     my $updateh = $self -> {"dbh"} -> prepare("UPDATE ".$self -> {"settings"} -> {"database"} -> {"users"}."
-                                               SET realname = ?, rolename = ?, updated = UNIX_TIMESTAMP()
+                                               SET email = ?, realname = ?, rolename = ?, updated = UNIX_TIMESTAMP()
                                                WHERE user_id = ?");
-    $updateh -> execute($args -> {"realname"}, $args -> {"rolename"}, $args -> {"user_id"})
+    $updateh -> execute($args -> {"email"}, $args -> {"realname"}, $args -> {"rolename"}, $args -> {"user_id"})
         or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute user details update: ".$self -> {"dbh"} -> errstr);
 }
 
@@ -356,6 +356,12 @@ sub validate_userdetails {
                                                                         "nicename" => $self -> {"template"} -> replace_langvar("DETAILS_NAME"),
                                                                         "minlen"   => 1,
                                                                         "maxlen"   => 255});
+    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error}) if($error);
+
+    ($args -> {"email"}, $error) = $self -> validate_string("email", {"required" => 1,
+                                                                      "nicename" => $self -> {"template"} -> replace_langvar("DETAILS_EMAIL"),
+                                                                      "minlen"   => 1,
+                                                                      "maxlen"   => 255});
     $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error}) if($error);
 
     ($args -> {"rolename"}, $error) = $self -> validate_string("role", {"required" => 1,
@@ -718,6 +724,7 @@ sub generate_userdetails_form {
     my $content = $self -> {"template"} -> load_template("blocks/user_details.tem", {"***info***"  => $info,
                                                                                      "***error***" => $error,
                                                                                      "***name***"  => $args -> {"realname"},
+                                                                                     "***email***" => $args -> {"email"},
                                                                                      "***role***"  => $args -> {"rolename"}});
     # If we have args, add them as a hidden values
     my $hidetem = $self -> {"template"} -> load_template("hiddenarg.tem");
