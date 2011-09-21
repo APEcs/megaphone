@@ -68,7 +68,7 @@
                         <td class="field"><select onchange="prefixMode()" size="1" name="prefix" id="prefix">
 ***prefix***
                                           </select>
-                                          &nbsp; <input type="text" name="prefixother" id="prefixother" size="20" maxlength="20" value="***prefixother***" /></td>
+                                          &nbsp; <input type="text" name="prefix_other" id="prefix_other" size="20" maxlength="20" value="***prefix_other***" /></td>
                     </tr>
                     <tr>
                         <td class="label"><label class="required" for="subject">{L_MESSAGE_SUBJECT}:</label></td>
