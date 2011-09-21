@@ -308,6 +308,7 @@ sub check_edit {
     return $message;
 }
 
+
 ## @method $ check_send()
 # Determine whether the message selected by the user can be sent immediately including
 # verifying that the message has been specified, and is sendable.
@@ -409,10 +410,12 @@ sub build_sent_info {
     # Unsendables get their own template...
     return $self -> {"template"} -> load_template("messagelist/unsendable.tem") if(!defined($remain));
 
-    # Not sent yet?
+    # Not sent yet when it should have been?
     return $self -> {"template"} -> load_template("messagelist/notsent.tem") if($remain == -1);
 
-    
+    # Not sent, waiting on delay timer
+    return $self -> {"template"} -> load_template("messagelist/delaywait.tem", {"***remain***" => $self -> {"template"} -> humanise_seconds($remain, 1)});
+}
 
 
 ## @method $ get_msglist_args($msgid)
@@ -614,7 +617,7 @@ sub generate_messagelist {
 
     # First stage; we need to get a list of the user's messages. All of them.
     # We can't rely on SQL LIMIT and ORDER BY to get it right, unfortunately.
-    my $messh = $self -> {"dbh"} -> prepare("SELECT id, status, subject, updated, sent
+    my $messh = $self -> {"dbh"} -> prepare("SELECT id, status, subject, updated, sent, visible, delaysend
                                              FROM ".$self -> {"settings"} -> {"database"} -> {"messages"}."
                                              WHERE user_id = ?");
     $messh -> execute($self -> {"session"} -> {"sessuser"})
@@ -702,16 +705,16 @@ sub generate_messagelist {
         if($error);
 
     # Put the table together
-    return $self -> {"template"} -> load_template("blocks/messagelist.tem", {"***error***"       => $error,
-                                                                             "***info***"        => $info,
-                                                                             "***navigation***"  => $self -> build_navigation($maxpage, $pagenum, $sort, $way), # FIXME: PAGINATION
-                                                                             "***statepopup***"  => $statepopup,
-                                                                             "***sortstate***"   => $sortcols -> {"status"},
-                                                                             "***sortsubject***" => $sortcols -> {"subject"},
-                                                                             "***sortupdated***" => $sortcols -> {"updated"},
-                                                                             "***sortsent***"    => $sortcols -> {"sent"},
-                                                                             "***sortvisible***" => $sortcols -> {"visible"},
-                                                                             "***messages***"    => $rows});
+    return $self -> {"template"} -> load_template("messagelist/messagelist.tem", {"***error***"       => $error,
+                                                                                  "***info***"        => $info,
+                                                                                  "***navigation***"  => $self -> build_navigation($maxpage, $pagenum, $sort, $way), # FIXME: PAGINATION
+                                                                                  "***statepopup***"  => $statepopup,
+                                                                                  "***sortstate***"   => $sortcols -> {"status"},
+                                                                                  "***sortsubject***" => $sortcols -> {"subject"},
+                                                                                  "***sortupdated***" => $sortcols -> {"updated"},
+                                                                                  "***sortsent***"    => $sortcols -> {"sent"},
+                                                                                  "***sortvisible***" => $sortcols -> {"visible"},
+                                                                                  "***messages***"    => $rows});
 }
 
 
