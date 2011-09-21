@@ -75,7 +75,8 @@ $settings -> load_db_config($dbh, $settings -> {"database"} -> {"settings"});
 start_log($settings -> {"config"} -> {"logfile"}) if($settings -> {"config"} -> {"logfile"});
 
 # Create the template handler object
-my $template = Template -> new(basedir => path_join($settings -> {"config"} -> {"base"}, "templates"))
+my $template = Template -> new(basedir => path_join($settings -> {"config"} -> {"base"}, "templates"),
+                               mailcmd => '/usr/sbin/sendmail -t -f '.$settings -> {"config"} -> {"Core:envelope_address"})
     or die_log($out -> remote_host(), "Unable to create template handling object: ".$Template::errstr);
 
 # Create the authenticator
