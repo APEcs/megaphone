@@ -52,7 +52,7 @@ sub store_message {
     $messh -> execute($prev_id,
                       $user -> {"user_id"},
                       $args -> {"prefix_id"},
-                      $args -> {"prefixother"},
+                      $args -> {"prefix_other"},
                       $args -> {"subject"},
                       $args -> {"message"},
                       $args -> {"delaysend"})
@@ -170,10 +170,10 @@ sub update_message {
     # Check that the message can be edited.
     my $message = $self -> get_message($msgid);
     die_log($self -> {"cgi"} -> remote_host(), "Attempt to edit message $msgid when it is in an uneditable state. Giving up in disgust.")
-        unless($message -> {"status"} eq "incomplete" || $message -> {"status"} eq "pending" || $message -> {"status"} eq "aborted");
+        if($message -> {"status"} eq "edited");
 
-    # Switch the old message to 'edited' status if needed (we don't want to change aborted messages)
-    $self -> set_message_status($msgid, "edited") unless($message -> {"status"} eq "aborted");
+    # Switch the old message to 'edited' status if needed (we don't want to change aborted or sent messages)
+    $self -> set_message_status($msgid, "edited") unless($message -> {"status"} eq "aborted" || $message -> {"status"} eq "sent");
 
     # Create a new message
     return $self -> store_message($args, $user, $msgid);
@@ -494,13 +494,13 @@ sub validate_message {
     # Has the user selected the 'other prefix' option? If so, check they enetered a prefixe
     if($self -> {"cgi"} -> param("prefix") == 0) {
         $args -> {"prefix_id"} = 0;
-        ($args -> {"prefixother"}, $error) = $self -> validate_string("prefixother", {"required" => 1,
-                                                                                      "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_PREFIX"),
-                                                                                      "minlen"   => 1,
-                                                                                      "maxlen"   => 20});
+        ($args -> {"prefix_other"}, $error) = $self -> validate_string("prefix_other", {"required" => 1,
+                                                                                        "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_PREFIX"),
+                                                                                        "minlen"   => 1,
+                                                                                        "maxlen"   => 20});
     # User has selected a prefix, check it is valid
     } else {
-        $args -> {"prefixother"} = undef;
+        $args -> {"prefix_other"} = undef;
         ($args -> {"prefix_id"}, $error) = $self -> validate_options("prefix", {"required" => 1,
                                                                                 "source"   => $self -> {"settings"} -> {"database"} -> {"prefixes"},
                                                                                 "where"    => "WHERE id = ?",
@@ -556,28 +556,28 @@ sub generate_message_editform {
         if($error);
 
     # And build the message block itself. Kinda big and messy, this...
-    my $body = $self -> {"template"} -> load_template("blocks/message_edit.tem", {"***error***"       => $error,
-                                                                                  "***cc1***"         => $args -> {"cc"}  ?  $args -> {"cc"} -> [0]  : "",
-                                                                                  "***cc2***"         => $args -> {"cc"}  ?  $args -> {"cc"} -> [1]  : "",
-                                                                                  "***cc3***"         => $args -> {"cc"}  ?  $args -> {"cc"} -> [2]  : "",
-                                                                                  "***cc4***"         => $args -> {"cc"}  ?  $args -> {"cc"} -> [3]  : "",
-                                                                                  "***bcc1***"        => $args -> {"bcc"} ?  $args -> {"bcc"} -> [0] : "",
-                                                                                  "***bcc2***"        => $args -> {"bcc"} ?  $args -> {"bcc"} -> [1] : "",
-                                                                                  "***bcc3***"        => $args -> {"bcc"} ?  $args -> {"bcc"} -> [2] : "",
-                                                                                  "***bcc4***"        => $args -> {"bcc"} ?  $args -> {"bcc"} -> [3] : "",
-                                                                                  "***cc2hide***"     => $args -> {"cc"}  ? ($args -> {"cc"} -> [1]  ? "" : "hide") : "hide",
-                                                                                  "***cc3hide***"     => $args -> {"cc"}  ? ($args -> {"cc"} -> [2]  ? "" : "hide") : "hide",
-                                                                                  "***cc4hide***"     => $args -> {"cc"}  ? ($args -> {"cc"} -> [3]  ? "" : "hide") : "hide",
-                                                                                  "***bcc2hide***"    => $args -> {"bcc"} ? ($args -> {"bcc"} -> [1] ? "" : "hide") : "hide",
-                                                                                  "***bcc3hide***"    => $args -> {"bcc"} ? ($args -> {"bcc"} -> [2] ? "" : "hide") : "hide",
-                                                                                  "***bcc4hide***"    => $args -> {"bcc"} ? ($args -> {"bcc"} -> [3] ? "" : "hide") : "hide",
-                                                                                  "***prefixother***" => $args -> {"prefixother"},
-                                                                                  "***subject***"     => $args -> {"subject"},
-                                                                                  "***message***"     => $args -> {"message"},
-                                                                                  "***delaysend***"   => $args -> {"delaysend"} ? 'checked="checked"' : "",
-                                                                                  "***delay***"       => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delay_send"}),
-                                                                                  "***targmatrix***"  => $self -> build_target_matrix($args -> {"targset"}),
-                                                                                  "***prefix***"      => $self -> build_prefix($args -> {"prefix_id"}),
+    my $body = $self -> {"template"} -> load_template("blocks/message_edit.tem", {"***error***"        => $error,
+                                                                                  "***cc1***"          => $args -> {"cc"}  ?  $args -> {"cc"} -> [0]  : "",
+                                                                                  "***cc2***"          => $args -> {"cc"}  ?  $args -> {"cc"} -> [1]  : "",
+                                                                                  "***cc3***"          => $args -> {"cc"}  ?  $args -> {"cc"} -> [2]  : "",
+                                                                                  "***cc4***"          => $args -> {"cc"}  ?  $args -> {"cc"} -> [3]  : "",
+                                                                                  "***bcc1***"         => $args -> {"bcc"} ?  $args -> {"bcc"} -> [0] : "",
+                                                                                  "***bcc2***"         => $args -> {"bcc"} ?  $args -> {"bcc"} -> [1] : "",
+                                                                                  "***bcc3***"         => $args -> {"bcc"} ?  $args -> {"bcc"} -> [2] : "",
+                                                                                  "***bcc4***"         => $args -> {"bcc"} ?  $args -> {"bcc"} -> [3] : "",
+                                                                                  "***cc2hide***"      => $args -> {"cc"}  ? ($args -> {"cc"} -> [1]  ? "" : "hide") : "hide",
+                                                                                  "***cc3hide***"      => $args -> {"cc"}  ? ($args -> {"cc"} -> [2]  ? "" : "hide") : "hide",
+                                                                                  "***cc4hide***"      => $args -> {"cc"}  ? ($args -> {"cc"} -> [3]  ? "" : "hide") : "hide",
+                                                                                  "***bcc2hide***"     => $args -> {"bcc"} ? ($args -> {"bcc"} -> [1] ? "" : "hide") : "hide",
+                                                                                  "***bcc3hide***"     => $args -> {"bcc"} ? ($args -> {"bcc"} -> [2] ? "" : "hide") : "hide",
+                                                                                  "***bcc4hide***"     => $args -> {"bcc"} ? ($args -> {"bcc"} -> [3] ? "" : "hide") : "hide",
+                                                                                  "***prefix_other***" => $args -> {"prefix_other"},
+                                                                                  "***subject***"      => $args -> {"subject"},
+                                                                                  "***message***"      => $args -> {"message"},
+                                                                                  "***delaysend***"    => $args -> {"delaysend"} ? 'checked="checked"' : "",
+                                                                                  "***delay***"        => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delay_send"}),
+                                                                                  "***targmatrix***"   => $self -> build_target_matrix($args -> {"targset"}),
+                                                                                  "***prefix***"       => $self -> build_prefix($args -> {"prefix_id"}),
                                                                               });
 
     # store any hidden args...
@@ -624,7 +624,7 @@ sub generate_message_confirmform {
 
     # Get the prefix sorted
     if($args -> {"prefix_id"} == 0) {
-        $outfields -> {"prefix"} = $args -> {"prefixother"};
+        $outfields -> {"prefix"} = $args -> {"prefix_other"};
     } else {
         my $prefixh = $self -> {"dbh"} -> prepare("SELECT prefix FROM ".$self -> {"settings"} -> {"database"} -> {"prefixes"}."
                                                    WHERE id = ?");
