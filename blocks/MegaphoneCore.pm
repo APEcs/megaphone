@@ -47,22 +47,22 @@ sub generate_message {
         if($error);
 
     # And build the message block itself. Kinda big and messy, this...
-    return $self -> {"template"} -> load_template("blocks/message.tem", {"***error***"       => $error,
-                                                                         "***cc1***"         => $args -> {"cc"}  ? $args -> {"cc"} -> [0]  : "",
-                                                                         "***cc2***"         => $args -> {"cc"}  ? $args -> {"cc"} -> [1]  : "",
-                                                                         "***cc3***"         => $args -> {"cc"}  ? $args -> {"cc"} -> [2]  : "",
-                                                                         "***cc4***"         => $args -> {"cc"}  ? $args -> {"cc"} -> [3]  : "",
-                                                                         "***bcc1***"        => $args -> {"bcc"} ? $args -> {"bcc"} -> [0] : "",
-                                                                         "***bcc2***"        => $args -> {"bcc"} ? $args -> {"bcc"} -> [1] : "",
-                                                                         "***bcc3***"        => $args -> {"bcc"} ? $args -> {"bcc"} -> [2] : "",
-                                                                         "***bcc4***"        => $args -> {"bcc"} ? $args -> {"bcc"} -> [3] : "",
-                                                                         "***prefixother***" => $args -> {"prefixother"},
-                                                                         "***subject***"     => $args -> {"subject"},
-                                                                         "***message***"     => $args -> {"message"},
-                                                                         "***delaysend***"   => $args -> {"delaysend"} ? 'checked="checked"' : "",
-                                                                         "***delay***"       => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delay_send"}),
-                                                                         "***targmatrix***"  => $self -> build_target_matrix($args -> {"targset"}),
-                                                                         "***prefix***"      => $self -> build_prefix($args -> {"prefix"}),
+    return $self -> {"template"} -> load_template("blocks/message.tem", {"***error***"        => $error,
+                                                                         "***cc1***"          => $args -> {"cc"}  ? $args -> {"cc"} -> [0]  : "",
+                                                                         "***cc2***"          => $args -> {"cc"}  ? $args -> {"cc"} -> [1]  : "",
+                                                                         "***cc3***"          => $args -> {"cc"}  ? $args -> {"cc"} -> [2]  : "",
+                                                                         "***cc4***"          => $args -> {"cc"}  ? $args -> {"cc"} -> [3]  : "",
+                                                                         "***bcc1***"         => $args -> {"bcc"} ? $args -> {"bcc"} -> [0] : "",
+                                                                         "***bcc2***"         => $args -> {"bcc"} ? $args -> {"bcc"} -> [1] : "",
+                                                                         "***bcc3***"         => $args -> {"bcc"} ? $args -> {"bcc"} -> [2] : "",
+                                                                         "***bcc4***"         => $args -> {"bcc"} ? $args -> {"bcc"} -> [3] : "",
+                                                                         "***prefix_other***" => $args -> {"prefix_other"},
+                                                                         "***subject***"      => $args -> {"subject"},
+                                                                         "***message***"      => $args -> {"message"},
+                                                                         "***delaysend***"    => $args -> {"delaysend"} ? 'checked="checked"' : "",
+                                                                         "***delay***"        => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delay_send"}),
+                                                                         "***targmatrix***"   => $self -> build_target_matrix($args -> {"targset"}),
+                                                                         "***prefix***"       => $self -> build_prefix($args -> {"prefix"}),
                                                                      });
 }
 
