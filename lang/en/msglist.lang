@@ -1,12 +1,13 @@
-MSGLIST_TITLE   = User Messages and Settings
-MSGLIST_INTRO   = Here you may view the complete history of messages you are responsible for in the system. The actions you may perform on a given message depend on its state. See the "States" popup below for an explanation of the different states and the actions permitted for each.
-MSGLIST_OPS     = &nbsp;
-MSGLIST_SUBJECT = Subject
-MSGLIST_UPDATED = Updated
-MSGLIST_VISIBLE = Visible?
-MSGLIST_SENT    = Sent
-MSGLIST_NOTSENT = Not sent
-MSGLIST_EMPTY   = You have not composed any messages yet.
+MSGLIST_TITLE      = User Messages and Settings
+MSGLIST_INTRO      = Here you may view the complete history of messages you are responsible for in the system. The actions you may perform on a given message depend on its state. See the "States" popup below for an explanation of the different states and the actions permitted for each.
+MSGLIST_OPS        = &nbsp;
+MSGLIST_SUBJECT    = Subject
+MSGLIST_UPDATED    = Updated
+MSGLIST_VISIBLE    = Visible?
+MSGLIST_SENT       = Sent
+MSGLIST_NOTSENT    = Not sent
+MSGLIST_UNSENDABLE = This message is in a state that prevents it from being sent.
+MSGLIST_EMPTY      = You have not composed any messages yet.
 
 MSGLIST_EDIT    = Edit this message
 MSGLIST_ABORT   = Cancel this message
