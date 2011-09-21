@@ -6,6 +6,8 @@ MSGLIST_UPDATED    = Updated
 MSGLIST_VISIBLE    = Visible?
 MSGLIST_SENT       = Sent
 MSGLIST_NOTSENT    = Not sent
+MSGLIST_SENDIN     = Send in
+MSGLIST_DELAYWAIT  = This message is waiting to be sent.
 MSGLIST_UNSENDABLE = This message is in a state that prevents it from being sent.
 MSGLIST_EMPTY      = You have not composed any messages yet.
 
