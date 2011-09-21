@@ -638,16 +638,13 @@ sub generate_message_confirmform {
     $outfields -> {"delaysend"} = $self -> {"template"} -> load_template($args -> {"delaysend"} ? "blocks/message_edit_delay.tem" : "blocks/message_edit_nodelay.tem",
                                                                          {"***delay***" => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delay_send"})});
 
-    # Simple HTML fix for the message...
-    ($outfields -> {"message"} = $args -> {"message"}) =~ s/\n/<br \/>\n/g;
-
     # And build the message block itself. Kinda big and messy, this...
     my $body = $self -> {"template"} -> load_template("blocks/message_confirm.tem", {"***targmatrix***"  => $self -> build_target_matrix($args -> {"targset"}, 1),
                                                                                      "***cc***"          => $outfields -> {"cc"},
                                                                                      "***bcc***"         => $outfields -> {"bcc"},
                                                                                      "***prefix***"      => $outfields -> {"prefix"},
                                                                                      "***subject***"     => $args -> {"subject"},
-                                                                                     "***message***"     => $outfields -> {"message"},
+                                                                                     "***message***"     => $args -> {"message"},
                                                                                      "***delaysend***"   => $outfields -> {"delaysend"},
                                                                                  });
 
@@ -861,8 +858,9 @@ sub send_message {
         $targetmod -> send($message);
     }
 
+    # Message has been sent, update it.
     my $updateh = $self -> {"dbh"} -> prepare("UPDATE ".$self -> {"settings"} -> {"database"} -> {"messages"}."
-                                               SET status = 'sent', updated = UNIX_TIMESTAMP(), sent = UNIX_TIMESTAMP()
+                                               SET status = 'sent', updated = UNIX_TIMESTAMP(), sent = UNIX_TIMESTAMP(), visible = 1
                                                WHERE id = ?");
     $updateh -> execute($message -> {"id"})
         or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message update query: ".$self -> {"dbh"} -> errstr);
