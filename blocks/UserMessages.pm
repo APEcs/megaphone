@@ -414,7 +414,9 @@ sub build_sent_info {
     return $self -> {"template"} -> load_template("messagelist/notsent.tem") if($remain == -1);
 
     # Not sent, waiting on delay timer
-    return $self -> {"template"} -> load_template("messagelist/delaywait.tem", {"***remain***" => $self -> {"template"} -> humanise_seconds($remain, 1)});
+    my $class = ($remain > 600 ? "long" : ($remain > 120 ? "med" : "short")); 
+    return $self -> {"template"} -> load_template("messagelist/delaywait.tem", {"***remain***" => $self -> {"template"} -> humanise_seconds($remain, 1),
+                                                                                "***class***"  => $class});
 }
 
 

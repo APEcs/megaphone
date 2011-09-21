@@ -345,3 +345,15 @@ div.counter {
 .twitlong {
     color: red;
 }
+
+.delay-long {
+    color: green;
+}
+
+.delay-mid {
+    color: orange;
+}
+
+.delay-short {
+    color: red;
+}
