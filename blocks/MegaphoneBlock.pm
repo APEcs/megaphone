@@ -813,6 +813,13 @@ sub delay_remain {
 }
 
 
+## @method void send_message($msgid, $force)
+# Send the message to all the selected destinations. This will do nothing if
+# the message is waiting on a delayed send, unless force is set, in which case
+# the message will always be sent if posible.
+#
+# @param msgid The id of the message to send.
+# @param force Force the message to be sent, ignoring the message delay.
 sub send_message {
     my $self  = shift;
     my $msgid = shift;
@@ -825,10 +832,41 @@ sub send_message {
     die_log($self -> {"cgi"} -> remote_host(), "Attempt to send a message that is not in a sendable state. This should not happen.")
         unless($message -> {"status"} eq "pending");
 
-    # If the message has no delay, or force is enabled, send it
-    if($force || !$message -> {"delaysend"}) {
-        # TODO: SEND MESSAGE
+    # check that the message is sendable
+    my $remain = $self -> delay_remain($message);
+    die_log($self -> {"cgi"} -> remote_host(), "Illegal attempt to send message ".$message -> {"id"}.": message is not sendable!") if(!defined($remain));
+
+    # Do nothing if the remain is > 0 and we're not being forced to send
+    return unless($force || $remain <= 0);
+
+    # Message is going out! Work out where the user has asked to send it.
+    my $desth = $self -> {"dbh"} -> prepare("SELECT d.args, t.module_id
+                                             FROM ".$self -> {"settings"} -> {"database"} -> {"recip_targs"}." AS d,
+                                                  ".$self -> {"settings"} -> {"database"} -> {"targets"}." AS t
+                                             WHERE d.id = ?
+                                             AND t.id = d.target_id");
+    
+    foreach my $destid (@{$message -> {"targset"}}) {
+        $desth -> execute($destid)
+            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute destination lookup: ".$self -> {"dbh"} -> errstr);
+
+        my $dest = $desth -> fetchrow_hashref();
+        die_log($self -> {"cgi"} -> remote_host(), "No matching destination for message ".$message -> {"id"}.", dest $destid") if(!$dest);
+
+        # Get the module to handle the destination
+        my $targetmod = $self -> {"module"} -> new_module_byid($dest -> {"module_id"}, $dest -> {"args"});
+        die_log($self -> {"cgi"} -> remote_host(), "Unable to load target module for message ".$message -> {"id"}.", dest $destid") if(!$targetmod);
+
+        # Got a target module, send the message
+        $targetmod -> send($message);
     }
+
+    my $updateh = $self -> {"dbh"} -> prepare("UPDATE ".$self -> {"settings"} -> {"database"} -> {"messages"}."
+                                               SET status = 'sent', updated = UNIX_TIMESTAMP(), sent = UNIX_TIMESTAMP()
+                                               WHERE id = ?");
+    $updateh -> execute($message -> {"id"})
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message update query: ".$self -> {"dbh"} -> errstr);
 }
+
 
 1;
