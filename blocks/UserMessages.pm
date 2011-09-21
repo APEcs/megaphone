@@ -22,6 +22,7 @@ package UserMessages;
 
 use strict;
 use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
+use HTML::Entities;
 use MIME::Base64;   # Needed for base64 encoding of popup bodies.
 use Logging qw(die_log);
 use Utils qw(is_defined_numeric);
@@ -301,9 +302,30 @@ sub check_edit {
     my $message = $self -> get_message($msgid);
     return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_BADMSGID")) if(!$message);
 
-    # Can't edit messages unless they are incomplete, pending, or aborted
+    # Can't edit messages unless they are incomplete, pending, sent, or aborted
     return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_MSGNOEDIT"))
-        unless($message -> {"status"} eq "incomplete" || $message -> {"status"} eq "pending" || $message -> {"status"} eq "aborted");
+        if($message -> {"status"} eq "edited");
+
+    return $message;
+}
+
+
+## @method $ check_view()
+# Determine whether the message selected by the user can be viewed, including
+# verifying that the message has been specified, and is viewable.
+#
+# @return A reference to the message data if it can be viewed, or a string
+#         containing an error page if it can't
+sub check_view {
+    my $self = shift;
+
+    # Get the message id...
+    my $msgid = is_defined_numeric($self -> {"cgi"}, "msgid");
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_NOMSGID")) if(!$msgid);
+
+    # Get the message data
+    my $message = $self -> get_message($msgid);
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_BADMSGID")) if(!$message);
 
     return $message;
 }
@@ -837,8 +859,8 @@ sub page_display {
 
         # Has user selected a message to view?
         } elsif(defined($self -> {"cgi"} -> param("viewmsg"))) {
-            # Check that the message can be cancelled...
-            my $message = $self -> check_abort();
+            # Check that the message can be viewed...
+            my $message = $self -> check_view();
             return $message unless(ref($message) eq "HASH");
 
             $content = $self -> generate_view_form($message, $self -> get_msglist_args($message -> {"id"}));
