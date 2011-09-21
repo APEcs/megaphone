@@ -530,10 +530,7 @@ sub generate_abort_form {
     }
 
     $outfields -> {"delaysend"} = $self -> {"template"} -> load_template($message -> {"delaysend"} ? "blocks/message_edit_delay.tem" : "blocks/message_edit_nodelay.tem",
-                                                                         {"***delay***" => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delaysend"})});
-
-    # Simple HTML fix for the message...
-    ($outfields -> {"message"} = $message -> {"message"}) =~ s/\n/<br \/>\n/g;
+                                                                         {"***delay***" => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delay_send"})});
 
     # And build the message block itself. Kinda big and messy, this...
     my $body = $self -> {"template"} -> load_template("blocks/message_abort.tem", {"***targmatrix***"  => $self -> build_target_matrix($message -> {"targset"}, 1),
@@ -541,7 +538,7 @@ sub generate_abort_form {
                                                                                    "***bcc***"         => $outfields -> {"bcc"},
                                                                                    "***prefix***"      => $outfields -> {"prefix"},
                                                                                    "***subject***"     => $message -> {"subject"},
-                                                                                   "***message***"     => $outfields -> {"message"},
+                                                                                   "***message***"     => $message -> {"message"},
                                                                                    "***delaysend***"   => $outfields -> {"delaysend"},
                                                                                });
     # store any hidden args...
@@ -599,10 +596,7 @@ sub generate_view_form {
     }
 
     $outfields -> {"delaysend"} = $self -> {"template"} -> load_template($message -> {"delaysend"} ? "blocks/message_edit_delay.tem" : "blocks/message_edit_nodelay.tem",
-                                                                         {"***delay***" => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delaysend"})});
-
-    # Simple HTML fix for the message...
-    ($outfields -> {"message"} = $message -> {"message"}) =~ s/\n/<br \/>\n/g;
+                                                                         {"***delay***" => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delay_send"})});
 
     # And build the message block itself. Kinda big and messy, this...
     my $body = $self -> {"template"} -> load_template("blocks/message_view.tem", {"***targmatrix***"  => $self -> build_target_matrix($message -> {"targset"}, 1),
@@ -610,7 +604,7 @@ sub generate_view_form {
                                                                                    "***bcc***"         => $outfields -> {"bcc"},
                                                                                    "***prefix***"      => $outfields -> {"prefix"},
                                                                                    "***subject***"     => $message -> {"subject"},
-                                                                                   "***message***"     => $outfields -> {"message"},
+                                                                                   "***message***"     => $message -> {"message"},
                                                                                    "***delaysend***"   => $outfields -> {"delaysend"},
                                                                                });
 
