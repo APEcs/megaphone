@@ -22,6 +22,7 @@ package Target::Email;
 
 use strict;
 use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
+use HTML::Entities;
 
 # ============================================================================
 #  Constructor
@@ -96,8 +97,9 @@ sub send {
                                                                   "***to***"       => $self -> {"args"} -> {"to"},
                                                                   "***cc***"       => $outfields -> {"cc"} || "",
                                                                   "***bcc***"      => $outfields -> {"bcc"} || "",
-                                                                  "***subject***"  => $outfields -> {"subject"},
-                                                                  "***message***"  => $message -> {"message"},
+                                                                  # subject and message need html entities stripping
+                                                                  "***subject***"  => decode_entities($outfields -> {"subject"}),
+                                                                  "***message***"  => decode_entities($message -> {"message"}),
                                                                   "***realname***" => $user -> {"realname"},
                                                                   "***rolename***" => $user -> {"rolename"},
                                                               });    
