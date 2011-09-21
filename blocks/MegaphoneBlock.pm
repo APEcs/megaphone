@@ -325,7 +325,7 @@ sub build_prefix {
 
         $prefixlist .= '<option value="'.$prefix -> {"id"}.'"';
         $prefixlist .= ' selected="selected"' if($prefix -> {"id"} == $default);
-        $prefixlist .= '>'.$prefix -> {"prefix"}."</option>\n";
+        $prefixlist .= '>'.$prefix -> {"prefix"}." (".$prefix -> {"description"}.")</option>\n";
     }
 
     # Append the extra 'other' setting...
@@ -569,7 +569,7 @@ sub generate_message_editform {
                                                                                   "***subject***"     => $args -> {"subject"},
                                                                                   "***message***"     => $args -> {"message"},
                                                                                   "***delaysend***"   => $args -> {"delaysend"} ? 'checked="checked"' : "",
-                                                                                  "***delay***"       => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delaysend"}),
+                                                                                  "***delay***"       => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delay_send"}),
                                                                                   "***targmatrix***"  => $self -> build_target_matrix($args -> {"targset"}),
                                                                                   "***prefix***"      => $self -> build_prefix($args -> {"prefix_id"}),
                                                                               });
@@ -630,7 +630,7 @@ sub generate_message_confirmform {
     }
 
     $outfields -> {"delaysend"} = $self -> {"template"} -> load_template($args -> {"delaysend"} ? "blocks/message_edit_delay.tem" : "blocks/message_edit_nodelay.tem",
-                                                                         {"***delay***" => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delaysend"})});
+                                                                         {"***delay***" => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delay_send"})});
 
     # Simple HTML fix for the message...
     ($outfields -> {"message"} = $args -> {"message"}) =~ s/\n/<br \/>\n/g;
@@ -796,7 +796,7 @@ sub delay_remain {
 
     # Message is pending with a delay, how long does it have left?
     my $now      = time();
-    my $sendtime = $message -> {"updated"} + $self -> {"settings"} -> {"config"} -> {"Core:delaysend"};
+    my $sendtime = $message -> {"updated"} + $self -> {"settings"} -> {"config"} -> {"Core:delay_send"};
 
     # If the current time is after the send time, send immediately
     return -1 if($now > $sendtime);
