@@ -95,7 +95,7 @@ sub send {
     $self -> {"template"} -> email_template("email/message.tem", {"***from***"     => $user -> {"realname"}." <".$user -> {"email"}.">",
                                                                   "***to***"       => $self -> {"args"} -> {"to"},
                                                                   "***cc***"       => $outfields -> {"cc"} || "",
-                                                                  "***bcc***"      => $outfields -> {"cc"} || "",
+                                                                  "***bcc***"      => $outfields -> {"bcc"} || "",
                                                                   "***subject***"  => $outfields -> {"subject"},
                                                                   "***message***"  => $message -> {"message"},
                                                                   "***realname***" => $user -> {"realname"},
