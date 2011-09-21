@@ -13,9 +13,9 @@ function prefixMode() {
     var prefix = $('prefix').options[$('prefix').selectedIndex].value;
 
     if(prefix == "0") {
-        $('prefixother').disabled = false;
+        $('prefix_other').disabled = false;
     } else {
-        $('prefixother').disabled = true;
+        $('prefix_other').disabled = true;
     }
 }
 
