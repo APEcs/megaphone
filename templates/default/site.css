@@ -327,3 +327,21 @@ span.active {
 img.pageimg {                                                                                                                                         
     vertical-align: middle;                                                                                                                           
 }
+
+textarea.countarea {
+    width: 100%;
+}
+                  
+div.counter {
+    border: 1px inset grey;
+    padding: 3px;
+    font-size: x-small;
+}
+
+.twitokay {
+    color: green;
+}
+
+.twitlong {
+    color: red;
+}
