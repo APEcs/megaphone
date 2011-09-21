@@ -12,6 +12,7 @@ MSGLIST_UNSENDABLE = This message is in a state that prevents it from being sent
 MSGLIST_EMPTY      = You have not composed any messages yet.
 
 MSGLIST_EDIT    = Edit this message
+MSGLIST_CLONE   = Clone this message
 MSGLIST_ABORT   = Cancel this message
 MSGLIST_SEND    = Send this message immediately
 
@@ -23,7 +24,7 @@ MSGLIST_STATE_TITLE      = Status
 MSGLIST_STATE_DESC       = Messages in the system can be in one of several different states. The states are shown here as icons, with the following meanings:
 MSGLIST_STATE_INCOMPLETE = This message has not been confirmed for sending yet; either you are working on it in another tab, or you closed your browser or navigated away before confirming it. You can edit it to continue working on it.
 MSGLIST_STATE_PENDING    = This message is in a 'pending' state, meaning that it is ready to be sent, and it is waiting for its send delay to expire. You can edit it, cancel sending it entirely, or force it to be sent immediately.
-MSGLIST_STATE_SENT       = This message has been sent. You can view it, but you won't be able to edit it or prevent it from being sent. <strong>YOU SENT IT. YOU CAN'T UN-SEND IT!</strong>
+MSGLIST_STATE_SENT       = This message has been sent. You can view it, but you won't be able to edit it or prevent it from being sent. <strong>YOU SENT IT. YOU CAN'T UN-SEND IT!</strong> You can, however, clone a sent message to create a new message you can then edit.
 MSGLIST_STATE_EDITED     = This is an old version of a message that has been edited. All your message edits are retained for reference and auditing. You can not edit an edited message, and it will never be sent in its current form.
 MSGLIST_STATE_ABORTED    = This is an aborted message, one that was cancelled during its pending period. Aborted messages may be edited to create a new sendable message.
 
