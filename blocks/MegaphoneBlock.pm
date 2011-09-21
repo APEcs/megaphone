@@ -30,23 +30,27 @@ use Logging qw(die_log);
 # ============================================================================
 #  Storage
 
-## @method $ store_message($args, $user)
+## @method $ store_message($args, $user, $prev_id)
 # Store the contents of the message in the database, marked as 'incomplete' so that
 # the system can not autosend it yet.
 #
-# @params args A reference to a hash containing the message data.
-# @params user A reference to a user's data.
+# @param args    A reference to a hash containing the message data.
+# @param user    A reference to a user's data.
+# @param prev_id If creating a new message as part of editing an old one, this should
+#                be set to the old message's id. For new messages, this can be omitted.
 # @return The message id on success, dies on failure.
 sub store_message {
-    my $self = shift;
-    my $args = shift;
-    my $user = shift;
+    my $self    = shift;
+    my $args    = shift;
+    my $user    = shift;
+    my $prev_id = shift;
 
     # First we need to create the message itself
     my $messh = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"messages"}."
-                                             (user_id, prefix_id, prefix_other, subject, message, delaysend, created, updated)
-                                             VALUES(?, ?, ?, ?, ?, ?, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())");
-    $messh -> execute($user -> {"user_id"},
+                                             (previous_id, user_id, prefix_id, prefix_other, subject, message, delaysend, created, updated)
+                                             VALUES(?, ?, ?, ?, ?, ?, ?, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())");
+    $messh -> execute($prev_id,
+                      $user -> {"user_id"},
                       $args -> {"prefix_id"},
                       $args -> {"prefixother"},
                       $args -> {"subject"},
@@ -172,7 +176,7 @@ sub update_message {
     $self -> set_message_status($msgid, "edited") unless($message -> {"status"} eq "aborted");
 
     # Create a new message
-    return $self -> store_message($args, $user);
+    return $self -> store_message($args, $user, $msgid);
 }
 
 
