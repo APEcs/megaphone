@@ -1,1 +1,1 @@
-&nbsp;
+<a href="index.cgi?block={B_[msglist]}&amp;sort=***sort***&amp;way=***way***&amp;page=***page***&amp;msgid=***id***&amp;editmsg"><img src="templates/default/images/msgops/clone_msg.png" width="16" height="16" alt="clone" title="{L_MSGLIST_CLONE}" /></a>
