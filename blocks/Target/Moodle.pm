@@ -41,7 +41,7 @@ sub new {
         # If there are any arguments to convert, split and store
         if($self -> {"args"}) {
             my @argbits = split(/;/, $self -> {"args"});
-            
+
             $self -> {"args"} = {};
             foreach my $arg (@argbits) {
                 my ($name, $value) = $arg =~ /^(\w+)=(.*)$/;
@@ -54,10 +54,34 @@ sub new {
 
 
 # ============================================================================
+#  Moodle interaction
+
+## @method $ get_moodle_userid($username)
+# Obtain the moodle record for the user with the specified username.
+#
+# @param username The username of the user to find in moodle's database.
+# @return The requested user's userid, or undef if the user does not exist.
+sub get_moodle_userid {
+    my $self     = shift;
+    my $username = shift;
+
+    # Pretty simple query, really...
+    my $userh = $self -> {"moodle"} -> prepare("SELECT id FROM ".$self -> {"settings"} -> {"config"} -> {"Target::Moodle:users"}."
+                                                WHERE username LIKE ?");
+    $userh -> execute($username)
+        or die_log($self -> {"cgi"} -> remote_host(), "Target::Moodle: Unable to execute user query: ".$self -> {"moodle"} -> errstr);
+
+    my $user = $userh -> fetchrow_arrayref();
+
+    return $user ? $user -> [0] : undef;
+}
+
+
+# ============================================================================
 #  Message send functions
 
 ## @method $ send($message)
-# Attempt to send the specified message as a moodle forum post. 
+# Attempt to send the specified message as a moodle forum post.
 #
 # @param message A reference to a hash containing the message to send.
 # @return undef on success, an error message on failure.
@@ -65,8 +89,83 @@ sub send {
     my $self    = shift;
     my $message = shift;
 
+    # Get the user's data
+    my $user = $self -> {"session"} -> {"auth"} -> get_user_byid($message -> {"user_id"});
+    die_log($self -> {"cgi"} -> remote_host(), "Unable to get user details for message ".$message -> {"id"}) if(!$user);
 
+    # Open the moodle database connection.
+    $self -> {"moodle"} = DBI->connect($self -> {"settings"} -> {"config"} -> {"Target::Moodle:database"},
+                                       $self -> {"settings"} -> {"config"} -> {"Target::Moodle:username"},
+                                       $self -> {"settings"} -> {"config"} -> {"Target::Moodle:password"},
+                                       { RaiseError => 0, AutoCommit => 1, mysql_enable_utf8 => 1 })
+        or die_log($self -> {"cgi"} -> remote_host(), "Target::Moodle: Unable to connect to database: ".$DBI::errstr);
 
+    # Look up the user in moodle's user table
+    my $moodleuser = $self -> get_moodle_userid($user -> {"username"});
+
+    # If we have no user, fall back on the, um, fallback...
+    my $fallback = 0;
+    if(!$moodleuser) {
+        $fallback = 1;
+        $moodleuser = $self -> get_moodle_user($self -> {"settings"} -> {"config"} -> {"Target::Moodle:fallback_user"})
+            or die_log($self -> {"cgi"} -> remote_host(), "Target::Moodle: Unable to obtain a moodle user (username and fallback failed)");
+    }
+
+    # Get the prefix sorted if needed
+    my $prefix = "";
+    if($self -> {"args"} -> {"prefix"}) {
+        if($message -> {"prefix_id"} == 0) {
+            $prefix = $message -> {"prefixother"};
+        } else {
+            my $prefixh = $self -> {"dbh"} -> prepare("SELECT prefix FROM ".$self -> {"settings"} -> {"database"} -> {"prefixes"}."
+                                                   WHERE id = ?");
+            $prefixh -> execute($message -> {"prefix_id"})
+                or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute prefix query: ".$self -> {"dbh"} -> errstr);
+
+            my $prefixr = $prefixh -> fetchrow_arrayref();
+            $prefix = $prefixr ? $prefixr -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADPREFIX");
+        }
+        $prefix .= " " if($prefix);
+    }
+
+    # Timestamp for posting is now
+    my $now = time();
+
+    # Make the discussion
+    my $discussh = $self -> {"moodle"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"config"} -> {"Target::Moodle:discussions"}."
+                                                   (course, forum, name, userid, timemodified, usermodified)
+                                                   VALUES(?, ?, ?, ?, ?, ?)");
+    $discussh -> execute($self -> {"args"} -> {"course_id"},
+                         $self -> {"args"} -> {"forum_id"},
+                         $prefix.$message -> {"subject"},
+                         $moodleuser,
+                         $now,
+                         $moodleuser)
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute discussion insert query: ".$self -> {"moodle"} -> errstr);
+
+    # Get the discussion id
+    my $discussid = $self -> {"moodle"} -> {"mysql_insertid"};
+    die_log($self -> {"cgi"} -> remote_host(), "Unable to get ID of new discussion. This should not happen.") if(!$discussid);
+
+    my $posth =  $self -> {"moodle"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"config"} -> {"Target::Moodle:posts"}."
+                                                (discussion, userid, created, modified, subject, message)
+                                                VALUES(?, ?, ?, ?, ?, ?)");
+    $posth -> execute($discussid, $moodleuser, $now, $now, $prefix.$message -> {"subject"}, $message -> {"message"})
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute post insert query: ".$self -> {"moodle"} -> errstr);
+
+    # Get the post id..
+    my $postid = $self -> {"moodle"} -> {"mysql_insertid"};
+    die_log($self -> {"cgi"} -> remote_host(), "Unable to get ID of new post. This should not happen.") if(!$postid);
+
+    # Update the discussion with the post id
+    $discussh = $self -> {"moodle"} -> prepare("UPDATE ".$self -> {"settings"} -> {"config"} -> {"Target::Moodle:discussions"}."
+                                                SET firstpost = ?
+                                                WHERE id = ?");
+    $discussh -> execute($postid, $discussid)
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute discussion update query: ".$self -> {"moodle"} -> errstr);
+
+    # Done talking to moodle now.
+    $self -> {"moodle"} -> disconnect();
 }
 
 1;
