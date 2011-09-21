@@ -641,7 +641,7 @@ sub generate_messagelist {
 
     # Now the viewable splice can be extracted.
     # Find out how many pages there are...
-    my $maxpage = int(scalar(@sorted) / $self -> {"settings"} -> {"config"} -> {"UserMessages:pagelength"});
+    my $maxpage = int(scalar(@sorted) / $self -> {"settings"} -> {"config"} -> {"UserMessages:page_length"});
 
     # And which page the user is looking at
     my $pagenum   = is_defined_numeric($self -> {"cgi"}, "page") || 0;
@@ -649,7 +649,7 @@ sub generate_messagelist {
     $pagenum = $maxpage if($pagenum > $maxpage);
 
     # Get the splice. Probably a nicer way to do this, but hell, it works.
-    my @spliced = splice(@sorted, $pagenum * $self -> {"settings"} -> {"config"} -> {"UserMessages:pagelength"}, $self -> {"settings"} -> {"config"} -> {"UserMessages:pagelength"});
+    my @spliced = splice(@sorted, $pagenum * $self -> {"settings"} -> {"config"} -> {"UserMessages:page_length"}, $self -> {"settings"} -> {"config"} -> {"UserMessages:page_length"});
 
     # Precache the row template to speed things up
     my $rowtem = $self -> {"template"} -> load_template("messagelist/row.tem", {"***sort***" => $sort,
