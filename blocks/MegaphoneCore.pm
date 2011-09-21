@@ -60,7 +60,7 @@ sub generate_message {
                                                                          "***subject***"     => $args -> {"subject"},
                                                                          "***message***"     => $args -> {"message"},
                                                                          "***delaysend***"   => $args -> {"delaysend"} ? 'checked="checked"' : "",
-                                                                         "***delay***"       => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delaysend"}),
+                                                                         "***delay***"       => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delay_send"}),
                                                                          "***targmatrix***"  => $self -> build_target_matrix($args -> {"targset"}),
                                                                          "***prefix***"      => $self -> build_prefix($args -> {"prefix"}),
                                                                      });
