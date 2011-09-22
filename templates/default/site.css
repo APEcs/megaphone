@@ -364,3 +364,12 @@ div.messageview {
     overflow: auto;
     overflow-x: auto;
 }
+
+div.cron {
+    font-face: fixed;
+    max-height: 25em;
+    overflow: auto;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+    
