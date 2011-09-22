@@ -826,6 +826,7 @@ sub send_message {
 
     # Get the message data, so we know what to do with it
     my $message = $self -> get_message($msgid);
+    die_log($self -> {"cgi"} -> remote_host(), "Unable to fetch message data for message $msgid. This should not happen.") if(!$message);
 
     # We can only work with "pending" messages
     die_log($self -> {"cgi"} -> remote_host(), "Attempt to send a message that is not in a sendable state. This should not happen.")
