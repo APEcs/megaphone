@@ -810,13 +810,15 @@ sub delay_remain {
 }
 
 
-## @method void send_message($msgid, $force)
+## @method $ send_message($msgid, $force)
 # Send the message to all the selected destinations. This will do nothing if
 # the message is waiting on a delayed send, unless force is set, in which case
 # the message will always be sent if posible.
 #
 # @param msgid The id of the message to send.
 # @param force Force the message to be sent, ignoring the message delay.
+# @return True if the message was sent, 0 if it was not. Dies with an error
+#         if the message should not/can not be sent.
 sub send_message {
     my $self  = shift;
     my $msgid = shift;
@@ -834,7 +836,7 @@ sub send_message {
     die_log($self -> {"cgi"} -> remote_host(), "Illegal attempt to send message ".$message -> {"id"}.": message is not sendable!") if(!defined($remain));
 
     # Do nothing if the remain is > 0 and we're not being forced to send
-    return unless($force || $remain <= 0);
+    return 0 unless($force || $remain <= 0);
 
     # Message is going out! Work out where the user has asked to send it.
     my $desth = $self -> {"dbh"} -> prepare("SELECT d.args, t.module_id
@@ -864,6 +866,8 @@ sub send_message {
                                                WHERE id = ?");
     $updateh -> execute($message -> {"id"})
         or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message update query: ".$self -> {"dbh"} -> errstr);
+
+    return 1;
 }
 
 
