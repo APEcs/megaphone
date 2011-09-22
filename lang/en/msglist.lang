@@ -35,3 +35,4 @@ NAVBOX_NEXT   = Next
 NAVBOX_LAST   = Last
 NAVBOX_PAGE   = Page
 NAVBOX_PAGEOF = of
+NAVBOX_NEWMSG = Compose a new message

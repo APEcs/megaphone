@@ -13,7 +13,7 @@ body  {
     margin: 0 auto;
     text-align: left; /* this overrides the text-align: center on the body element. */
     padding: 90px 20px 10px 20px;
-} 
+}
 
 #header {
   font-size: 127%;
@@ -87,7 +87,7 @@ body  {
 
 .megaphone #footer {
     padding: 0 10px;
-} 
+}
 
 .megaphone #footer p {
     margin: 0;
@@ -147,14 +147,14 @@ body  {
 
 table.notebox {
     margin: 0px 10%;   /* 10% = Will not overlap with other elements */
-    border: 1px solid #aaa; 
+    border: 1px solid #aaa;
     border-left: 10px solid #1e90ff;    /* Default "notice" blue */
-    background: #fbfbfb; 
+    background: #fbfbfb;
 }
 table.notebox + table.notebox {   /* Single border between stacked boxes. */
     margin-top: -1px;
 }
-.notebox th.nbox-text, 
+.notebox th.nbox-text,
 .notebox td.nbox-text {            /* The message body cell(s) */
     padding: 0.25em 0.5em;       /* 0.5em left/right */
 }
@@ -164,7 +164,7 @@ table.notebox + table.notebox {   /* Single border between stacked boxes. */
 .notebox td.nbox-imageright {      /* The right image cell */
     padding: 2px 0.5em 2px 0;    /* 0px left, 0.5em right */
 }
- 
+
 table.notebox-notice {
     border-left: 10px solid #1e90ff;    /* Blue */
 }
@@ -305,33 +305,33 @@ ul#states li {
     clear: both;
 }
 
-div.paginate {                                                                                                                                        
-    text-align: right;                                                                                                                                
-    height: 1.5em;                                                                                                                                    
-    margin-bottom: 0.5em;                                                                                                                             
+div.paginate {
+    text-align: right;
+    margin-bottom: 0.5em;
     margin-top: 0.5em;
-}                                                                                                                                                     
-                                                                                                                                                      
-span.pagebox {                                                                                                                                        
-    border: 1px solid #cedfeb;                                                                                                                        
-    vertical-align: middle;                                                                                                                           
-    padding: 3px;                                                                                                                                     
-    background-color: #e2e6f8;                                                                                                                        
-    margin-left: 1px;                                                                                                                                 
-}                                                                                                                                                     
-                                                                                                                                                      
-span.active {                                                                                                                                         
-    background-color: #c1c1ff;                                                                                                                        
-}                                                                                                                                                     
-                                                                                                                                                      
-img.pageimg {                                                                                                                                         
-    vertical-align: middle;                                                                                                                           
+}
+
+span.pagebox {
+    border: 1px solid #cedfeb;
+    vertical-align: middle;
+    padding: 3px;
+    background-color: #e2e6f8;
+    margin-left: 1px;
+    line-height: 27px;
+}
+
+span.active {
+    background-color: #c1c1ff;
+}
+
+img.pageimg {
+    vertical-align: middle;
 }
 
 textarea.countarea {
     width: 100%;
 }
-                  
+
 div.counter {
     border: 1px inset grey;
     padding: 3px;
@@ -372,4 +372,10 @@ div.cron {
     overflow-x: auto;
     overflow-y: auto;
 }
-    
+
+img.link {
+    display: inline;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
