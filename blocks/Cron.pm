@@ -19,7 +19,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-package Login;
+package Cron;
 
 use strict;
 use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
@@ -39,13 +39,13 @@ sub page_display {
     $pendh -> execute()
         or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message lookup: ".$self -> {"dbh"} -> errstr);
 
-    my $body = '<div class="cron">';
+    my $body = '<div class="cron">Checking messages.<br/>';
     while(my $msgrow = $pendh -> fetchrow_arrayref()) {
         $body .= "Checking message ".$msgrow -> [0]."... ";
         $body .= $self -> send_message($msgrow -> [0]) ? "sent" : "delay active";
         $body .= "<br/>\n";
     }
-    $body .= "</div>";
+    $body .= "Done.</div>";
 
     # Done sending, return the filled in page template
     return $self -> {"template"} -> load_template("page.tem", {"***title***"     => $self -> {"template"} -> replace_langvar("CRON_TITLE"),
