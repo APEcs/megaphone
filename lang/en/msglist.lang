@@ -11,6 +11,8 @@ MSGLIST_DELAYWAIT  = This message is waiting to be sent.
 MSGLIST_UNSENDABLE = This message is in a state that prevents it from being sent.
 MSGLIST_EMPTY      = You have not composed any messages yet.
 
+MSGLIST_NOTSENTNOTE = This message's delay time has expired, but it hasn't been sent. Usually this means the cron job hasn't run since the delay timer expired.
+
 MSGLIST_EDIT    = Edit this message
 MSGLIST_CLONE   = Clone this message
 MSGLIST_ABORT   = Cancel this message

@@ -1,1 +1,1 @@
-<img src="templates/default/images/msgstates/notsent.png" width="16" height="16" alt="not sent" title="{L_MSGLIST_NOTSENT}" /> <span class="error">{L_MSGLIST_NOTSENT}</span>
+<span title="{L_MSGLIST_NOTSENTNOTE}"><img src="templates/default/images/msgstates/notsent.png" width="16" height="16" alt="not sent" title="{L_MSGLIST_NOTSENT}" /> <span class="error">{L_MSGLIST_NOTSENT}</span></span>
