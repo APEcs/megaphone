@@ -106,7 +106,7 @@ sub page_display {
     my ($title, $content);
 
     # If we have no submission, just send the blank form...
-    if(!$self -> {"cgi"} -> param()) {
+    if(!$self -> {"cgi"} -> param() || defined($self -> {"cgi"} -> param("newmsg"))) {
         $title   = $self -> {"template"} -> replace_langvar("MESSAGE_TITLE");
         $content = $self -> generate_message_form();
 
