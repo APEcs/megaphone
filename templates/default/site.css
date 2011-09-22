@@ -306,9 +306,17 @@ ul#states li {
 }
 
 div.paginate {
+    float: right;
     text-align: right;
     margin-bottom: 0.5em;
     margin-top: 0.5em;
+}
+div.showhide {
+    float: left;
+    text-align: left;
+    margin-bottom: 0.5em;
+    margin-top: 0.5em;
+    line-height: 27px;
 }
 
 span.pagebox {

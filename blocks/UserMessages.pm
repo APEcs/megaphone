@@ -359,7 +359,7 @@ sub check_send {
 # ============================================================================
 #  Fragment generators
 
-## @method $ build_navigation($maxpage, $pagenum, $sort, $way)
+## @method $ build_navigation($maxpage, $pagenum, $sort, $way, $hide)
 # Generate the navigation/pagination box for the message list. This will generate
 # a series of boxes and controls to allow users to move between pages of message
 # list.
@@ -368,6 +368,7 @@ sub check_send {
 # @param pagenum The selected page (first is page 0!!)
 # @param sort    The current sort mode.
 # @param way     The direction to sort in.
+# @param hide    The hide options hash.
 # @return A string containing the navigation block.
 sub build_navigation {
     my $self    = shift;
@@ -375,6 +376,8 @@ sub build_navigation {
     my $pagenum = shift;
     my $sort    = shift;
     my $way     = shift;
+    my $hideref = shift;
+    my $hide = $self -> set_hide_options($hideref);
 
     # If there is more than one page, generate a full set of page controls
     if($maxpage > 0) {
@@ -382,13 +385,15 @@ sub build_navigation {
 
         # If the user is not on the first page, we need to add the left jump controls
         $pagelist .= $self -> {"template"} -> load_template("messagelist/jumpleft.tem", {"***sort***"   => $sort,
-                                                                                                "***way***"    => $way,
-                                                                                                "***prev***"   => $pagenum - 1})
+                                                                                         "***way***"    => $way,
+                                                                                         "***hide***"   => $hide,
+                                                                                         "***prev***"   => $pagenum - 1})
             if($pagenum > 0);
 
         # load some templates to speed up page list generation...
         my $pagetem = $self -> {"template"} -> load_template("messagelist/jumppage.tem", {"***sort***"   => $sort,
-                                                                                                 "***way***"    => $way});
+                                                                                          "***hide***"   => $hide,
+                                                                                          "***way***"    => $way});
         my $pageacttem = $self -> {"template"} -> load_template("messagelist/page.tem");
 
         # Generate the list of pages
@@ -400,19 +405,22 @@ sub build_navigation {
 
         # Append the right jump controls if we're not on the last page
         $pagelist .= $self -> {"template"} -> load_template("messagelist/jumpright.tem", {"***sort***"   => $sort,
-                                                                                                 "***way***"    => $way,
-                                                                                                 "***next***"   => $pagenum + 1,
-                                                                                                 "***last***"   => $maxpage})
+                                                                                          "***way***"    => $way,
+                                                                                          "***hide***"   => $hide,
+                                                                                          "***next***"   => $pagenum + 1,
+                                                                                          "***last***"   => $maxpage})
             if($pagenum < $maxpage);
 
-        return $self -> {"template"} -> load_template("messagelist/paginate.tem", {"***pagenum***" => $pagenum + 1,
-                                                                                          "***maxpage***" => $maxpage + 1,
-                                                                                          "***pages***"   => $pagelist});
+        return $self -> {"template"} -> load_template("messagelist/paginate.tem", {"***showhide***" => $self -> build_showhide($sort, $way, $pagenum, $hideref),
+                                                                                   "***pagenum***" => $pagenum + 1,
+                                                                                   "***maxpage***" => $maxpage + 1,
+                                                                                   "***pages***"   => $pagelist});
     # If there's only one page, a simple "Page 1 of 1" will do the trick.
     } else { # if($maxpage > 0)
-        return $self -> {"template"} -> load_template("messagelist/paginate.tem", {"***pagenum***" => 1,
-                                                                                          "***maxpage***" => 1,
-                                                                                          "***pages***"   => ""});
+        return $self -> {"template"} -> load_template("messagelist/paginate.tem", {"***showhide***" => $self -> build_showhide($sort, $way, $pagenum, $hideref),
+                                                                                   "***pagenum***" => 1,
+                                                                                   "***maxpage***" => 1,
+                                                                                   "***pages***"   => ""});
     }
 }
 
@@ -442,6 +450,43 @@ sub build_sent_info {
 }
 
 
+## @method $ build_showhide($sort, $way, $page, $hideref)
+# Generate the showhide block
+#
+# @param sort    The current sort mode.
+# @param way     The current sort direction.
+# @param page    The selected page number.
+# @param hideref A reference to a hash containing hide options.
+# @return A string containing the show/hide block.
+sub build_showhide {
+    my ($self, $sort, $way, $page, $hideref) = @_;
+    
+    my $hidetem = $self -> {"template"} -> load_template("messagelist/status_hide.tem", {"***sort***" => $sort,
+                                                                                         "***way***"  => $way,
+                                                                                         "***page***" => $page});
+
+    my $showtem = $self -> {"template"} -> load_template("messagelist/status_show.tem", {"***sort***" => $sort,
+                                                                                         "***way***"  => $way,
+                                                                                         "***page***" => $page});
+    my $hideshow = "";
+    foreach my $state ("incomplete", "pending", "sent", "edited", "aborted") {
+        # If the state is hidden, output a 'show' option
+        if($hideref -> {$state}) {
+            $hideshow .= $self -> {"template"} -> process_template($showtem, {"***status***" => $state,
+                                                                              "***hide***"   => $self -> set_hide_options($hideref, $state)});
+        } else {
+            $hideshow .= $self -> {"template"} -> process_template($hidetem, {"***status***" => $state,
+                                                                              "***hide***"   => $self -> set_hide_options($hideref, undef, $state)});
+        }
+    }
+
+    return $self -> {"template"} -> load_template("messagelist/showhide.tem", {"***showhide***" => $hideshow});
+}
+
+
+# ============================================================================
+#  Support functions
+
 ## @method $ get_msglist_args($msgid)
 # Create a hash containing the currently set message list options.
 #
@@ -452,6 +497,7 @@ sub get_msglist_args {
     my $msgid = shift;
 
     my $args = { "msgid" => $msgid,
+                 "hide" => $self -> {"cgi"} -> param("hide"),
                  "sort" => $self -> {"cgi"} -> param("sort") || "updated",
                  "way"  => $self -> {"cgi"} -> param("way")  || "desc",
                  "page" => is_defined_numeric($self -> {"cgi"}, "page") || 0 };
@@ -461,7 +507,74 @@ sub get_msglist_args {
     $args -> {"way"}  = "desc" unless($args -> {"way"} eq "asc" || $args -> {"way"} eq "desc");
     $args -> {"page"} = 0 if($args -> {"page"} < 0);
 
+    $args -> {"hide"} = "edited" if(!defined($args -> {"hide"}));
+    
+    # Check that the hide contents are valid
+    my @hide = split(/,/, $args -> {"hide"});
+    my @valid;
+    foreach my $arg (@hide) {
+        # Cheat and use the stateweight hash to check that states are valid
+        push(@valid, $arg) if(defined($stateweight -> {$arg}));
+    }
+
+    # push out the valid hide arguments
+    $args -> {"hide"} = join(",", @valid);
+
     return $args;
+}
+
+
+## @method $ get_hide_options()
+# Create a hash containing the currently set hide options, and return a refernce
+# to it.
+#
+# @return A reference to a hash of hide options
+sub get_hide_options {
+    my $self = shift;
+
+    # Get the hide and set it to a default if we don't have one
+    my $hide = $self -> {"cgi"} -> param("hide");
+    $hide = "edited" if(!defined($hide));
+
+    # Now check each hide option, storing it in the hash if valid
+    my @hides = split(",", $hide);
+    my $hideset;
+    foreach my $hideop (@hides) {
+        $hideset -> {$hideop} = 1
+            if(defined($stateweight -> {$hideop}));
+    }
+
+    return $hideset;
+}
+
+
+## @method $ set_hide_options($hideref, $omit, $extra)
+# Generate a string containing the hide options specified in the hide hash,
+# omitting the $omit option if set, and including the $extra option if given.
+#
+# @param hideref A reference to a hash of hide options.
+# @param omit    Omit this hide option from the generated string.
+# @param extra   Include this hide option in the generate string.
+# @return A string containing the comma separated hide options.
+sub set_hide_options {
+    my $self    = shift;
+    my $hideref = shift;
+    my $omit    = shift;
+    my $extra   = shift;
+
+    my $outstring = "";
+    foreach my $hide (keys(%{$hideref})) {
+        next if($hide eq $omit);
+
+        $outstring .= "," if($outstring);
+        $outstring .= $hide;
+    }
+    if($extra) {
+        $outstring .= "," if($outstring);
+        $outstring .= $extra;
+    }
+
+    return $outstring;
 }
 
 
@@ -642,8 +755,15 @@ sub generate_messagelist {
     $messh -> execute($self -> {"session"} -> {"sessuser"})
         or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message lookup query: ".$self -> {"dbh"} -> errstr);
 
-    # Get a reference to an array of hashrefs, one entry per message
-    my $messages = $messh -> fetchall_arrayref({});
+    # Pull the hide options
+    my $hideopts = $self -> get_hide_options();
+    my @messages;
+    while(my $msg = $messh -> fetchrow_hashref()) {
+        # Ship hidden messages
+        next if($hideopts -> {$msg -> {"status"}});
+
+        push(@messages, $msg);
+    }
 
     # Has the user specified any sorting preferences?
     my $sort = $self -> {"cgi"} -> param("sort") || "updated";
@@ -654,7 +774,7 @@ sub generate_messagelist {
     $way  = "desc" unless($way eq "asc" || $way eq "desc");
 
     # Sort according to user preferences...
-    my @sorted = sort { $sortfns -> {$sort} -> {$way} -> () } @{$messages};
+    my @sorted = sort { $sortfns -> {$sort} -> {$way} -> () } @messages;
 
     # Now the viewable splice can be extracted.
     # Find out how many pages there are...
@@ -671,12 +791,14 @@ sub generate_messagelist {
     # Precache the row template to speed things up
     my $rowtem = $self -> {"template"} -> load_template("messagelist/row.tem", {"***sort***" => $sort,
                                                                                 "***way***"  => $way,
+                                                                                "***hide***" => $self -> set_hide_options($hideopts),
                                                                                 "***page***" => $pagenum});
     # Precache the ops templates for each status
     my $optems = {};
     foreach my $state (keys(%{$stateweight})) {
         $optems -> {$state} = $self -> {"template"} -> load_template("messagelist/op$state.tem", {"***sort***" => $sort,
                                                                                                   "***way***"  => $way,
+                                                                                                  "***hide***" => $self -> set_hide_options($hideopts),
                                                                                                   "***page***" => $pagenum});
     }
 
@@ -726,7 +848,7 @@ sub generate_messagelist {
     # Put the table together
     return $self -> {"template"} -> load_template("messagelist/messagelist.tem", {"***error***"       => $error,
                                                                                   "***info***"        => $info,
-                                                                                  "***navigation***"  => $self -> build_navigation($maxpage, $pagenum, $sort, $way), # FIXME: PAGINATION
+                                                                                  "***navigation***"  => $self -> build_navigation($maxpage, $pagenum, $sort, $way, $hideopts),
                                                                                   "***statepopup***"  => $statepopup,
                                                                                   "***sortstate***"   => $sortcols -> {"status"},
                                                                                   "***sortsubject***" => $sortcols -> {"subject"},

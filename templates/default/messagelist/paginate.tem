@@ -1,4 +1,8 @@
-<div class="paginate cleared">
+<div>
+***showhide***
+<div class="paginate">
 <span class="fltlt"><a href="index.cgi?block={B_[core]}&amp;newmsg"><img class="link" src="templates/default/images/newmessage.png" width="97" height="27" alt="new message" title="{L_NAVBOX_NEWMSG}" /></a></span>
 <span class="fltrt"><span class="pagebox">{L_NAVBOX_PAGE} ***pagenum*** {L_NAVBOX_PAGEOF} ***maxpage***</span>***pages***</span>
 </div>
+</div>
+<div class="cleared"></div>

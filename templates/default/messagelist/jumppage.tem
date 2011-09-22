@@ -1,1 +1,1 @@
-<span class="pagebox"><a href="index.cgi?block={B_[msglist]}&amp;sort=***sort***&amp;way=***way***&amp;page=***pageid***">***pagenum***</a></span>
+<span class="pagebox"><a href="index.cgi?block={B_[msglist]}&amp;sort=***sort***&amp;way=***way***&amp;page=***pageid***&amp;hide=***hide***">***pagenum***</a></span>

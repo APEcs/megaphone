@@ -1,1 +1,1 @@
-<a href="index.cgi?block={B_[msglist]}&amp;sort=***sort***&amp;way=asc&amp;page=***page***"><img src="templates/default/images/sort/none.png" width="12" height="12" alt="sort" /></a>
+<a href="index.cgi?block={B_[msglist]}&amp;sort=***sort***&amp;way=asc&amp;page=***page***&amp;hide=***hide***"><img src="templates/default/images/sort/none.png" width="12" height="12" alt="sort" /></a>
