@@ -49,12 +49,13 @@
     </div> <!-- #header -->
 
     <div id="mainContent">
-                <table class="notebox notebox-warning">
+                <table class="notebox notebox-warning" id="livewarn">
                     <tr>
                         <td class="nbox-image"><img src="templates/default/images/important.png" width="48" height="48" alt="important" /></td>
                         <td class="nbox-text">WARNING: This system is now "live" - messages sent by the system will go to the real destination rather than a testing location. If you need to do testing, use the 'Test' recipient!</td>
                     </tr>
-                </table>  
+                </table>
+                <script type="text/javascript">setTimeout(function() { $('livewarn').dissolve() }, 5000);</script>
 ***content***
     </div> <!-- #mainContent -->
 
