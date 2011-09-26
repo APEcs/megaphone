@@ -118,10 +118,14 @@ print $out -> header(-charset => 'utf-8',
 
 my $endtime = time();
 my ($user, $system, $cuser, $csystem) = times();
-my $debug = $template -> load_template("debug.tem", {"***secs***"   => sprintf("%.2f", $endtime - $starttime),
-                                                     "***user***"   => $user,
-                                                     "***system***" => $system,
-                                                     "***memory***" => $template -> bytes_to_human(get_proc_size())});
+my $debug = "";
+
+if($settings -> {"config"} -> {"debug"}) {
+    $debug = $template -> load_template("debug.tem", {"***secs***"   => sprintf("%.2f", $endtime - $starttime),
+                                                      "***user***"   => $user,
+                                                      "***system***" => $system,
+                                                      "***memory***" => $template -> bytes_to_human(get_proc_size())});
+}
 
 print Encode::encode_utf8($template -> process_template($content, {"***debug***" => $debug}));
 $template -> set_module_obj(undef);
