@@ -217,17 +217,23 @@ img.control {
 
 div.matrix {
     width: 100%;
-    max-height: 12em;
+    max-height: 13em;
     overflow: auto;
     overflow-x: auto;
     overflow-y: auto;
 }
 
 table.matrix {
+    margin-right: 1px;
 }
 
 table.matrix th.help {
     text-align: left;
+    white-space: nowrap;
+}
+
+table.matrix td.recip {
+    width: 100%;
 }
 
 /* CSS for zebratables */
