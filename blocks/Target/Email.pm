@@ -20,6 +20,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package Target::Email;
 
+## @class
+# A simple email target implementation. Supported arguments are:
+#
+# to=<address list>  - specify a list of recipient addresses (comma separated)
+# reply-to=<address> - specify the address that replies should go to, if not
+#                      replies will go to the From: address (the message owner).
+#
+# Repeat arguments are concatenated, so these are equivalent:
+#
+# to=foo@bar.com;to=wibble@nowhere.com
+# to=foo@bar.com,wibble@nowhere.com
+
 use strict;
 use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
 use HTML::Entities;
@@ -42,11 +54,16 @@ sub new {
         # If there are any arguments to convert, split and store
         if($self -> {"args"}) {
             my @argbits = split(/;/, $self -> {"args"});
-            
+
             $self -> {"args"} = {};
             foreach my $arg (@argbits) {
                 my ($name, $value) = $arg =~ /^(\w+)=(.*)$/;
-                $self -> {"args"} -> {$name} = $value;
+                # Concatenate arguments with the same name
+                if($self -> {"args"} -> {$name}) {
+                    $self -> {"args"} -> {$name} .= ",$value";
+                } else {
+                    $self -> {"args"} -> {$name} = $value;
+                }
             }
         }
     }
@@ -58,7 +75,7 @@ sub new {
 #  Message send functions
 
 ## @method $ send($message)
-# Attempt to send the specified message as an email. 
+# Attempt to send the specified message as an email.
 #
 # @param message A reference to a hash containing the message to send.
 # @return undef on success, an error message on failure.
@@ -75,7 +92,7 @@ sub send {
     foreach my $mode ("cc", "bcc") {
         $outfields -> {$mode} = join(",", @{$message -> {$mode}});
     }
-    
+
     # Get the prefix sorted
     if($message -> {"prefix_id"} == 0) {
         $outfields -> {"prefix"} = $message -> {"prefixother"};
@@ -95,6 +112,7 @@ sub send {
     # Send the message!
     $self -> {"template"} -> email_template("email/message.tem", {"***from***"     => $user -> {"realname"}." <".$user -> {"email"}.">",
                                                                   "***to***"       => $self -> {"args"} -> {"to"},
+                                                                  "***replyto***"  => $self -> {"args"} -> {"reply-to"},
                                                                   "***cc***"       => $outfields -> {"cc"} || "",
                                                                   "***bcc***"      => $outfields -> {"bcc"} || "",
                                                                   # subject and message need html entities stripping
@@ -102,7 +120,7 @@ sub send {
                                                                   "***message***"  => decode_entities($message -> {"message"}),
                                                                   "***realname***" => $user -> {"realname"},
                                                                   "***rolename***" => $user -> {"rolename"},
-                                                              });    
+                                                              });
 }
 
 1;
