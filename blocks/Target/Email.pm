@@ -93,10 +93,13 @@ sub send {
     # work out the bcc/cc fields....
     foreach my $mode ("cc", "bcc") {
         $outfields -> {$mode} = join(",", @{$message -> {$mode}});
-    }
 
-    $outfields -> {"cc"}  .= $self -> {"args"} -> {"cc"};
-    $outfields -> {"bcc"} .= $self -> {"args"} -> {"bcc"};
+        # Concatenate bcc/cc set in the arguments.
+        if($self -> {"args"} -> {$mode}) {
+            $outfields -> {$mode} .= ", " if($outfields -> {$mode});
+            $outfields -> {$mode}  .= $self -> {"args"} -> {$mode};
+        }
+    }
 
     # Get the prefix sorted
     if($message -> {"prefix_id"} == 0) {
