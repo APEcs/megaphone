@@ -472,9 +472,9 @@ sub validate_message {
         # Four field each for cc and bcc...
         for(my $i = 1; $i <= 4; ++$i) {
             ($args -> {$mode} -> [$i - 1], $error) = $self -> validate_string($mode.$i, {"required"   => 0,
-                                                                                     "default"    => "",
-                                                                                     "nicename"   => $self -> {"template"} -> replace_langvar("MESSAGE_".uc($mode)),
-                                                                                     "maxlen"     => 255});
+                                                                                         "default"    => "",
+                                                                                         "nicename"   => $self -> {"template"} -> replace_langvar("MESSAGE_".uc($mode)),
+                                                                                         "maxlen"     => 255});
             # Fix up <, >, and "
             $args -> {$mode} -> [$i - 1] = decode_entities($args -> {$mode} -> [$i - 1]);
 
@@ -482,13 +482,22 @@ sub validate_message {
             if($error) {
                 $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error});
             } else {
-                # Emails can have 'real name' junk as well as straight addresses
-                if($args -> {$mode} -> [$i - 1] && $args -> {$mode} -> [$i - 1] !~ /^.*<$addressre>$/ && $args -> {$mode} -> [$i - 1] !~ /^$addressre$/) {
-                    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_BADEMAIL", {"***name***" => $self -> {"template"} -> replace_langvar("MESSAGE_".uc($mode))." $i (".$self -> {"template"} -> html_clean($args ->{$mode} -> [$i -1]).")" })});
+                # Split the field for validation
+                my @addresses = split(/,/, $args -> {$mode} -> [$i - 1]);
+
+                # Check each address is valid.
+                foreach my $address (@addresses) {
+                    $address =~ s/^\s*(.*?)\s*$/$1/; # trim trailing or leading whitespace
+
+                    if($address !~ /^.*?<$addressre>$/ && $address !~ /^$addressre$/) {
+                        # Emails can have 'real name' junk as well as straight addresses
+                        $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_BADEMAIL", {"***name***" => $self -> {"template"} -> replace_langvar("MESSAGE_".uc($mode))." $i (".$self -> {"template"} -> encode_entities($args ->{$mode} -> [$i -1]).")" })});
+                        last;
+                    }
                 }
             }
-        }
-    }
+        } # for(my $i = 1; $i <= 4; ++$i)
+    } # foreach my $mode ("cc", "bcc")
 
     # Check that the selected prefix is valid...
     # Has the user selected the 'other prefix' option? If so, check they enetered a prefixe
