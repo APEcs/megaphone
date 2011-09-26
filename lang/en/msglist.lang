@@ -1,5 +1,5 @@
 MSGLIST_TITLE      = User Messages and Settings
-MSGLIST_INTRO      = Here you may view the complete history of messages you are responsible for in the system. The actions you may perform on a given message depend on its state. See the "States" popup below for an explanation of the different states and the actions permitted for each.
+MSGLIST_INTRO      = Here you may view the complete history of messages you are responsible for in the system. The actions you may perform on a given message depend on its state. See the "Status" popup below for an explanation of the different states and the actions permitted for each.
 MSGLIST_OPS        = &nbsp;
 MSGLIST_SUBJECT    = Subject
 MSGLIST_UPDATED    = Updated
