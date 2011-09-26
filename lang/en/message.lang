@@ -8,7 +8,9 @@ MESSAGE_CCNOTE     = Note: CC may not be supported by all destinations.
 MESSAGE_BCC        = BCC
 MESSAGE_BCCNOTE    = Note: BCC may not be supported by all destinations.
 MESSAGE_PREFIX     = Subject Prefix
+MESSAGE_REPLYTO    = Reply-To
 MESSAGE_CUSTPREFIX = Custom prefix =&gt;
+MESSAGE_CUSTREPLYTO = Custom Reply-To =&gt;
 MESSAGE_SUBJECT    = Subject
 MESSAGE_SUBJWARN   = <span class="small">(Do not include a prefix in your subject, it will be added for you.)</span>
 MESSAGE_MESSAGE    = Message
@@ -33,6 +35,7 @@ MESSAGE_EDITTITLE     = Edit a message
 MESSAGE_EDITINTRO     = Here you may edit the settings and contents of a previously written message. When you save this message, the delay send timer will be reset (if you have enabled delayed sending). Fields in red are required.
 MESSAGE_EDIT          = Update message
 MESSAGE_BADPREFIX     = <span class="error">Unable to locate selected prefix.</span>
+MESSAGE_BADREPLYTO    = <span class="error">Unable to locate selected replyto.</span>
 MESSAGE_WILLDELAY     = Message will be held for
 MESSAGE_NODELAY       = Message will be sent immediately.
 

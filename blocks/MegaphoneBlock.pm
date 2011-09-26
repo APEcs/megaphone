@@ -81,6 +81,11 @@ sub store_message {
         }
     }
 
+    my $replytoh = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"messages_reply"}."
+                                                VALUES(?, ?, ?)");
+    $replytoh -> execute($messid, $args -> {"replyto_id"}, $args -> {"replyto_other"})
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto insert: ".$self -> {"dbh"} -> errstr);
+
     return $messid;
 }
 
@@ -126,6 +131,17 @@ sub get_message {
             push(@{$message -> {$mode}}, $cc -> [0]);
         }
     }
+
+    my $replyh = $self -> {"dbh"} -> prepare("SELECT *FROM ".$self -> {"settings"} -> {"database"} ->  {"messages_reply"}."
+                                              WHERE message_id = ?");
+    $replyh -> execute($msgid)
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto lookup query: ".$self -> {"dbh"} -> errstr);
+
+    my $replyr = $replyh -> fetchrow_hashref();
+    die_log($self -> {"cgi"} -> remote_host(), "No reply-to set for message: ".$self -> {"dbh"} -> errstr) if(!$replyr);
+
+    $message -> {"replyto_id"} = $replyr -> {"replyto_id"};
+    $message -> {"replyto_other"} = $replyr -> {"replyto_other"};
 
     # Done, return the data...
     return $message;
@@ -337,6 +353,41 @@ sub build_prefix {
 }
 
 
+## @method $ build_replyto($default)
+# Generate the options to show for the replyto dropdown.
+#
+# @param default The option to have selected by default.
+# @return A string containing the replyto option list.
+sub build_replyto {
+    my $self    = shift;
+    my $default = shift;
+
+    # Ask the database for the available replytoes
+    my $replytoh = $self -> {"dbh"} -> prepare("SELECT * FROM ".$self -> {"settings"} -> {"database"} -> {"replytos"}."
+                                               ORDER BY id");
+    $replytoh -> execute()
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto lookup: ".$self -> {"dbh"} -> errstr);
+
+    # now build the replyto list...
+    my $replytolist = "";
+    while(my $replyto = $replytoh -> fetchrow_hashref()) {
+        # pick the first real replyto, if we have no default set
+        $default = $replyto -> {"id"} if(!defined($default));
+
+        $replytolist .= '<option value="'.$replyto -> {"id"}.'"';
+        $replytolist .= ' selected="selected"' if($replyto -> {"id"} == $default);
+        $replytolist .= '>'.$replyto -> {"email"}." (".$replyto -> {"description"}.")</option>\n";
+    }
+
+    # Append the extra 'other' setting...
+    $replytolist .= '<option value="0"';
+    $replytolist .= ' selected="selected"' if($default == 0);
+    $replytolist .= '>'.$self -> {"template"} -> replace_langvar("MESSAGE_CUSTREPLYTO")."</option>\n";
+
+    return $replytolist;
+}
+
+
 # ============================================================================
 #  Validation functions
 
@@ -499,9 +550,31 @@ sub validate_message {
         } # for(my $i = 1; $i <= 4; ++$i)
     } # foreach my $mode ("cc", "bcc")
 
+    # Check that the selected reply-to is valid...
+    # Has the user selected the 'other reply-to' option? If so, check they enetered a prefixe
+    if($self -> {"cgi"} -> param("replyto_id") == 0) {
+        $args -> {"replyto_id"} = 0;
+        ($args -> {"replyto_other"}, $error) = $self -> validate_string("replyto_other", {"required" => 1,
+                                                                                          "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_REPLYTO"),
+                                                                                          "minlen"   => 1,
+                                                                                          "maxlen"   => 255});
+        # check that the replyto is valid
+        $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_BADEMAIL", {"***name***" => $self -> {"template"} -> replace_langvar("MESSAGE_REPLYTO")})})
+            if($args -> {"replyto_other"} !~ /^.*?<$addressre>$/ && $args -> {"replyto_other"} !~ /^$addressre$/);
+
+    # User has selected a prefix, check it is valid
+    } else {
+        $args -> {"replyto_other"} = undef;
+        ($args -> {"replyto_id"}, $error) = $self -> validate_options("replyto_id", {"required" => 1,
+                                                                                     "source"   => $self -> {"settings"} -> {"database"} -> {"replytos"},
+                                                                                     "where"    => "WHERE id = ?",
+                                                                                     "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_REPLYTO")});
+    }
+    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error}) if($error);
+
     # Check that the selected prefix is valid...
     # Has the user selected the 'other prefix' option? If so, check they enetered a prefixe
-    if($self -> {"cgi"} -> param("prefix") == 0) {
+    if($self -> {"cgi"} -> param("prefix_id") == 0) {
         $args -> {"prefix_id"} = 0;
         ($args -> {"prefix_other"}, $error) = $self -> validate_string("prefix_other", {"required" => 1,
                                                                                         "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_PREFIX"),
@@ -510,10 +583,10 @@ sub validate_message {
     # User has selected a prefix, check it is valid
     } else {
         $args -> {"prefix_other"} = undef;
-        ($args -> {"prefix_id"}, $error) = $self -> validate_options("prefix", {"required" => 1,
-                                                                                "source"   => $self -> {"settings"} -> {"database"} -> {"prefixes"},
-                                                                                "where"    => "WHERE id = ?",
-                                                                                "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_PREFIX")});
+        ($args -> {"prefix_id"}, $error) = $self -> validate_options("prefix_id", {"required" => 1,
+                                                                                   "source"   => $self -> {"settings"} -> {"database"} -> {"prefixes"},
+                                                                                   "where"    => "WHERE id = ?",
+                                                                                   "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_PREFIX")});
     }
     $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error}) if($error);
 
@@ -581,12 +654,14 @@ sub generate_message_editform {
                                                                                   "***bcc3hide***"     => $args -> {"bcc"} ? ($args -> {"bcc"} -> [2] ? "" : "hide") : "hide",
                                                                                   "***bcc4hide***"     => $args -> {"bcc"} ? ($args -> {"bcc"} -> [3] ? "" : "hide") : "hide",
                                                                                   "***prefix_other***" => $args -> {"prefix_other"},
+                                                                                  "***replyto_other***"=> $args -> {"replyto_other"},
                                                                                   "***subject***"      => $args -> {"subject"},
                                                                                   "***message***"      => $args -> {"message"},
                                                                                   "***delaysend***"    => $args -> {"delaysend"} ? 'checked="checked"' : "",
                                                                                   "***delay***"        => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delay_send"}),
                                                                                   "***targmatrix***"   => $self -> build_target_matrix($args -> {"targset"}),
                                                                                   "***prefix***"       => $self -> build_prefix($args -> {"prefix_id"}),
+                                                                                  "***replyto***"      => $self -> build_replyto($args -> {"replyto_id"}),
                                                                               });
 
     # store any hidden args...
@@ -631,6 +706,19 @@ sub generate_message_confirmform {
         }
     }
 
+    # Get the replyto sorted
+    if($args -> {"replyto_id"} == 0) {
+        $outfields -> {"replyto"} = $args -> {"replyto_other"};
+    } else {
+        my $replytoh = $self -> {"dbh"} -> prepare("SELECT email FROM ".$self -> {"settings"} -> {"database"} -> {"replytos"}."
+                                                   WHERE id = ?");
+        $replytoh -> execute($args -> {"replyto_id"})
+            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto query: ".$self -> {"dbh"} -> errstr);
+
+        my $replytor = $replytoh -> fetchrow_arrayref();
+        $outfields -> {"replyto"} = $replytor ? $replytor -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADREPLYTO");
+    }
+
     # Get the prefix sorted
     if($args -> {"prefix_id"} == 0) {
         $outfields -> {"prefix"} = $args -> {"prefix_other"};
@@ -652,6 +740,7 @@ sub generate_message_confirmform {
                                                                                      "***cc***"          => $outfields -> {"cc"},
                                                                                      "***bcc***"         => $outfields -> {"bcc"},
                                                                                      "***prefix***"      => $outfields -> {"prefix"},
+                                                                                     "***replyto***"     => $outfields -> {"replyto"},
                                                                                      "***subject***"     => $args -> {"subject"},
                                                                                      "***message***"     => $args -> {"message"},
                                                                                      "***delaysend***"   => $outfields -> {"delaysend"},

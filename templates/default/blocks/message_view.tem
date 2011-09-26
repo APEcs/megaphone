@@ -12,6 +12,10 @@
 ***cc***
 ***bcc***
                     <tr>
+                        <td class="label">{L_MESSAGE_REPLYTO}:</td>
+                        <td class="field">***replyto***</td>
+                    </tr>
+                    <tr>
                         <td class="label">{L_MESSAGE_PREFIX}:</td>
                         <td class="field">***prefix***</td>
                     </tr>

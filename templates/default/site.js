@@ -10,12 +10,22 @@ function persistWarning() {
 }
 
 function prefixMode() {
-    var prefix = $('prefix').options[$('prefix').selectedIndex].value;
+    var prefix = $('prefix_id').options[$('prefix_id').selectedIndex].value;
 
     if(prefix == "0") {
         $('prefix_other').disabled = false;
     } else {
         $('prefix_other').disabled = true;
+    }
+}
+
+function replytoMode() {
+    var replyto = $('replyto_id').options[$('replyto_id').selectedIndex].value;
+
+    if(replyto == "0") {
+        $('replyto_other').disabled = false;
+    } else {
+        $('replyto_other').disabled = true;
     }
 }
 

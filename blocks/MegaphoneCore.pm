@@ -57,12 +57,14 @@ sub generate_message {
                                                                          "***bcc3***"         => $args -> {"bcc"} ? $args -> {"bcc"} -> [2] : "",
                                                                          "***bcc4***"         => $args -> {"bcc"} ? $args -> {"bcc"} -> [3] : "",
                                                                          "***prefix_other***" => $args -> {"prefix_other"},
+                                                                         "***replyto_other***"=> $args -> {"replyto_other"},
                                                                          "***subject***"      => $args -> {"subject"},
                                                                          "***message***"      => $args -> {"message"},
                                                                          "***delaysend***"    => $args -> {"delaysend"} ? 'checked="checked"' : "",
                                                                          "***delay***"        => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delay_send"}),
                                                                          "***targmatrix***"   => $self -> build_target_matrix($args -> {"targset"}),
-                                                                         "***prefix***"       => $self -> build_prefix($args -> {"prefix"}),
+                                                                         "***prefix***"       => $self -> build_prefix($args -> {"prefix_id"}),
+                                                                         "***replyto***"      => $self -> build_replyto($args -> {"replyto_id"}),
                                                                      });
 }
 

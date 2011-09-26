@@ -101,9 +101,22 @@ sub send {
         }
     }
 
+    # Get the replyto sorted
+    if($message -> {"replyto_id"} == 0) {
+        $outfields -> {"replyto"} = $message -> {"replyto_other"};
+    } else {
+        my $replytoh = $self -> {"dbh"} -> prepare("SELECT email FROM ".$self -> {"settings"} -> {"database"} -> {"replytos"}."
+                                                   WHERE id = ?");
+        $replytoh -> execute($message -> {"replyto_id"})
+            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto query: ".$self -> {"dbh"} -> errstr);
+
+        my $replytor = $replytoh -> fetchrow_arrayref();
+        $outfields -> {"replyto"} = $replytor ? $replytor -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADREPLYTO");
+    }
+
     # Get the prefix sorted
     if($message -> {"prefix_id"} == 0) {
-        $outfields -> {"prefix"} = $message -> {"prefixother"};
+        $outfields -> {"prefix"} = $message -> {"prefix_other"};
     } else {
         my $prefixh = $self -> {"dbh"} -> prepare("SELECT prefix FROM ".$self -> {"settings"} -> {"database"} -> {"prefixes"}."
                                                    WHERE id = ?");
@@ -120,7 +133,7 @@ sub send {
     # Send the message!
     $self -> {"template"} -> email_template("email/message.tem", {"***from***"     => $user -> {"realname"}." <".$user -> {"email"}.">",
                                                                   "***to***"       => $self -> {"args"} -> {"to"},
-                                                                  "***replyto***"  => $self -> {"args"} -> {"reply-to"},
+                                                                  "***replyto***"  => $outfields -> {"replyto"},
                                                                   "***cc***"       => $outfields -> {"cc"} || "",
                                                                   "***bcc***"      => $outfields -> {"bcc"} || "",
                                                                   # subject and message need html entities stripping

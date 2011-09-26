@@ -65,8 +65,15 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="label"><label class="required" for="prefix">{L_MESSAGE_PREFIX}:</label></td>
-                        <td class="field"><select onchange="prefixMode()" size="1" name="prefix" id="prefix">
+                        <td class="label"><label class="required" for="replyto_id">{L_MESSAGE_REPLYTO}:</label></td>
+                        <td class="field"><select onchange="replytoMode()" size="1" name="replyto_id" id="replyto_id">
+***replyto***
+                                          </select>
+                                          &nbsp; <input type="text" name="replyto_other" id="replyto_other" size="40" maxlength="255" value="***replyto_other***" /></td>
+                    </tr>
+                    <tr>
+                        <td class="label"><label class="required" for="prefix_id">{L_MESSAGE_PREFIX}:</label></td>
+                        <td class="field"><select onchange="prefixMode()" size="1" name="prefix_id" id="prefix_id">
 ***prefix***
                                           </select>
                                           &nbsp; <input type="text" name="prefix_other" id="prefix_other" size="20" maxlength="20" value="***prefix_other***" /></td>
@@ -91,5 +98,6 @@
             </div>
         </div>
         <script type="text/javascript">
+            replytoMode();
             prefixMode();
         </script>
