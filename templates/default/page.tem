@@ -49,6 +49,12 @@
     </div> <!-- #header -->
 
     <div id="mainContent">
+                <table class="notebox notebox-warning">
+                    <tr>
+                        <td class="nbox-image"><img src="templates/default/images/important.png" width="48" height="48" alt="important" /></td>
+                        <td class="nbox-text">WARNING: This system is now "live" - messages sent by the system will go to the real destination rather than a testing location. If you need test, use the 'Test' recipient!</td>
+                    </tr>
+                </table>  
 ***content***
     </div> <!-- #mainContent -->
 
