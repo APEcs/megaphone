@@ -26,6 +26,8 @@ package Target::Email;
 # to=<address list>  - specify a list of recipient addresses (comma separated)
 # reply-to=<address> - specify the address that replies should go to, if not
 #                      replies will go to the From: address (the message owner).
+# cc=<address list>  - specify a list of cc recipients (comma sepatated)
+# bcc=<address list> - specify a list of bcc recipients (comma sepatated)
 #
 # Repeat arguments are concatenated, so these are equivalent:
 #
@@ -92,6 +94,9 @@ sub send {
     foreach my $mode ("cc", "bcc") {
         $outfields -> {$mode} = join(",", @{$message -> {$mode}});
     }
+
+    $outfields -> {"cc"}  .= $self -> {"args"} -> {"cc"};
+    $outfields -> {"bcc"} .= $self -> {"args"} -> {"bcc"};
 
     # Get the prefix sorted
     if($message -> {"prefix_id"} == 0) {
