@@ -6,8 +6,14 @@
                 <div>{L_MESSAGE_EDITINTRO}</div>
                 <table class="formtable">
                     <tr>
-                        <td class="label top required">{L_MESSAGE_DESTS}:</td>
+                        <td class="subtitle" colspan="2">{L_MESSAGE_DESTS}:</td>
+                    </tr>
+                    <tr>
+                        <td class="label">&nbsp;</td>
                         <td class="field">***targmatrix***</td>
+                    </tr>
+                    <tr>
+                        <td class="subtitle" colspan="2">{L_MESSAGE_SEC_EMAIL}:</td>
                     </tr>
                     <tr>
                         <td class="label"><label for="cc1">{L_MESSAGE_CC}:</label></td>
@@ -69,6 +75,9 @@
 ***replyto***
                                           </select>
                                           &nbsp; <input type="text" name="replyto_other" id="replyto_other" size="40" maxlength="255" value="***replyto_other***" /></td>
+                    </tr>
+                    <tr>
+                        <td class="subtitle" colspan="2">{L_MESSAGE_SEC_ALL}:</td>
                     </tr>
                     <tr>
                         <td class="label"><label class="required" for="prefix_id">{L_MESSAGE_PREFIX}:</label></td>

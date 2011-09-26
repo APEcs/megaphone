@@ -22,6 +22,9 @@ MESSAGE_NOTARGET   = Unable to send to this recipient via this system.
 MESSAGE_NOTSEND    = The message will not be sent to the recipient via this system.
 MESSAGE_SENDING    = The message will be sent to the recipient via this system.
 
+MESSAGE_SEC_EMAIL  = Email specific options
+MESSAGE_SEC_ALL    = Common options
+
 MESSAGE_ERRORS        = Message validation failed. The following error(s) were encountered during validation:
 MESSAGE_ERR_NOMATRIX  = No destinations have been selected for your message.
 MESSAGE_ERR_BADMATRIX = One or more selected destinations are invalid.

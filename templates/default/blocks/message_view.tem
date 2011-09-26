@@ -6,14 +6,23 @@
                 <div class="cleared"></div>
                 <table class="formtable">
                     <tr>
-                        <td class="label top">{L_MESSAGE_DESTS}:</td>
+                        <td class="subtitle" colspan="2">{L_MESSAGE_DESTS}:</td>
+                    </tr>
+                    <tr>
+                        <td class="label">&nbsp;</td>
                         <td class="field">***targmatrix***</td>
+                    </tr>
+                    <tr>
+                        <td class="subtitle" colspan="2">{L_MESSAGE_SEC_EMAIL}:</td>
                     </tr>
 ***cc***
 ***bcc***
                     <tr>
                         <td class="label">{L_MESSAGE_REPLYTO}:</td>
                         <td class="field">***replyto***</td>
+                    </tr>
+                    <tr>
+                        <td class="subtitle" colspan="2">{L_MESSAGE_SEC_ALL}:</td>
                     </tr>
                     <tr>
                         <td class="label">{L_MESSAGE_PREFIX}:</td>

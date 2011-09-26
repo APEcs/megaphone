@@ -16,6 +16,7 @@ function prefixMode() {
         $('prefix_other').disabled = false;
     } else {
         $('prefix_other').disabled = true;
+        $('prefix_other').set('value', '');
     }
 }
 
@@ -26,6 +27,7 @@ function replytoMode() {
         $('replyto_other').disabled = false;
     } else {
         $('replyto_other').disabled = true;
+        $('replyto_other').set('value', '');
     }
 }
 
