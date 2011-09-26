@@ -39,8 +39,17 @@ use Utils qw(is_defined_numeric);
 # @return A string containing the message block.
 sub generate_message {
     my $self  = shift;
-    my $args  = shift || { };
+    my $args  = shift;
     my $error = shift;
+
+    # Get the user, even if they're anonymous
+    my $user = $self -> {"session"} -> {"auth"} -> get_user_byid($self -> {"session"} -> {"sessuser"});
+
+    # fill in the default reply-to if not set.
+    if(!defined($args)) {
+        $args = {"replyto_id"    => 0,
+                 "replyto_other" => $user -> {"email"}};
+    }
 
     # Wrap the error message in a message box if we have one.
     $error = $self -> {"template"} -> load_template("blocks/error_box.tem", {"***message***" => $error})
