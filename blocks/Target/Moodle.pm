@@ -20,6 +20,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package Target::Moodle;
 
+## @class
+# A moodle target implementation. Supported arguments are:
+#
+# forum_id=<fid>,course_id=<cid>,prefix=<1/0>;
+#
+# If multiple forum_id/course_id arguments are specified, this will
+# insert the message into each forum. the prefix is completely optional,
+# and defaults to 0, if true then the subject prefix for the message is
+# included in the moodle discussion subject.
+
 use strict;
 use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
 
@@ -40,12 +50,19 @@ sub new {
     if($self) {
         # If there are any arguments to convert, split and store
         if($self -> {"args"}) {
-            my @argbits = split(/;/, $self -> {"args"});
+            my @args = split(/;/, $self -> {"args"});
 
-            $self -> {"args"} = {};
-            foreach my $arg (@argbits) {
-                my ($name, $value) = $arg =~ /^(\w+)=(.*)$/;
-                $self -> {"args"} -> {$name} = $value;
+            $self -> {"args"} = [];
+            foreach my $arg (@args) {
+                my @argbits = split(/,/, $arg);
+
+                my $arghash = {};
+                foreach my $argbit (@argbits) {
+                    my ($name, $value) = $argbit =~ /^(\w+)=(.*)$/;
+                    $arghash -> {$name} = $value;
+                }
+
+                push(@{$self -> {"args"}}, $arghash);
             }
         }
     }
@@ -111,58 +128,66 @@ sub send {
             or die_log($self -> {"cgi"} -> remote_host(), "Target::Moodle: Unable to obtain a moodle user (username and fallback failed)");
     }
 
-    # Get the prefix sorted if needed
-    my $prefix = "";
-    if($self -> {"args"} -> {"prefix"}) {
-        if($message -> {"prefix_id"} == 0) {
-            $prefix = $message -> {"prefixother"};
-        } else {
-            my $prefixh = $self -> {"dbh"} -> prepare("SELECT prefix FROM ".$self -> {"settings"} -> {"database"} -> {"prefixes"}."
-                                                   WHERE id = ?");
-            $prefixh -> execute($message -> {"prefix_id"})
-                or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute prefix query: ".$self -> {"dbh"} -> errstr);
-
-            my $prefixr = $prefixh -> fetchrow_arrayref();
-            $prefix = $prefixr ? $prefixr -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADPREFIX");
-        }
-        $prefix .= " " if($prefix);
-    }
-
-    # Timestamp for posting is now
-    my $now = time();
-
-    # Make the discussion
+    # Precache queries
     my $discussh = $self -> {"moodle"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"config"} -> {"Target::Moodle:discussions"}."
                                                    (course, forum, name, userid, timemodified, usermodified)
                                                    VALUES(?, ?, ?, ?, ?, ?)");
-    $discussh -> execute($self -> {"args"} -> {"course_id"},
-                         $self -> {"args"} -> {"forum_id"},
-                         $prefix.$message -> {"subject"},
-                         $moodleuser,
-                         $now,
-                         $moodleuser)
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute discussion insert query: ".$self -> {"moodle"} -> errstr);
 
-    # Get the discussion id
-    my $discussid = $self -> {"moodle"} -> {"mysql_insertid"};
-    die_log($self -> {"cgi"} -> remote_host(), "Unable to get ID of new discussion. This should not happen.") if(!$discussid);
+    my $posth   =  $self -> {"moodle"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"config"} -> {"Target::Moodle:posts"}."
+                                                  (discussion, userid, created, modified, subject, message)
+                                                  VALUES(?, ?, ?, ?, ?, ?)");
 
-    my $posth =  $self -> {"moodle"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"config"} -> {"Target::Moodle:posts"}."
-                                                (discussion, userid, created, modified, subject, message)
-                                                VALUES(?, ?, ?, ?, ?, ?)");
-    $posth -> execute($discussid, $moodleuser, $now, $now, $prefix.$message -> {"subject"}, $message -> {"message"})
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute post insert query: ".$self -> {"moodle"} -> errstr);
+    my $updateh = $self -> {"moodle"} -> prepare("UPDATE ".$self -> {"settings"} -> {"config"} -> {"Target::Moodle:discussions"}."
+                                                  SET firstpost = ?
+                                                  WHERE id = ?");
 
-    # Get the post id..
-    my $postid = $self -> {"moodle"} -> {"mysql_insertid"};
-    die_log($self -> {"cgi"} -> remote_host(), "Unable to get ID of new post. This should not happen.") if(!$postid);
+    # Go through each moodle forum, posting the message there.
+    foreach my $arghash (@{$self -> {"args"}}) {
+        # Get the prefix sorted if needed
+        my $prefix = "";
+        if($arghash -> {"prefix"}) {
+            if($message -> {"prefix_id"} == 0) {
+                $prefix = $message -> {"prefixother"};
+            } else {
+                my $prefixh = $self -> {"dbh"} -> prepare("SELECT prefix FROM ".$self -> {"settings"} -> {"database"} -> {"prefixes"}."
+                                                   WHERE id = ?");
+                $prefixh -> execute($message -> {"prefix_id"})
+                    or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute prefix query: ".$self -> {"dbh"} -> errstr);
 
-    # Update the discussion with the post id
-    $discussh = $self -> {"moodle"} -> prepare("UPDATE ".$self -> {"settings"} -> {"config"} -> {"Target::Moodle:discussions"}."
-                                                SET firstpost = ?
-                                                WHERE id = ?");
-    $discussh -> execute($postid, $discussid)
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute discussion update query: ".$self -> {"moodle"} -> errstr);
+                my $prefixr = $prefixh -> fetchrow_arrayref();
+                $prefix = $prefixr ? $prefixr -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADPREFIX");
+            }
+            $prefix .= " " if($prefix);
+        }
+
+        # Timestamp for posting is now
+        my $now = time();
+
+        # Make the discussion
+        $discussh -> execute($arghash -> {"course_id"},
+                             $arghash -> {"forum_id"},
+                             $prefix.$message -> {"subject"},
+                             $moodleuser,
+                             $now,
+                             $moodleuser)
+            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute discussion insert query: ".$self -> {"moodle"} -> errstr);
+
+        # Get the discussion id
+        my $discussid = $self -> {"moodle"} -> {"mysql_insertid"};
+        die_log($self -> {"cgi"} -> remote_host(), "Unable to get ID of new discussion. This should not happen.") if(!$discussid);
+
+        # Post the message body
+        $posth -> execute($discussid, $moodleuser, $now, $now, $prefix.$message -> {"subject"}, $message -> {"message"})
+            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute post insert query: ".$self -> {"moodle"} -> errstr);
+
+        # Get the post id..
+        my $postid = $self -> {"moodle"} -> {"mysql_insertid"};
+        die_log($self -> {"cgi"} -> remote_host(), "Unable to get ID of new post. This should not happen.") if(!$postid);
+
+        # Update the discussion with the post id
+        $updateh -> execute($postid, $discussid)
+            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute discussion update query: ".$self -> {"moodle"} -> errstr);
+    }
 
     # Done talking to moodle now.
     $self -> {"moodle"} -> disconnect();
