@@ -542,7 +542,7 @@ sub validate_message {
 
                     if($address !~ /^.*?<$addressre>$/ && $address !~ /^$addressre$/) {
                         # Emails can have 'real name' junk as well as straight addresses
-                        $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_BADEMAIL", {"***name***" => $self -> {"template"} -> replace_langvar("MESSAGE_".uc($mode))." $i (".$self -> {"template"} -> encode_entities($args ->{$mode} -> [$i -1]).")" })});
+                        $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_BADEMAIL", {"***name***" => $self -> {"template"} -> replace_langvar("MESSAGE_".uc($mode))." $i (".encode_entities($args ->{$mode} -> [$i -1]).")" })});
                         last;
                     }
                 }
