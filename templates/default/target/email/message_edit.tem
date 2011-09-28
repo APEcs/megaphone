@@ -1,0 +1,62 @@
+                    <tr>
+                        <td class="subtitle" colspan="2">{L_MESSAGE_SEC_EMAIL}:</td>
+                    </tr>
+                    <tr>
+                        <td class="label"><label for="cc1">{L_MESSAGE_CC}:</label></td>
+                        <td class="field"><input type="text" name="cc1" id="cc1" size="64" maxlength="255" value="***cc1***" />
+                                          <img id="addcc1" src="templates/default/images/add.png" width="16" height="16" class="control" onclick="addExtraRow(1, 'cc')" title="{L_MESSAGE_ADD_RECIP}" alt="add" />
+                        </td>
+                    </tr>
+                    <tr class="***cc2hide***" id="cc2row">
+                        <td class="label"><label for="cc2">{L_MESSAGE_CC}:</label></td>
+                        <td class="field"><input type="text" name="cc2" id="cc2" size="64" maxlength="255" value="***cc2***" />
+                                          <img id="addcc2" src="templates/default/images/add.png" width="16" height="16" class="control" onclick="addExtraRow(2, 'cc')" title="{L_MESSAGE_ADD_RECIP}" alt="add" />
+                                          <img id="delcc2" src="templates/default/images/delete.png" width="16" height="16" class="control" onclick="delExtraRow(2, 'cc')" title="{L_MESSAGE_DEL_RECIP}" alt="delete" />
+                        </td>
+                    </tr>
+                    <tr class="***cc3hide***" id="cc3row">
+                        <td class="label"><label for="cc3">{L_MESSAGE_CC}:</label></td>
+                        <td class="field"><input type="text" name="cc3" id="cc3" size="64" maxlength="255" value="***cc3***" />
+                                          <img id="addcc3" src="templates/default/images/add.png" width="16" height="16" class="control" onclick="addExtraRow(3, 'cc')" title="{L_MESSAGE_ADD_RECIP}" alt="add" />
+                                          <img id="delcc3" src="templates/default/images/delete.png" width="16" height="16" class="control" onclick="delExtraRow(3, 'cc')" title="{L_MESSAGE_DEL_RECIP}" alt="delete" />
+                        </td>
+                    </tr>
+                    <tr class="***cc4hide***" id="cc4row">
+                        <td class="label"><label for="cc4">{L_MESSAGE_CC}:</label></td>
+                        <td class="field"><input type="text" name="cc4" id="cc4" size="64" maxlength="255" value="***cc4***" />
+                                          <img id="delcc4" src="templates/default/images/delete.png" width="16" height="16" class="control" onclick="delExtraRow(4, 'cc')" title="{L_MESSAGE_DEL_RECIP}" alt="delete" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label"><label for="bcc1">{L_MESSAGE_BCC}:</label></td>
+                        <td class="field"><input type="text" name="bcc1" id="bcc1" size="64" maxlength="255" value="***bcc1***" />
+                                          <img id="addbcc1" src="templates/default/images/add.png" width="16" height="16" class="control" onclick="addExtraRow(1, 'bcc')" title="{L_MESSAGE_ADD_RECIP}" alt="add" />
+                        </td>
+                    </tr>
+                    <tr class="***bcc2hide***" id="bcc2row">
+                        <td class="label"><label for="bcc2">{L_MESSAGE_BCC}:</label></td>
+                        <td class="field"><input type="text" name="bcc2" id="bcc2" size="64" maxlength="255" value="***bcc2***" />
+                                          <img id="addbcc2" src="templates/default/images/add.png" width="16" height="16" class="control" onclick="addExtraRow(2, 'bcc')" title="{L_MESSAGE_ADD_RECIP}" alt="add" />
+                                          <img id="delbcc2" src="templates/default/images/delete.png" width="16" height="16" class="control" onclick="delExtraRow(2, 'bcc')" title="{L_MESSAGE_DEL_RECIP}" alt="delete" />
+                        </td>
+                    </tr>
+                    <tr class="***bcc3hide***" id="bcc3row">
+                        <td class="label"><label for="bcc3">{L_MESSAGE_BCC}:</label></td>
+                        <td class="field"><input type="text" name="bcc3" id="bcc3" size="64" maxlength="255" value="***bcc3***" />
+                                          <img id="addbcc3" src="templates/default/images/add.png" width="16" height="16" class="control" onclick="addExtraRow(3, 'bcc')" title="{L_MESSAGE_ADD_RECIP}" alt="add" />
+                                          <img id="delbcc3" src="templates/default/images/delete.png" width="16" height="16" class="control" onclick="delExtraRow(3, 'bcc')" title="{L_MESSAGE_DEL_RECIP}" alt="delete" />
+                        </td>
+                    </tr>
+                    <tr class="***bcc4hide***" id="bcc4row">
+                        <td class="label"><label for="bcc4">{L_MESSAGE_BCC}:</label></td>
+                        <td class="field"><input type="text" name="bcc4" id="bcc4" size="64" maxlength="255" value="***bcc4***" />
+                                          <img id="delbcc4" src="templates/default/images/delete.png" width="16" height="16" class="control" onclick="delExtraRow(4, 'bcc')" title="{L_MESSAGE_DEL_RECIP}" alt="delete" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label"><label class="required" for="replyto_id">{L_MESSAGE_REPLYTO}:</label></td>
+                        <td class="field"><select onchange="replytoMode()" size="1" name="replyto_id" id="replyto_id">
+***replyto***
+                                          </select>
+                                          &nbsp; <input type="text" name="replyto_other" id="replyto_other" size="40" maxlength="255" value="***replyto_other***" /></td>
+                    </tr>
