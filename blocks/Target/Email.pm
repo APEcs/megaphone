@@ -52,24 +52,39 @@ sub new {
     my $class    = ref($invocant) || $invocant;
     my $self     = $class -> SUPER::new(@_);
 
-    if($self) {
-        # If there are any arguments to convert, split and store
-        if($self -> {"args"}) {
-            my @argbits = split(/;/, $self -> {"args"});
+    # If there are any arguments to convert, split and store
+    $self -> set_config($self -> {"args"}) if($self && $self -> {"args"});
 
-            $self -> {"args"} = {};
-            foreach my $arg (@argbits) {
-                my ($name, $value) = $arg =~ /^(\w+)=(.*)$/;
-                # Concatenate arguments with the same name
-                if($self -> {"args"} -> {$name}) {
-                    $self -> {"args"} -> {$name} .= ",$value";
-                } else {
-                    $self -> {"args"} -> {$name} = $value;
-                }
-            }
+    return $self;
+}
+
+
+# ============================================================================
+#  General interface functions
+
+## @method void set_config($args)
+# Set the current configuration to the module to the values in the provided
+# args string.
+#
+# @param args A string containing the new configuration.
+sub set_config {
+    my $self = shift;
+    my $args = shift;
+
+    my $self -> {"args"} = $args;
+
+    my @argbits = split(/;/, $self -> {"args"});
+
+    $self -> {"args"} = {};
+    foreach my $arg (@argbits) {
+        my ($name, $value) = $arg =~ /^(\w+)=(.*)$/;
+        # Concatenate arguments with the same name
+        if($self -> {"args"} -> {$name}) {
+            $self -> {"args"} -> {$name} .= ",$value";
+        } else {
+            $self -> {"args"} -> {$name} = $value;
         }
     }
-    return $self;
 }
 
 

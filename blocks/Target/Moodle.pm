@@ -47,26 +47,41 @@ sub new {
     my $class    = ref($invocant) || $invocant;
     my $self     = $class -> SUPER::new(@_);
 
-    if($self) {
-        # If there are any arguments to convert, split and store
-        if($self -> {"args"}) {
-            my @args = split(/;/, $self -> {"args"});
+    # If there are any arguments to convert, split and store
+    $self -> set_config($self -> {"args"}) if($self && $self -> {"args"});
 
-            $self -> {"args"} = [];
-            foreach my $arg (@args) {
-                my @argbits = split(/,/, $arg);
-
-                my $arghash = {};
-                foreach my $argbit (@argbits) {
-                    my ($name, $value) = $argbit =~ /^(\w+)=(.*)$/;
-                    $arghash -> {$name} = $value;
-                }
-
-                push(@{$self -> {"args"}}, $arghash);
-            }
-        }
-    }
     return $self;
+}
+
+
+# ============================================================================
+#  General interface functions
+
+## @method void set_config($args)
+# Set the current configuration to the module to the values in the provided
+# args string.
+#
+# @param args A string containing the new configuration.
+sub set_config {
+    my $self = shift;
+    my $args = shift;
+
+    my $self -> {"args"} = $args;
+
+    my @args = split(/;/, $self -> {"args"});
+
+    $self -> {"args"} = [];
+    foreach my $arg (@args) {
+        my @argbits = split(/,/, $arg);
+
+        my $arghash = {};
+        foreach my $argbit (@argbits) {
+            my ($name, $value) = $argbit =~ /^(\w+)=(.*)$/;
+            $arghash -> {$name} = $value;
+        }
+
+        push(@{$self -> {"args"}}, $arghash);
+    }
 }
 
 
