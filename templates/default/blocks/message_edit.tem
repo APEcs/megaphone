@@ -1,3 +1,4 @@
+        <script type="text/javascript" src="templates/default/textcounter.js"></script>
         <div class="message">
             <h2>{L_MESSAGE_EDITTITLE}</h2>
             <div class="mbody">
@@ -5,6 +6,7 @@
 ***error***
                 <div>{L_MESSAGE_EDITINTRO}</div>
                 <table class="formtable">
+                    <tbody id="dests">
                     <tr>
                         <td class="subtitle" colspan="2">{L_MESSAGE_DESTS}:</td>
                     </tr>
@@ -12,7 +14,9 @@
                         <td class="label">&nbsp;</td>
                         <td class="field">***targmatrix***</td>
                     </tr>
+                    </tbody>
 ***targethook***
+                    <tbody id="common">
                     <tr>
                         <td class="subtitle" colspan="2">{L_MESSAGE_SEC_ALL}:</td>
                     </tr>
@@ -39,6 +43,7 @@
                         <td class="label"></td>
                         <td class="field"><input type="submit" name="updatemsg" id="updatemsg" value="{L_MESSAGE_EDIT}" /></td>
                     </tr>
+                    </tbody>
                 </table>
             </div>
         </div>

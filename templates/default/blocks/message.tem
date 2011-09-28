@@ -6,6 +6,7 @@
 ***error***
                 <div>{L_MESSAGE_INTRO}</div>
                 <table class="formtable">
+                    <tbody id="dests">
                     <tr>
                         <td class="subtitle" colspan="2">{L_MESSAGE_DESTS}:</td>
                     </tr>
@@ -13,7 +14,9 @@
                         <td class="label">&nbsp;</td>
                         <td class="field">***targmatrix***</td>
                     </tr>
+                    </tbody>
 ***targethook***
+                    <tbody id="common">
                     <tr>
                         <td class="subtitle" colspan="2">{L_MESSAGE_SEC_ALL}:</td>
                     </tr>
@@ -40,6 +43,7 @@
                         <td class="label"></td>
                         <td class="field"><input type="submit" name="sendmsg" id="sendmsg" value="{L_MESSAGE_SEND}" /></td>
                     </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
