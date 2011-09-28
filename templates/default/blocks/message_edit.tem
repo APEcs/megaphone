@@ -103,7 +103,4 @@
                 </table>
             </div>
         </div>
-        <script type="text/javascript">
-            prefixMode();
-            replytoMode();
-        </script>
+
