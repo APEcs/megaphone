@@ -26,6 +26,41 @@ use MIME::Base64;   # Needed for base64 encoding of popup bodies.
 use HTML::Entities;
 use Logging qw(die_log);
 
+# ============================================================================
+#  Constructor
+
+## @cmethod $ new(%args)
+# An overridden constructor that will, unless "istarget" is set in the args,
+# load all available target modules.
+#
+# @param args A hash of arguments to initialise the object with
+# @return A blessed reference to the object
+sub new {
+    my $invocant = shift;
+    my $class    = ref($invocant) || $invocant;
+    my $self     = $class -> SUPER::new(@_);
+
+    if($self && !$self -> {"istarget"}) {
+        # Go through the list of targets in the system
+        my $targh = $self -> {"dbh"} -> prepare("SELECT name, module_id FROM ".$self -> {"settings"} -> {"database"} -> {"targets"}."
+                                                 ORDER BY id");
+        my $targh -> execute()
+            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute target list query: ".$self -> {"dbh"} -> errstr);
+
+        # Prevent recursive calls to the module handler...
+        $self -> {"module"} -> {"istarget"} = 1;
+
+        while(my $targ = $targh -> fetchrow_hashref()) {
+            $self -> {"targets"} -> {$targ -> {"module_id"}} = {"name"   => $targ -> {"name"},
+                                                                "module" => $self -> {"module"} -> new_module_byid($targ -> {"module_id"})};
+            die_log($self -> {"cgi"} -> remote_host(), "Unable to load target module ".$targ -> {"module_id"})
+                if(!$self -> {"targets"} -> {$targ -> {"module_id"} -> {"module"}});
+        }
+
+        # Kill the recursive lock
+        $self -> {"module"} -> {"istarget"} = 0;
+    }
+}
 
 # ============================================================================
 #  Storage
@@ -350,41 +385,6 @@ sub build_prefix {
     $prefixlist .= '>'.$self -> {"template"} -> replace_langvar("MESSAGE_CUSTPREFIX")."</option>\n";
 
     return $prefixlist;
-}
-
-
-## @method $ build_replyto($default)
-# Generate the options to show for the replyto dropdown.
-#
-# @param default The option to have selected by default.
-# @return A string containing the replyto option list.
-sub build_replyto {
-    my $self    = shift;
-    my $default = shift;
-
-    # Ask the database for the available replytoes
-    my $replytoh = $self -> {"dbh"} -> prepare("SELECT * FROM ".$self -> {"settings"} -> {"database"} -> {"replytos"}."
-                                               ORDER BY id");
-    $replytoh -> execute()
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto lookup: ".$self -> {"dbh"} -> errstr);
-
-    # now build the replyto list...
-    my $replytolist = "";
-    while(my $replyto = $replytoh -> fetchrow_hashref()) {
-        # pick the first real replyto, if we have no default set
-        $default = $replyto -> {"id"} if(!defined($default));
-
-        $replytolist .= '<option value="'.$replyto -> {"id"}.'"';
-        $replytolist .= ' selected="selected"' if($replyto -> {"id"} == $default);
-        $replytolist .= '>'.$replyto -> {"email"}." (".$replyto -> {"description"}.")</option>\n";
-    }
-
-    # Append the extra 'other' setting...
-    $replytolist .= '<option value="0"';
-    $replytolist .= ' selected="selected"' if($default == 0);
-    $replytolist .= '>'.$self -> {"template"} -> replace_langvar("MESSAGE_CUSTREPLYTO")."</option>\n";
-
-    return $replytolist;
 }
 
 
@@ -943,7 +943,7 @@ sub send_message {
                                                   ".$self -> {"settings"} -> {"database"} -> {"targets"}." AS t
                                              WHERE d.id = ?
                                              AND t.id = d.target_id");
-    
+
     foreach my $destid (@{$message -> {"targset"}}) {
         $desth -> execute($destid)
             or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute destination lookup: ".$self -> {"dbh"} -> errstr);
