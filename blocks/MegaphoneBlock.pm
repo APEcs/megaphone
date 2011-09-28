@@ -332,6 +332,7 @@ sub build_target_matrix {
                 # Yes, output either a checkbox or a marker...
                 if(!$readonly) {
                     $data .= $self -> {"template"} -> process_template($recipentrytem, {"***data***" => $self -> {"template"} -> process_template($recipacttem, {"***id***"      => $matrow -> [0],
+                                                                                                                                                                 "***name***"    => $target -> {"name"},
                                                                                                                                                                  "***checked***" => $activehash -> {$matrow -> [0]} ? 'checked="checked"' : ""})});
                 } else {
                     $data .= $self -> {"template"} -> process_template($recipentrytem, {"***data***" => ($activehash -> {$matrow -> [0]} ? $recipact_ontem : $recipact_offtem)});

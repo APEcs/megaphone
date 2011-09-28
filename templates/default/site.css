@@ -180,6 +180,7 @@ table.formtable {
 table.formtable td.label {
     font-weight: bold;
     text-align: right;
+    min-width: 10em;
 }
 
 table.formtable td.field {

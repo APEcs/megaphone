@@ -45,36 +45,28 @@ sub generate_message {
     # Get the user, even if they're anonymous
     my $user = $self -> {"session"} -> {"auth"} -> get_user_byid($self -> {"session"} -> {"sessuser"});
 
-    # fill in the default reply-to if not set.
-    if(!defined($args)) {
-        $args = {"replyto_id"    => 0,
-                 "replyto_other" => $user -> {"email"}};
-    }
 
     # Wrap the error message in a message box if we have one.
     $error = $self -> {"template"} -> load_template("blocks/error_box.tem", {"***message***" => $error})
         if($error);
 
+    # Check each target for blocks
+    my $targethook = "";
+    foreach my $targ (@{$self -> {"targetorder"}}) {
+        $targethook .= $self -> {"targets"} -> {$targ} -> {"module"} -> generate_message();
+    }
+
     # And build the message block itself. Kinda big and messy, this...
     return $self -> {"template"} -> load_template("blocks/message.tem", {"***error***"        => $error,
-                                                                         "***cc1***"          => $args -> {"cc"}  ? $args -> {"cc"} -> [0]  : "",
-                                                                         "***cc2***"          => $args -> {"cc"}  ? $args -> {"cc"} -> [1]  : "",
-                                                                         "***cc3***"          => $args -> {"cc"}  ? $args -> {"cc"} -> [2]  : "",
-                                                                         "***cc4***"          => $args -> {"cc"}  ? $args -> {"cc"} -> [3]  : "",
-                                                                         "***bcc1***"         => $args -> {"bcc"} ? $args -> {"bcc"} -> [0] : "",
-                                                                         "***bcc2***"         => $args -> {"bcc"} ? $args -> {"bcc"} -> [1] : "",
-                                                                         "***bcc3***"         => $args -> {"bcc"} ? $args -> {"bcc"} -> [2] : "",
-                                                                         "***bcc4***"         => $args -> {"bcc"} ? $args -> {"bcc"} -> [3] : "",
                                                                          "***prefix_other***" => $args -> {"prefix_other"},
-                                                                         "***replyto_other***"=> $args -> {"replyto_other"},
                                                                          "***subject***"      => $args -> {"subject"},
                                                                          "***message***"      => $args -> {"message"},
                                                                          "***delaysend***"    => $args -> {"delaysend"} ? 'checked="checked"' : "",
                                                                          "***delay***"        => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delay_send"}),
                                                                          "***targmatrix***"   => $self -> build_target_matrix($args -> {"targset"}),
                                                                          "***prefix***"       => $self -> build_prefix($args -> {"prefix_id"}),
-                                                                         "***replyto***"      => $self -> build_replyto($args -> {"replyto_id"}),
-                                                                     });
+                                                                         "***targethook***"   => $targethook,
+                                                  });
 }
 
 
@@ -177,11 +169,11 @@ sub page_display {
         return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_BADMSGID")) if(!$message);
 
         # Check that the user isn't trying to be a smartarse and mess with an old message here...
-        return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_MSGSENT")) 
+        return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_MSGSENT"))
             unless($message -> {"status"} eq "incomplete" || $message -> {"status"} eq "pending");
 
         # Check that the user actually has permission to edit the message (message owner, or admin)...
-        return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_MSGEDIT_PERMERROR")) 
+        return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_MSGEDIT_PERMERROR"))
             unless($message -> {"user_id"} == $user -> {"user_id"} || $user -> {"user_type"} == 3);
 
         # user has submitted the name/role form...

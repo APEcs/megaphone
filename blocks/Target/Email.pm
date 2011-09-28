@@ -88,6 +88,38 @@ sub set_config {
 }
 
 
+## @method $ generate_message($args, $user)
+# Generate the string to insert into the message.tem target hook region for
+# this target.
+#
+# @param args A reference to a hash of arguments to use in the form
+# @param user A reference to a hash containing the user's data
+# @return A string containing the message form fragment.
+sub generate_message {
+    my $self = shift;
+    my $args = shift;
+    my $user = shift;
+
+    # fill in the default reply-to if not set.
+    if(!defined($args)) {
+        $args = {"replyto_id"    => 0,
+                 "replyto_other" => $user -> {"email"}};
+    }
+
+    return $self -> {"template"} -> load_template("target/email/message.tem", {"***cc1***"          => $args -> {"cc"}  ? $args -> {"cc"} -> [0]  : "",
+                                                                               "***cc2***"          => $args -> {"cc"}  ? $args -> {"cc"} -> [1]  : "",
+                                                                               "***cc3***"          => $args -> {"cc"}  ? $args -> {"cc"} -> [2]  : "",
+                                                                               "***cc4***"          => $args -> {"cc"}  ? $args -> {"cc"} -> [3]  : "",
+                                                                               "***bcc1***"         => $args -> {"bcc"} ? $args -> {"bcc"} -> [0] : "",
+                                                                               "***bcc2***"         => $args -> {"bcc"} ? $args -> {"bcc"} -> [1] : "",
+                                                                               "***bcc3***"         => $args -> {"bcc"} ? $args -> {"bcc"} -> [2] : "",
+                                                                               "***bcc4***"         => $args -> {"bcc"} ? $args -> {"bcc"} -> [3] : "",
+                                                                               "***replyto_other***"=> $args -> {"replyto_other"},
+                                                                               "***replyto***"      => $self -> build_replyto($args -> {"replyto_id"}),
+                                                  });
+}
+
+
 # ============================================================================
 #  Message send functions
 
@@ -158,5 +190,44 @@ sub send {
                                                                   "***rolename***" => $user -> {"rolename"},
                                                               });
 }
+
+
+# ============================================================================
+#  Internal stuff
+
+## @method $ build_replyto($default)
+# Generate the options to show for the replyto dropdown.
+#
+# @param default The option to have selected by default.
+# @return A string containing the replyto option list.
+sub build_replyto {
+    my $self    = shift;
+    my $default = shift;
+
+    # Ask the database for the available replytoes
+    my $replytoh = $self -> {"dbh"} -> prepare("SELECT * FROM ".$self -> {"settings"} -> {"database"} -> {"replytos"}."
+                                               ORDER BY id");
+    $replytoh -> execute()
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto lookup: ".$self -> {"dbh"} -> errstr);
+
+    # now build the replyto list...
+    my $replytolist = "";
+    while(my $replyto = $replytoh -> fetchrow_hashref()) {
+        # pick the first real replyto, if we have no default set
+        $default = $replyto -> {"id"} if(!defined($default));
+
+        $replytolist .= '<option value="'.$replyto -> {"id"}.'"';
+        $replytolist .= ' selected="selected"' if($replyto -> {"id"} == $default);
+        $replytolist .= '>'.$replyto -> {"email"}." (".$replyto -> {"description"}.")</option>\n";
+    }
+
+    # Append the extra 'other' setting...
+    $replytolist .= '<option value="0"';
+    $replytolist .= ' selected="selected"' if($default == 0);
+    $replytolist .= '>'.$self -> {"template"} -> replace_langvar("MESSAGE_CUSTREPLYTO")."</option>\n";
+
+    return $replytolist;
+}
+
 
 1;

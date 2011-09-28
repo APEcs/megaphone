@@ -1,1 +1,1 @@
-<input type="checkbox" name="matrix" id="matrix-***id***" value="***id***" ***checked*** />
+<input type="checkbox" class="target-***name***" name="matrix" id="matrix-***id***" value="***id***" ***checked*** onclick="matrixClick('target-***name***')"/>

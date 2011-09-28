@@ -1,3 +1,4 @@
+                    <tbody id="target-Email">
                     <tr>
                         <td class="subtitle" colspan="2">{L_MESSAGE_SEC_EMAIL}:</td>
                     </tr>
@@ -58,5 +59,8 @@
                         <td class="field"><select onchange="replytoMode()" size="1" name="replyto_id" id="replyto_id">
 ***replyto***
                                           </select>
-                                          &nbsp; <input type="text" name="replyto_other" id="replyto_other" size="40" maxlength="255" value="***replyto_other***" /></td>
+                                          &nbsp; <input type="text" name="replyto_other" id="replyto_other" size="40" maxlength="255" value="***replyto_other***" />
+                                          <script type="text/javascript" src="templates/default/target/email/email.js"></script>
+                        </td>
                     </tr>
+                    </tbody>
