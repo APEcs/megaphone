@@ -44,22 +44,28 @@ sub new {
         # Go through the list of targets in the system
         my $targh = $self -> {"dbh"} -> prepare("SELECT name, module_id FROM ".$self -> {"settings"} -> {"database"} -> {"targets"}."
                                                  ORDER BY id");
-        my $targh -> execute()
+        $targh -> execute()
             or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute target list query: ".$self -> {"dbh"} -> errstr);
 
         # Prevent recursive calls to the module handler...
         $self -> {"module"} -> {"istarget"} = 1;
 
+        $self -> {"targetorder"} = [];
         while(my $targ = $targh -> fetchrow_hashref()) {
             $self -> {"targets"} -> {$targ -> {"module_id"}} = {"name"   => $targ -> {"name"},
                                                                 "module" => $self -> {"module"} -> new_module_byid($targ -> {"module_id"})};
-            die_log($self -> {"cgi"} -> remote_host(), "Unable to load target module ".$targ -> {"module_id"})
-                if(!$self -> {"targets"} -> {$targ -> {"module_id"} -> {"module"}});
+            die_log($self -> {"cgi"} -> remote_host(), "Unable to load target module ".$targ -> {"module_id"}.":".$Modules::errstr)
+                if(!$self -> {"targets"} -> {$targ -> {"module_id"}} -> {"module"});
+
+            # Make calling modules in the correct order during hook calls later easier
+            push(@{$self -> {"targetorder"}}, $targ -> {"module_id"});
         }
 
         # Kill the recursive lock
         $self -> {"module"} -> {"istarget"} = 0;
     }
+
+    return $self;
 }
 
 # ============================================================================
@@ -952,8 +958,11 @@ sub send_message {
         die_log($self -> {"cgi"} -> remote_host(), "No matching destination for message ".$message -> {"id"}.", dest $destid") if(!$dest);
 
         # Get the module to handle the destination
-        my $targetmod = $self -> {"module"} -> new_module_byid($dest -> {"module_id"}, $dest -> {"args"});
-        die_log($self -> {"cgi"} -> remote_host(), "Unable to load target module for message ".$message -> {"id"}.", dest $destid") if(!$targetmod);
+        my $targetmod = $self -> {"targets"} -> {$dest -> {"module_id"}} -> {"module"};
+        die_log($self -> {"cgi"} -> remote_host(), "No target module for message ".$message -> {"id"}.", dest $destid") if(!$targetmod);
+
+        # Update the config as needed
+        $targetmod -> set_config($dest -> {"args"});
 
         # Got a target module, send the message
         $targetmod -> send($message);
