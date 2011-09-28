@@ -29,7 +29,6 @@ package SSHAuth;
 use strict;
 # Standard modules
 use Net::SSH::Expect;
-use Net::SSH::Perl;
 
 # Custom module imports
 use Logging qw(die_log);
@@ -85,9 +84,9 @@ sub get_config {
 
 ## @method $ get_user_byid($userid, $onlyreal)
 # Obtain the user record for the specified user, if they exist. This should
-# return a reference to a hash of user data corresponding to the specified userid, 
+# return a reference to a hash of user data corresponding to the specified userid,
 # or undef if the userid does not correspond to a valid user. If the onlyreal
-# argument is set, the userid must correspond to 'real' user - bots or inactive 
+# argument is set, the userid must correspond to 'real' user - bots or inactive
 # users should not be returned.
 #
 # @param userid   The id of the user to obtain the data for.
@@ -176,13 +175,13 @@ sub valid_user {
 
     # No record for this user, need to make one...
     my $newuser = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"users"}."
-                                               (username, user_type, created, updated) 
+                                               (username, user_type, created, updated)
                                                VALUES(?, ?, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())");
     $newuser -> execute($username, $usertype)
         or die_log($self -> {"cgi"} -> remote_host(), "FATAL: Unable to create new user record: ".$self -> {"dbh"} -> errstr);
 
     $user =  $self -> _get_user_byusername($username);
-    
+
     # Got a new user okay? If so, return their record...
     return $user if($user);
 
@@ -217,7 +216,7 @@ sub _get_user_byusername {
 ## @method $ _ssh_valid_user($username, $password)
 # Attempt to authenticate the user against the ssh server. This will check the user's
 # login against the configured ssh server, and return true if the login is valid.
-#  
+#
 # @param username The username to check against the server.
 # @param password The password to check against the server.
 # @return true if the login is valid, false otherwise. If the return value is false,
