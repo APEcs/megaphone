@@ -26,7 +26,7 @@ var CountArea = new Class(
         this.getCount(textarea.get('value'));
 
         // Shove the div in after the textarea
-        textarea.parentElement.adopt(this.options.countDiv);
+        textarea.getParent().adopt(this.options.countDiv);
 
         // Attach events
         textarea.addEvent('keyup', function() {
