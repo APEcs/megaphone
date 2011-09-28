@@ -1,2 +1,3 @@
 TOPRIGHT_LOGIN     = Log in
 TOPRIGHT_LOGOUT    = Log out
+TOPRIGHT_MSGLIST   = View messages

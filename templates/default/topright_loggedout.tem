@@ -1,1 +1,2 @@
+<li><a href="index.cgi?block={B_[msglist]}">{L_TOPRIGHT_MSGLIST}</a></li>
 <li><a href="index.cgi?block={B_[login]}">{L_TOPRIGHT_LOGIN}</a></li>
