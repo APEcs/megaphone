@@ -71,7 +71,7 @@ sub set_config {
     my $self = shift;
     my $args = shift;
 
-    my $self -> {"args"} = $args;
+    $self -> {"args"} = $args;
 
     my @argbits = split(/;/, $self -> {"args"});
 
@@ -101,10 +101,11 @@ sub generate_message {
     my $user = shift;
 
     # fill in the default reply-to if not set.
-    if(!defined($args)) {
-        $args = {"replyto_id"    => 0,
-                 "replyto_other" => $user -> {"email"}};
+    if(!defined($args -> {"replyto_id"})) {
+        $args -> {"replyto_id"}    = 0;
+        $args -> {"replyto_other"} = $user -> {"email"};
     }
+    print STDERR "generate_message: $args->{replyto_other}\n";
 
     return $self -> {"template"} -> load_template("target/email/message.tem", {"***cc1***"          => $args -> {"cc"}  ? $args -> {"cc"} -> [0]  : "",
                                                                                "***cc2***"          => $args -> {"cc"}  ? $args -> {"cc"} -> [1]  : "",
@@ -117,6 +118,257 @@ sub generate_message {
                                                                                "***replyto_other***"=> $args -> {"replyto_other"},
                                                                                "***replyto***"      => $self -> build_replyto($args -> {"replyto_id"}),
                                                   });
+}
+
+
+## @method $ generate_message_edit($args)
+# Generate the string to insert into the message_edit.tem target hook region for
+# this target.
+#
+# @param args A reference to a hash of arguments to use in the form
+# @return A string containing the message edit form fragment.
+sub generate_message_edit {
+    my $self = shift;
+    my $args = shift;
+
+    return $self -> {"template"} -> load_template("target/email/message_edit.tem", {"***cc1***"          => $args -> {"cc"}  ?  $args -> {"cc"} -> [0]  : "",
+                                                                                    "***cc2***"          => $args -> {"cc"}  ?  $args -> {"cc"} -> [1]  : "",
+                                                                                    "***cc3***"          => $args -> {"cc"}  ?  $args -> {"cc"} -> [2]  : "",
+                                                                                    "***cc4***"          => $args -> {"cc"}  ?  $args -> {"cc"} -> [3]  : "",
+                                                                                    "***bcc1***"         => $args -> {"bcc"} ?  $args -> {"bcc"} -> [0] : "",
+                                                                                    "***bcc2***"         => $args -> {"bcc"} ?  $args -> {"bcc"} -> [1] : "",
+                                                                                    "***bcc3***"         => $args -> {"bcc"} ?  $args -> {"bcc"} -> [2] : "",
+                                                                                    "***bcc4***"         => $args -> {"bcc"} ?  $args -> {"bcc"} -> [3] : "",
+                                                                                    "***cc2hide***"      => $args -> {"cc"}  ? ($args -> {"cc"} -> [1]  ? "" : "hide") : "hide",
+                                                                                    "***cc3hide***"      => $args -> {"cc"}  ? ($args -> {"cc"} -> [2]  ? "" : "hide") : "hide",
+                                                                                    "***cc4hide***"      => $args -> {"cc"}  ? ($args -> {"cc"} -> [3]  ? "" : "hide") : "hide",
+                                                                                    "***bcc2hide***"     => $args -> {"bcc"} ? ($args -> {"bcc"} -> [1] ? "" : "hide") : "hide",
+                                                                                    "***bcc3hide***"     => $args -> {"bcc"} ? ($args -> {"bcc"} -> [2] ? "" : "hide") : "hide",
+                                                                                    "***bcc4hide***"     => $args -> {"bcc"} ? ($args -> {"bcc"} -> [3] ? "" : "hide") : "hide",
+                                                                                    "***replyto_other***"=> $args -> {"replyto_other"},
+                                                                                    "***replyto***"      => $self -> build_replyto($args -> {"replyto_id"}),
+                                                  });
+}
+
+
+## @method $ generate_message_confirm($args, $outfields)
+# Generate the string to insert into the message_confirm.tem target hook region
+# for this target.
+#
+# @param args      A reference to a hash of arguments to use in the form
+# @param outfields A reference to a hash of output values.
+# @return A string containing the message confirm form fragment.
+sub generate_message_confirm {
+    my $self      = shift;
+    my $args      = shift;
+    my $outfields = shift;
+    my $tem;
+
+    $tem -> {"cc"}  = $self -> {"template"} -> load_template("target/email/message_confirm_cc.tem");
+    $tem -> {"bcc"} = $self -> {"template"} -> load_template("target/email/message_confirm_bcc.tem");
+
+    # work out the bcc/cc fields....
+    foreach my $mode ("cc", "bcc") {
+        for(my $i = 0; $i < 4; ++$i) {
+            # Append the cc/bcc if it is set...
+            $outfields -> {$mode} .= $self -> {"template"} -> process_template($tem -> {$mode}, {"***data***" => encode_entities($args -> {$mode} -> [$i])})
+                if($args -> {$mode} -> [$i]);
+        }
+    }
+
+    # Get the replyto sorted
+    if($args -> {"replyto_id"} == 0) {
+        $outfields -> {"replyto"} = $args -> {"replyto_other"};
+    } else {
+        my $replytoh = $self -> {"dbh"} -> prepare("SELECT email FROM ".$self -> {"settings"} -> {"database"} -> {"replytos"}."
+                                                   WHERE id = ?");
+        $replytoh -> execute($args -> {"replyto_id"})
+            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto query: ".$self -> {"dbh"} -> errstr);
+
+        my $replytor = $replytoh -> fetchrow_arrayref();
+        $outfields -> {"replyto"} = $replytor ? $replytor -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADREPLYTO");
+    }
+
+    return $self -> {"template"} -> load_template("target/email/message_confirm.tem", {"***cc***"      => $outfields -> {"cc"},
+                                                                                       "***bcc***"     => $outfields -> {"bcc"},
+                                                                                       "***replyto***" => $outfields -> {"replyto"}});
+}
+
+
+## @method $ generate_message_abort($args, $outfields)
+# Generate the string to insert into the message_abort.tem target hook region
+# for this target.
+#
+# @param args      A reference to a hash of arguments to use in the form
+# @param outfields A reference to a hash of output values.
+# @return A string containing the message abort form fragment.
+sub generate_message_abort {
+    my $self      = shift;
+    my $args      = shift;
+    my $outfields = shift;
+
+    return $self -> generate_message_confirm($args, $outfields);
+}
+
+
+## @method $ generate_message_view($args, $outfields)
+# Generate the string to insert into the message_view.tem target hook region
+# for this target.
+#
+# @param args      A reference to a hash of arguments to use in the form
+# @param outfields A reference to a hash of output values.
+# @return A string containing the message view form fragment.
+sub generate_message_view {
+    my $self      = shift;
+    my $args      = shift;
+    my $outfields = shift;
+
+    return $self -> generate_message_confirm($args, $outfields);
+}
+
+
+## @method void store_message($args, $user, $mess_id, $prev_id)
+# Store the data for this target. This will store any target-specific
+# data in the args hash in the appropraite tables in the database.
+#
+# @param args    A reference to a hash containing the message data.
+# @param user    A reference to a hash containing the user's data.
+# @param mess_id The ID of the message being stored.
+# @param prev_id If set, this is the ID of the message that the current
+#                mess_id is an edit of.
+sub store_message {
+    my $self    = shift;
+    my $args    = shift;
+    my $user    = shift;
+    my $mess_id = shift;
+    my $prev_id = shift;
+
+    foreach my $mode ("cc", "bcc") {
+        my $insh = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"messages_$mode"}."
+                                                VALUES(?, ?)");
+        foreach my $address (@{$args -> {$mode}}) {
+            next if(!$address); # skip ""
+
+            $insh -> execute($mess_id, $address)
+                or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute $mode insert: ".$self -> {"dbh"} -> errstr);
+        }
+    }
+
+    my $replytoh = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"messages_reply"}."
+                                                VALUES(?, ?, ?)");
+    $replytoh -> execute($mess_id, $args -> {"replyto_id"}, $args -> {"replyto_other"})
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto insert: ".$self -> {"dbh"} -> errstr);
+}
+
+
+## @method void get_message($msgid, $message)
+# Populate the specified message hash with data specific to this target.
+# This will pull any data appropriate for the current target out of
+# the database and shove it into the message hash.
+#
+# @param msgid   The ID of the message to fetch the data for.
+# @param message A reference to the hash into which the data should be written.
+sub get_message {
+    my $self    = shift;
+    my $msgid   = shift;
+    my $message = shift;
+
+    # now get the cc/bcc lists
+    foreach my $mode ("cc", "bcc") {
+        my $cch = $self -> {"dbh"} -> prepare("SELECT address FROM ".$self -> {"settings"} -> {"database"} -> {"messages_$mode"}."
+                                               WHERE message_id = ?");
+        $cch -> execute($msgid)
+            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute $mode lookup query: ".$self -> {"dbh"} -> errstr);
+
+        $message -> {$mode} = [];
+        while(my $cc = $cch -> fetchrow_arrayref()) {
+            push(@{$message -> {$mode}}, $cc -> [0]);
+        }
+    }
+
+    my $replyh = $self -> {"dbh"} -> prepare("SELECT *FROM ".$self -> {"settings"} -> {"database"} ->  {"messages_reply"}."
+                                              WHERE message_id = ?");
+    $replyh -> execute($msgid)
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto lookup query: ".$self -> {"dbh"} -> errstr);
+
+    my $replyr = $replyh -> fetchrow_hashref();
+    die_log($self -> {"cgi"} -> remote_host(), "No reply-to set for message: ".$self -> {"dbh"} -> errstr) if(!$replyr);
+
+    $message -> {"replyto_id"}    = $replyr -> {"replyto_id"};
+    $message -> {"replyto_other"} = $replyr -> {"replyto_other"};
+}
+
+
+## @method $ validate_message($args)
+# Validate this target's settings in the posted data, and store them in
+# the provided args hash.
+#
+# @param args A reference to a hash into which the Target's data should be stored.
+# @return A string containing any error messages encountered during validation.
+sub validate_message {
+    my $self = shift;
+    my $args = shift;
+    my ($error, $errors) = ("", "");
+
+    my $errtem = $self -> {"template"} -> load_template("blocks/error_entry.tem");
+
+    # Check the cc and bcc fields are valid emails, if set
+    my $addressre = '[\w\.-]+\@([\w-]+\.)+\w+'; # regexp used to check email addresses...
+    foreach my $mode ("cc", "bcc") {
+        $args -> {$mode} = [];
+        # Four field each for cc and bcc...
+        for(my $i = 1; $i <= 4; ++$i) {
+            ($args -> {$mode} -> [$i - 1], $error) = $self -> validate_string($mode.$i, {"required"   => 0,
+                                                                                         "default"    => "",
+                                                                                         "nicename"   => $self -> {"template"} -> replace_langvar("MESSAGE_".uc($mode)),
+                                                                                         "maxlen"     => 255});
+            # Fix up <, >, and "
+            $args -> {$mode} -> [$i - 1] = decode_entities($args -> {$mode} -> [$i - 1]);
+
+            # If we have an error, store it, otherwise check the address is valid
+            if($error) {
+                $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error});
+            } else {
+                # Split the field for validation
+                my @addresses = split(/,/, $args -> {$mode} -> [$i - 1]);
+
+                # Check each address is valid.
+                foreach my $address (@addresses) {
+                    $address =~ s/^\s*(.*?)\s*$/$1/; # trim trailing or leading whitespace
+
+                    if($address !~ /^.*?<$addressre>$/ && $address !~ /^$addressre$/) {
+                        # Emails can have 'real name' junk as well as straight addresses
+                        $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_BADEMAIL", {"***name***" => $self -> {"template"} -> replace_langvar("MESSAGE_".uc($mode))." $i (".encode_entities($args ->{$mode} -> [$i -1]).")" })});
+                        last;
+                    }
+                }
+            }
+        } # for(my $i = 1; $i <= 4; ++$i)
+    } # foreach my $mode ("cc", "bcc")
+
+    # Check that the selected reply-to is valid...
+    # Has the user selected the 'other reply-to' option? If so, check they enetered a prefixe
+    if($self -> {"cgi"} -> param("replyto_id") == 0) {
+        $args -> {"replyto_id"} = 0;
+        ($args -> {"replyto_other"}, $error) = $self -> validate_string("replyto_other", {"required" => 1,
+                                                                                          "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_REPLYTO"),
+                                                                                          "minlen"   => 1,
+                                                                                          "maxlen"   => 255});
+        # check that the replyto is valid
+        $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_BADEMAIL", {"***name***" => $self -> {"template"} -> replace_langvar("MESSAGE_REPLYTO")})})
+            if($args -> {"replyto_other"} !~ /^.*?<$addressre>$/ && $args -> {"replyto_other"} !~ /^$addressre$/);
+
+    # User has selected a prefix, check it is valid
+    } else {
+        $args -> {"replyto_other"} = undef;
+        ($args -> {"replyto_id"}, $error) = $self -> validate_options("replyto_id", {"required" => 1,
+                                                                                     "source"   => $self -> {"settings"} -> {"database"} -> {"replytos"},
+                                                                                     "where"    => "WHERE id = ?",
+                                                                                     "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_REPLYTO")});
+    }
+    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error}) if($error);
+
+    return $errors;
 }
 
 
