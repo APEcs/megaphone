@@ -39,7 +39,7 @@ use Utils qw(is_defined_numeric);
 # @return A string containing the message block.
 sub generate_message {
     my $self  = shift;
-    my $args  = shift;
+    my $args  = shift || {};
     my $error = shift;
 
     # Get the user, even if they're anonymous
@@ -53,7 +53,7 @@ sub generate_message {
     # Check each target for blocks
     my $targethook = "";
     foreach my $targ (@{$self -> {"targetorder"}}) {
-        $targethook .= $self -> {"targets"} -> {$targ} -> {"module"} -> generate_message();
+        $targethook .= $self -> {"targets"} -> {$targ} -> {"module"} -> generate_message($args, $user);
     }
 
     # And build the message block itself. Kinda big and messy, this...

@@ -68,6 +68,7 @@ sub new {
     return $self;
 }
 
+
 # ============================================================================
 #  Storage
 
@@ -111,21 +112,10 @@ sub store_message {
             or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute destination insert: ".$self -> {"dbh"} -> errstr);
     }
 
-    foreach my $mode ("cc", "bcc") {
-        my $insh = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"messages_$mode"}."
-                                                VALUES(?, ?)");
-        foreach my $address (@{$args -> {$mode}}) {
-            next if(!$address); # skip ""
-
-            $insh -> execute($messid, $address)
-                or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute $mode insert: ".$self -> {"dbh"} -> errstr);
-        }
+    # Call Target modules to store their data.
+    foreach my $targ (keys(%{$args -> {"targused"}})) {
+        $self -> {"targets"} -> {$targ} -> {"module"} -> store_message($args, $user, $messid, $prev_id);
     }
-
-    my $replytoh = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"messages_reply"}."
-                                                VALUES(?, ?, ?)");
-    $replytoh -> execute($messid, $args -> {"replyto_id"}, $args -> {"replyto_other"})
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto insert: ".$self -> {"dbh"} -> errstr);
 
     return $messid;
 }
@@ -151,38 +141,26 @@ sub get_message {
 
     # Fetch the destinations
     $message -> {"targset"} = [];
-    my $targh = $self -> {"dbh"} -> prepare("SELECT dest_id FROM ".$self -> {"settings"} -> {"database"} ->  {"messages_dests"}."
-                                             WHERE message_id = ?");
+    my $targh = $self -> {"dbh"} -> prepare("SELECT d.dest_id,t.module_id
+                                             FROM ".$self -> {"settings"} -> {"database"} -> {"messages_dests"}." AS d,
+                                                  ".$self -> {"settings"} -> {"database"} -> {"recip_targs"}." AS m,
+                                                  ".$self -> {"settings"} -> {"database"} -> {"targets"}." AS t
+                                             WHERE message_id = ?
+                                             AND m.id = d.dest_id
+                                             AND t.id = m.target_id");
     $targh -> execute($msgid)
         or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute destination lookup query: ".$self -> {"dbh"} -> errstr);
 
-    while(my $targ = $targh -> fetchrow_arrayref()) {
-        push(@{$message -> {"targset"}}, $targ -> [0]);
+    while(my $targ = $targh -> fetchrow_hashref()) {
+        # Store the used destination, and the id of the module that implements the target
+        push(@{$message -> {"targset"}}, $targ -> {"dest_id"});
+        $message -> {"targused"} -> {$targ -> {"module_id"}} = 1;
     }
 
-    # now get the cc/bcc lists
-    foreach my $mode ("cc", "bcc") {
-        my $cch = $self -> {"dbh"} -> prepare("SELECT address FROM ".$self -> {"settings"} -> {"database"} -> {"messages_$mode"}."
-                                               WHERE message_id = ?");
-        $cch -> execute($msgid)
-            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute $mode lookup query: ".$self -> {"dbh"} -> errstr);
-
-        $message -> {$mode} = [];
-        while(my $cc = $cch -> fetchrow_arrayref()) {
-            push(@{$message -> {$mode}}, $cc -> [0]);
-        }
+    # Call Target modules to fill in their data.
+    foreach my $targ (keys(%{$message -> {"targused"}})) {
+        $self -> {"targets"} -> {$targ} -> {"module"} -> get_message($msgid, $message);
     }
-
-    my $replyh = $self -> {"dbh"} -> prepare("SELECT *FROM ".$self -> {"settings"} -> {"database"} ->  {"messages_reply"}."
-                                              WHERE message_id = ?");
-    $replyh -> execute($msgid)
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto lookup query: ".$self -> {"dbh"} -> errstr);
-
-    my $replyr = $replyh -> fetchrow_hashref();
-    die_log($self -> {"cgi"} -> remote_host(), "No reply-to set for message: ".$self -> {"dbh"} -> errstr) if(!$replyr);
-
-    $message -> {"replyto_id"} = $replyr -> {"replyto_id"};
-    $message -> {"replyto_other"} = $replyr -> {"replyto_other"};
 
     # Done, return the data...
     return $message;
@@ -496,19 +474,27 @@ sub validate_message {
     my $errtem = $self -> {"template"} -> load_template("blocks/error_entry.tem");
 
     # Query used to check that destinations are valid
-    my $matrixh = $self -> {"dbh"} -> prepare("SELECT id FROM ".$self -> {"settings"} -> {"database"} -> {"recip_targs"}."
-                                               WHERE id = ?");
+    my $matrixh = $self -> {"dbh"} -> prepare("SELECT m.id, t.module_id
+                                               FROM ".$self -> {"settings"} -> {"database"} -> {"recip_targs"}." AS m,
+                                                    ".$self -> {"settings"} -> {"database"} -> {"targets"}." AS t
+                                               WHERE m.id = ?
+                                               AND t.id = m.target_id");
 
     # check that we have some seleted destinations, and they are valid
     my @targset = $self -> {"cgi"} -> param('matrix');
     my @checked_targs;
+    $args -> {"targused"} = {};
     foreach my $targ (@targset) {
         $matrixh -> execute($targ)
             or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute recipient/target validation check: ".$self -> {"dbh"} -> errstr);
 
         # do we have a match?
-        if($matrixh -> fetchrow_hashref()){
+        my $dest = $matrixh -> fetchrow_hashref();
+        if($dest){
+            # Store the destination, and record that the module implementing the
+            # target for the destination has been used.
             push(@checked_targs, $targ);
+            $args -> {"targused"} -> {$dest -> {"module_id"}} = 1;
 
         # Not found, produce an error...
         } else {
@@ -523,61 +509,10 @@ sub validate_message {
     $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_NOMATRIX")})
         if(!scalar(@checked_targs));
 
-    # Check the cc and bcc fields are valid emails, if set
-    my $addressre = '[\w\.-]+\@([\w-]+\.)+\w+'; # regexp used to check email addresses...
-    foreach my $mode ("cc", "bcc") {
-        $args -> {$mode} = [];
-        # Four field each for cc and bcc...
-        for(my $i = 1; $i <= 4; ++$i) {
-            ($args -> {$mode} -> [$i - 1], $error) = $self -> validate_string($mode.$i, {"required"   => 0,
-                                                                                         "default"    => "",
-                                                                                         "nicename"   => $self -> {"template"} -> replace_langvar("MESSAGE_".uc($mode)),
-                                                                                         "maxlen"     => 255});
-            # Fix up <, >, and "
-            $args -> {$mode} -> [$i - 1] = decode_entities($args -> {$mode} -> [$i - 1]);
-
-            # If we have an error, store it, otherwise check the address is valid
-            if($error) {
-                $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error});
-            } else {
-                # Split the field for validation
-                my @addresses = split(/,/, $args -> {$mode} -> [$i - 1]);
-
-                # Check each address is valid.
-                foreach my $address (@addresses) {
-                    $address =~ s/^\s*(.*?)\s*$/$1/; # trim trailing or leading whitespace
-
-                    if($address !~ /^.*?<$addressre>$/ && $address !~ /^$addressre$/) {
-                        # Emails can have 'real name' junk as well as straight addresses
-                        $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_BADEMAIL", {"***name***" => $self -> {"template"} -> replace_langvar("MESSAGE_".uc($mode))." $i (".encode_entities($args ->{$mode} -> [$i -1]).")" })});
-                        last;
-                    }
-                }
-            }
-        } # for(my $i = 1; $i <= 4; ++$i)
-    } # foreach my $mode ("cc", "bcc")
-
-    # Check that the selected reply-to is valid...
-    # Has the user selected the 'other reply-to' option? If so, check they enetered a prefixe
-    if($self -> {"cgi"} -> param("replyto_id") == 0) {
-        $args -> {"replyto_id"} = 0;
-        ($args -> {"replyto_other"}, $error) = $self -> validate_string("replyto_other", {"required" => 1,
-                                                                                          "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_REPLYTO"),
-                                                                                          "minlen"   => 1,
-                                                                                          "maxlen"   => 255});
-        # check that the replyto is valid
-        $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_BADEMAIL", {"***name***" => $self -> {"template"} -> replace_langvar("MESSAGE_REPLYTO")})})
-            if($args -> {"replyto_other"} !~ /^.*?<$addressre>$/ && $args -> {"replyto_other"} !~ /^$addressre$/);
-
-    # User has selected a prefix, check it is valid
-    } else {
-        $args -> {"replyto_other"} = undef;
-        ($args -> {"replyto_id"}, $error) = $self -> validate_options("replyto_id", {"required" => 1,
-                                                                                     "source"   => $self -> {"settings"} -> {"database"} -> {"replytos"},
-                                                                                     "where"    => "WHERE id = ?",
-                                                                                     "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_REPLYTO")});
+    # Call Target modules to validate their data.
+    foreach my $targ (keys(%{$args -> {"targused"}})) {
+        $errors .= $self -> {"targets"} -> {$targ} -> {"module"} -> validate_message($args);
     }
-    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error}) if($error);
 
     # Check that the selected prefix is valid...
     # Has the user selected the 'other prefix' option? If so, check they enetered a prefixe
@@ -644,31 +579,22 @@ sub generate_message_editform {
     $error = $self -> {"template"} -> load_template("blocks/error_box.tem", {"***message***" => $error})
         if($error);
 
+    # Check each target for blocks
+    my $targethook = "";
+    foreach my $targ (@{$self -> {"targetorder"}}) {
+        $targethook .= $self -> {"targets"} -> {$targ} -> {"module"} -> generate_message_edit($args);
+    }
+
     # And build the message block itself. Kinda big and messy, this...
     my $body = $self -> {"template"} -> load_template("blocks/message_edit.tem", {"***error***"        => $error,
-                                                                                  "***cc1***"          => $args -> {"cc"}  ?  $args -> {"cc"} -> [0]  : "",
-                                                                                  "***cc2***"          => $args -> {"cc"}  ?  $args -> {"cc"} -> [1]  : "",
-                                                                                  "***cc3***"          => $args -> {"cc"}  ?  $args -> {"cc"} -> [2]  : "",
-                                                                                  "***cc4***"          => $args -> {"cc"}  ?  $args -> {"cc"} -> [3]  : "",
-                                                                                  "***bcc1***"         => $args -> {"bcc"} ?  $args -> {"bcc"} -> [0] : "",
-                                                                                  "***bcc2***"         => $args -> {"bcc"} ?  $args -> {"bcc"} -> [1] : "",
-                                                                                  "***bcc3***"         => $args -> {"bcc"} ?  $args -> {"bcc"} -> [2] : "",
-                                                                                  "***bcc4***"         => $args -> {"bcc"} ?  $args -> {"bcc"} -> [3] : "",
-                                                                                  "***cc2hide***"      => $args -> {"cc"}  ? ($args -> {"cc"} -> [1]  ? "" : "hide") : "hide",
-                                                                                  "***cc3hide***"      => $args -> {"cc"}  ? ($args -> {"cc"} -> [2]  ? "" : "hide") : "hide",
-                                                                                  "***cc4hide***"      => $args -> {"cc"}  ? ($args -> {"cc"} -> [3]  ? "" : "hide") : "hide",
-                                                                                  "***bcc2hide***"     => $args -> {"bcc"} ? ($args -> {"bcc"} -> [1] ? "" : "hide") : "hide",
-                                                                                  "***bcc3hide***"     => $args -> {"bcc"} ? ($args -> {"bcc"} -> [2] ? "" : "hide") : "hide",
-                                                                                  "***bcc4hide***"     => $args -> {"bcc"} ? ($args -> {"bcc"} -> [3] ? "" : "hide") : "hide",
                                                                                   "***prefix_other***" => $args -> {"prefix_other"},
-                                                                                  "***replyto_other***"=> $args -> {"replyto_other"},
                                                                                   "***subject***"      => $args -> {"subject"},
                                                                                   "***message***"      => $args -> {"message"},
                                                                                   "***delaysend***"    => $args -> {"delaysend"} ? 'checked="checked"' : "",
                                                                                   "***delay***"        => $self -> {"template"} -> humanise_seconds($self -> {"settings"} -> {"config"} -> {"Core:delay_send"}),
                                                                                   "***targmatrix***"   => $self -> build_target_matrix($args -> {"targset"}),
                                                                                   "***prefix***"       => $self -> build_prefix($args -> {"prefix_id"}),
-                                                                                  "***replyto***"      => $self -> build_replyto($args -> {"replyto_id"}),
+                                                                                  "***targethook***"   => $targethook,
                                                                               });
 
     # store any hidden args...
@@ -698,32 +624,13 @@ sub generate_message_confirmform {
     my $msgid  = shift;
     my $args   = shift || { };
     my $hidden = shift;
-    my $tem;
+    my $outfields = {};
 
-    $tem -> {"cc"}  = $self -> {"template"} -> load_template("blocks/message_confirm_cc.tem");
-    $tem -> {"bcc"} = $self -> {"template"} -> load_template("blocks/message_confirm_bcc.tem");
-
-    my $outfields;
-    # work out the bcc/cc fields....
-    foreach my $mode ("cc", "bcc") {
-        for(my $i = 0; $i < 4; ++$i) {
-            # Append the cc/bcc if it is set...
-            $outfields -> {$mode} .= $self -> {"template"} -> process_template($tem -> {$mode}, {"***data***" => encode_entities($args -> {$mode} -> [$i])})
-                if($args -> {$mode} -> [$i]);
-        }
-    }
-
-    # Get the replyto sorted
-    if($args -> {"replyto_id"} == 0) {
-        $outfields -> {"replyto"} = $args -> {"replyto_other"};
-    } else {
-        my $replytoh = $self -> {"dbh"} -> prepare("SELECT email FROM ".$self -> {"settings"} -> {"database"} -> {"replytos"}."
-                                                   WHERE id = ?");
-        $replytoh -> execute($args -> {"replyto_id"})
-            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto query: ".$self -> {"dbh"} -> errstr);
-
-        my $replytor = $replytoh -> fetchrow_arrayref();
-        $outfields -> {"replyto"} = $replytor ? $replytor -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADREPLYTO");
+    # Check each target for blocks
+    my $targethook = "";
+    foreach my $targ (@{$self -> {"targetorder"}}) {
+        $targethook .= $self -> {"targets"} -> {$targ} -> {"module"} -> generate_message_confirm($args, $outfields)
+            if($args -> {"targused"} -> {$targ});
     }
 
     # Get the prefix sorted
@@ -744,15 +651,12 @@ sub generate_message_confirmform {
 
     # And build the message block itself. Kinda big and messy, this...
     my $body = $self -> {"template"} -> load_template("blocks/message_confirm.tem", {"***targmatrix***"  => $self -> build_target_matrix($args -> {"targset"}, 1),
-                                                                                     "***cc***"          => $outfields -> {"cc"},
-                                                                                     "***bcc***"         => $outfields -> {"bcc"},
                                                                                      "***prefix***"      => $outfields -> {"prefix"},
-                                                                                     "***replyto***"     => $outfields -> {"replyto"},
                                                                                      "***subject***"     => $args -> {"subject"},
                                                                                      "***message***"     => $args -> {"message"},
                                                                                      "***delaysend***"   => $outfields -> {"delaysend"},
+                                                                                     "***targethook***"  => $targethook,
                                                                                  });
-
     # store any hidden args...
     my $hiddenargs = "";
     my $hidetem = $self -> {"template"} -> load_template("hiddenarg.tem");
