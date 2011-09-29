@@ -356,6 +356,56 @@ sub check_send {
 }
 
 
+## @method $ check_show()
+# Determine whether the message selected by the user can be shown in the
+# public message list.
+#
+# @return A reference to the message data if it can be shown, or a string
+#         containing an error page if it can't
+sub check_show {
+    my $self = shift;
+
+    # Get the message id...
+    my $msgid = is_defined_numeric($self -> {"cgi"}, "msgid");
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_NOMSGID")) if(!$msgid);
+
+    # Get the message data
+    my $message = $self -> get_message($msgid);
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_BADMSGID")) if(!$message);
+
+    # Can't show messages if they aren't already sent and invisible
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_MSGNOSHOW"))
+        unless($message -> {"status"} eq "sent" && !$message -> {"visible"});
+
+    return $message;
+}
+
+
+## @method $ check_hide()
+# Determine whether the message selected by the user can be hidden from the
+# public message list.
+#
+# @return A reference to the message data if it can be hidden, or a string
+#         containing an error page if it can't
+sub check_hide {
+    my $self = shift;
+
+    # Get the message id...
+    my $msgid = is_defined_numeric($self -> {"cgi"}, "msgid");
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_NOMSGID")) if(!$msgid);
+
+    # Get the message data
+    my $message = $self -> get_message($msgid);
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_BADMSGID")) if(!$message);
+
+    # Can't hide messages unles they are sent and visible
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_MSGNOSHOW"))
+        unless($message -> {"status"} eq "sent" && $message -> {"visible"});
+
+    return $message;
+}
+
+
 # ============================================================================
 #  Fragment generators
 
@@ -789,9 +839,16 @@ sub generate_messagelist {
     }
 
     # Visibility templates
-    my @vistem = ($self -> {"template"} -> load_template("messagelist/invisible.tem"),
-                  $self -> {"template"} -> load_template("messagelist/visible.tem"));
-
+    my @vistem  = ($self -> {"template"} -> load_template("messagelist/invisible.tem"),
+                   $self -> {"template"} -> load_template("messagelist/visible.tem"));
+    my @viscont = ($self -> {"template"} -> load_template("messagelist/opsent_show.tem", {"***sort***" => $sort,
+                                                                                          "***way***"  => $way,
+                                                                                          "***hide***" => $self -> set_hide_options($hideopts),
+                                                                                          "***page***" => $pagenum}),
+                   $self -> {"template"} -> load_template("messagelist/opsent_hide.tem", {"***sort***" => $sort,
+                                                                                          "***way***"  => $way,
+                                                                                          "***hide***" => $self -> set_hide_options($hideopts),
+                                                                                          "***page***" => $pagenum}));
     # Process the rows...
     my $rows = "";
     foreach my $message (@spliced) {
@@ -801,7 +858,10 @@ sub generate_messagelist {
                                                                      "***updated***" => $self -> {"template"} -> format_time($message -> {"updated"}),
                                                                      "***visible***" => $vistem[$message -> {"visible"}],
                                                                      "***sent***"    => $message -> {"sent"} ? $self -> {"template"} -> format_time($message -> {"sent"}) : $self -> build_sent_info($message),
-                                                                     "***ops***"     => $self -> {"template"} -> process_template($optems -> {$message -> {"status"}}, {"***id***" => $message -> {"id"}})});
+                                                                     "***ops***"     => $self -> {"template"} -> process_template($optems -> {$message -> {"status"}}, {"***id***"       => $message -> {"id"},
+                                                                                                                                                                        "***showhide***" => $self -> {"template"} -> process_template($viscont[$message -> {"visible"}], {"***id***" => $message -> {"id"}})
+                                                                                                                                                                       }),
+                                                                    });
     }
 
     # If there are no rows, output a "No messages" row
@@ -966,6 +1026,24 @@ sub page_display {
             return $message unless(ref($message) eq "HASH");
 
             $content = $self -> generate_view_form($message, $self -> get_msglist_args($message -> {"id"}));
+
+        # Has user asked to hide a message?
+        } elsif(defined($self -> {"cgi"} -> param("hidemsg"))) {
+            # Check that the message can be viewed...
+            my $message = $self -> check_hide();
+            return $message unless(ref($message) eq "HASH");
+
+            $self -> set_message_visible($message -> {"id"}, 0);
+            $content = $self -> generate_basic_messagepage($user);
+
+        # Has user asked to show a message?
+        } elsif(defined($self -> {"cgi"} -> param("showmsg"))) {
+            # Check that the message can be viewed...
+            my $message = $self -> check_show();
+            return $message unless(ref($message) eq "HASH");
+
+            $self -> set_message_visible($message -> {"id"}, 1);
+            $content = $self -> generate_basic_messagepage($user);
 
         # No recognised operations in progress - send the basic list and user details box
         } else {
