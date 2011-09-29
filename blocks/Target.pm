@@ -58,4 +58,116 @@ sub generate_message {
     return "";
 }
 
+
+## @method $ generate_message_edit($args)
+# Generate the string to insert into the message_edit.tem target hook region for
+# this target.
+#
+# @param args A reference to a hash of arguments to use in the form
+# @return A string containing the message edit form fragment.
+sub generate_message_edit {
+    my $self = shift;
+    my $args = shift;
+
+    return "";
+}
+
+
+## @method $ generate_message_confirm($args, $outfields)
+# Generate the string to insert into the message_confirm.tem target hook region
+# for this target.
+#
+# @param args      A reference to a hash of arguments to use in the form
+# @param outfields A reference to a hash of output values.
+# @return A string containing the message confirm form fragment.
+sub generate_message_confirm {
+    my $self      = shift;
+    my $args      = shift;
+    my $outfields = shift;
+
+    return "";
+}
+
+
+## @method $ generate_message_abort($args, $outfields)
+# Generate the string to insert into the message_abort.tem target hook region
+# for this target.
+#
+# @param args      A reference to a hash of arguments to use in the form
+# @param outfields A reference to a hash of output values.
+# @return A string containing the message abort form fragment.
+sub generate_message_abort {
+    my $self      = shift;
+    my $args      = shift;
+    my $outfields = shift;
+
+    return "";
+}
+
+
+## @method $ generate_message_view($args, $outfields)
+# Generate the string to insert into the message_view.tem target hook region
+# for this target.
+#
+# @param args      A reference to a hash of arguments to use in the form
+# @param outfields A reference to a hash of output values.
+# @return A string containing the message view form fragment.
+sub generate_message_view {
+    my $self      = shift;
+    my $args      = shift;
+    my $outfields = shift;
+
+    return "";
+}
+
+
+## @method void store_message($args, $user, $mess_id, $prev_id)
+# Store the data for this target. This will store any target-specific
+# data in the args hash in the appropraite tables in the database.
+#
+# @param args    A reference to a hash containing the message data.
+# @param user    A reference to a hash containing the user's data.
+# @param mess_id The ID of the message being stored.
+# @param prev_id If set, this is the ID of the message that the current
+#                mess_id is an edit of.
+sub store_message {
+    my $self    = shift;
+    my $args    = shift;
+    my $user    = shift;
+    my $mess_id = shift;
+    my $prev_id = shift;
+
+    # Does nothing
+}
+
+
+## @method void get_message($msgid, $message)
+# Populate the specified message hash with data specific to this target.
+# This will pull any data appropriate for the current target out of
+# the database and shove it into the message hash.
+#
+# @param msgid   The ID of the message to fetch the data for.
+# @param message A reference to the hash into which the data should be written.
+sub get_message {
+    my $self    = shift;
+    my $msgid   = shift;
+    my $message = shift;
+
+    # Does nothing.
+}
+
+
+## @method $ validate_message($args)
+# Validate this target's settings in the posted data, and store them in
+# the provided args hash.
+#
+# @param args A reference to a hash into which the Target's data should be stored.
+# @return A string containing any error messages encountered during validation.
+sub validate_message {
+    my $self = shift;
+    my $args = shift;
+
+    return "";
+}
+
 1;
