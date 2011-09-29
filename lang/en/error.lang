@@ -7,3 +7,7 @@ FATAL_MSGSENT   = Message has already been sent or aborted, unable to edit it. T
 FATAL_MSGNOKILL = The selected message can not be aborted. Only messages currently in the 'pending' state may be aborted.
 FATAL_MSGNOEDIT = The selected message can not be edited. Only messages currently in the 'incomplete', 'pending', or 'aborted' state may be edited.
 FATAL_MSGNOSEND = The selected message can not be sent. Only messages currently in the 'pending' state may be sent immediately.
+
+FATAL_MSGNOSHOW = The selected message can not be shown in the public message list. Only currently hidden messages in the 'sent' state may be shown.
+FATAL_MSGNOHIDE = The selected message can not be hidden from the public message list. The message is either already hidden, or has never been sent (and has thus never been visible anyway).
+
