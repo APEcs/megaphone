@@ -444,7 +444,7 @@ sub build_sent_info {
     return $self -> {"template"} -> load_template("messagelist/notsent.tem") if($remain == -1);
 
     # Not sent, waiting on delay timer
-    my $class = ($remain > 600 ? "long" : ($remain > 120 ? "med" : "short")); 
+    my $class = ($remain > 600 ? "long" : ($remain > 120 ? "med" : "short"));
     return $self -> {"template"} -> load_template("messagelist/delaywait.tem", {"***remain***" => $self -> {"template"} -> humanise_seconds($remain, 1),
                                                                                 "***class***"  => $class});
 }
@@ -460,7 +460,7 @@ sub build_sent_info {
 # @return A string containing the show/hide block.
 sub build_showhide {
     my ($self, $sort, $way, $page, $hideref) = @_;
-    
+
     my $hidetem = $self -> {"template"} -> load_template("messagelist/status_hide.tem", {"***sort***" => $sort,
                                                                                          "***way***"  => $way,
                                                                                          "***page***" => $page});
@@ -508,7 +508,7 @@ sub get_msglist_args {
     $args -> {"page"} = 0 if($args -> {"page"} < 0);
 
     $args -> {"hide"} = "edited" if(!defined($args -> {"hide"}));
-    
+
     # Check that the hide contents are valid
     my @hide = split(/,/, $args -> {"hide"});
     my @valid;
@@ -564,7 +564,7 @@ sub set_hide_options {
 
     my $outstring = "";
     foreach my $hide (keys(%{$hideref})) {
-        next if($hide eq $omit);
+        next if($omit && $hide eq $omit);
 
         $outstring .= "," if($outstring);
         $outstring .= $hide;
@@ -614,32 +614,13 @@ sub generate_abort_form {
     my $self      = shift;
     my $message   = shift;
     my $extraargs = shift;
-    my $tem;
+    my $outfields = {};
 
-    $tem -> {"cc"}  = $self -> {"template"} -> load_template("blocks/message_confirm_cc.tem");
-    $tem -> {"bcc"} = $self -> {"template"} -> load_template("blocks/message_confirm_bcc.tem");
-
-    my $outfields;
-    # work out the bcc/cc fields....
-    foreach my $mode ("cc", "bcc") {
-        for(my $i = 0; $i < 4; ++$i) {
-            # Append the cc/bcc if it is set...
-            $outfields -> {$mode} .= $self -> {"template"} -> process_template($tem -> {$mode}, {"***data***" => encode_entities($message -> {$mode} -> [$i])})
-                if($message -> {$mode} -> [$i]);
-        }
-    }
-
-    # Get the replyto sorted
-    if($message -> {"replyto_id"} == 0) {
-        $outfields -> {"replyto"} = $message -> {"replyto_other"};
-    } else {
-        my $replytoh = $self -> {"dbh"} -> prepare("SELECT email FROM ".$self -> {"settings"} -> {"database"} -> {"replytos"}."
-                                                   WHERE id = ?");
-        $replytoh -> execute($message -> {"replyto_id"})
-            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto query: ".$self -> {"dbh"} -> errstr);
-
-        my $replytor = $replytoh -> fetchrow_arrayref();
-        $outfields -> {"replyto"} = $replytor ? $replytor -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADREPLYTO");
+    # Check each target for blocks
+    my $targethook = "";
+    foreach my $targ (@{$self -> {"targetorder"}}) {
+        $targethook .= $self -> {"targets"} -> {$targ} -> {"module"} -> generate_message_abort($message, $outfields)
+            if($message -> {"targused"} -> {$targ});
     }
 
     # Get the prefix sorted
@@ -660,9 +641,7 @@ sub generate_abort_form {
 
     # And build the message block itself. Kinda big and messy, this...
     my $body = $self -> {"template"} -> load_template("blocks/message_abort.tem", {"***targmatrix***"  => $self -> build_target_matrix($message -> {"targset"}, 1),
-                                                                                   "***cc***"          => $outfields -> {"cc"},
-                                                                                   "***bcc***"         => $outfields -> {"bcc"},
-                                                                                   "***replyto***"     => $outfields -> {"replyto"},
+                                                                                   "***targethook***"  => $targethook,
                                                                                    "***prefix***"      => $outfields -> {"prefix"},
                                                                                    "***subject***"     => $message -> {"subject"},
                                                                                    "***message***"     => $message -> {"message"},
@@ -694,32 +673,13 @@ sub generate_view_form {
     my $self      = shift;
     my $message   = shift;
     my $extraargs = shift;
-    my $tem;
+    my $outfields = {};
 
-    $tem -> {"cc"}  = $self -> {"template"} -> load_template("blocks/message_confirm_cc.tem");
-    $tem -> {"bcc"} = $self -> {"template"} -> load_template("blocks/message_confirm_bcc.tem");
-
-    my $outfields;
-    # work out the bcc/cc fields....
-    foreach my $mode ("cc", "bcc") {
-        for(my $i = 0; $i < 4; ++$i) {
-            # Append the cc/bcc if it is set...
-            $outfields -> {$mode} .= $self -> {"template"} -> process_template($tem -> {$mode}, {"***data***" => encode_entities($message -> {$mode} -> [$i])})
-                if($message -> {$mode} -> [$i]);
-        }
-    }
-
-    # Get the replyto sorted
-    if($message -> {"replyto_id"} == 0) {
-        $outfields -> {"replyto"} = $message -> {"replyto_other"};
-    } else {
-        my $replytoh = $self -> {"dbh"} -> prepare("SELECT email FROM ".$self -> {"settings"} -> {"database"} -> {"replytos"}."
-                                                   WHERE id = ?");
-        $replytoh -> execute($message -> {"replyto_id"})
-            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto query: ".$self -> {"dbh"} -> errstr);
-
-        my $replytor = $replytoh -> fetchrow_arrayref();
-        $outfields -> {"replyto"} = $replytor ? $replytor -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADREPLYTO");
+    # Check each target for blocks
+    my $targethook = "";
+    foreach my $targ (@{$self -> {"targetorder"}}) {
+        $targethook .= $self -> {"targets"} -> {$targ} -> {"module"} -> generate_message_confirm($message, $outfields)
+            if($message -> {"targused"} -> {$targ});
     }
 
     # Get the prefix sorted
@@ -740,10 +700,8 @@ sub generate_view_form {
 
     # And build the message block itself. Kinda big and messy, this...
     my $body = $self -> {"template"} -> load_template("blocks/message_view.tem", {"***targmatrix***"  => $self -> build_target_matrix($message -> {"targset"}, 1),
-                                                                                   "***cc***"          => $outfields -> {"cc"},
-                                                                                   "***bcc***"         => $outfields -> {"bcc"},
+                                                                                   "***targethook***"  => $targethook,
                                                                                    "***prefix***"      => $outfields -> {"prefix"},
-                                                                                   "***replyto***"     => $outfields -> {"replyto"},
                                                                                    "***subject***"     => $message -> {"subject"},
                                                                                    "***message***"     => $message -> {"message"},
                                                                                    "***delaysend***"   => $outfields -> {"delaysend"},
