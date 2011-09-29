@@ -66,7 +66,7 @@ sub set_config {
     my $self = shift;
     my $args = shift;
 
-    my $self -> {"args"} = $args;
+    $self -> {"args"} = $args;
 
     my @args = split(/;/, $self -> {"args"});
 
