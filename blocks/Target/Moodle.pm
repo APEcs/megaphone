@@ -31,7 +31,7 @@ package Target::Moodle;
 # included in the moodle discussion subject.
 
 use strict;
-use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
+use base qw(Target::Target); # This class is a Target module
 
 # ============================================================================
 #  Constructor
@@ -82,23 +82,6 @@ sub set_config {
 
         push(@{$self -> {"args"}}, $arghash);
     }
-}
-
-
-## @method $ generate_message($args, $user)
-# Generate the string to insert into the message.tem target hook region for
-# this target.
-#
-# @param args A reference to a hash of arguments to use in the form
-# @param user A reference to a hash containing the user's data
-# @return A string containing the message form fragment.
-sub generate_message {
-    my $self = shift;
-    my $args = shift;
-    my $user = shift;
-
-    # This target has no special options.
-    return "";
 }
 
 

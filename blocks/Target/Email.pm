@@ -35,7 +35,7 @@ package Target::Email;
 # to=foo@bar.com,wibble@nowhere.com
 
 use strict;
-use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
+use base qw(Target::Target); # This class is a Target module
 use HTML::Entities;
 
 # ============================================================================
