@@ -1,9 +1,0 @@
-                    <tr>
-                        <td class="subtitle" colspan="2">{L_MESSAGE_SEC_EMAIL}:</td>
-                    </tr>
-***cc***
-***bcc***
-                    <tr>
-                        <td class="label">{L_MESSAGE_REPLYTO}:</td>
-                        <td class="field">***replyto***</td>
-                    </tr>
