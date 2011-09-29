@@ -17,6 +17,8 @@ MSGLIST_EDIT    = Edit this message
 MSGLIST_CLONE   = Clone this message
 MSGLIST_ABORT   = Cancel this message
 MSGLIST_SEND    = Send this message immediately
+MSGLIST_HIDEMSG = Hide this message.
+MSGLIST_SHOWMSG = Show this message.
 
 MSGLIST_HIDETHIS = Click to hide messages with this status
 MSGLIST_SHOWTHIS = Click to show messages with this status
