@@ -10,11 +10,6 @@ function toggleRecipient(element)
     });
 }
 
-window.addEvent('domready', function() {
-    $$('td.recip').each(function(element, index) {
-        element.addEvent('click', function() { toggleRecipient(element) });
-    });
-});
 
 function matrixClick(target)
 {
@@ -32,5 +27,26 @@ function matrixClick(target)
         $(target).hide();
     }
 }
+
+
+function initTargets(element) 
+{
+    element.getAllNext('td').each(function(el, i) {
+        el.getChildren('input').each(function(inel, ini) {
+            matrixClick(inel.get('class'));
+        });
+    });
+    
+}
+
+
+window.addEvent('domready', function() {
+    $$('td.recip').each(function(element, index) {
+        element.addEvent('click', function() { toggleRecipient(element) });
+
+        if(index == 0) initTargets(element);
+    });
+});
+
         
         
