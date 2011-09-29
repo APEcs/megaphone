@@ -186,6 +186,27 @@ sub set_message_status {
 }
 
 
+## @method void set_message_visible($msgid, $visible)
+# Update the specified message to have the provided visibility. Note that this
+# will not actually check that visibility change is valid for the message -the
+# caller must check this!
+#
+# @param msgid   The id of the message to update.
+# @param visible True if the message should be made visible, false otherwise.
+sub set_message_visible {
+    my $self    = shift;
+    my $msgid   = shift;
+    my $visible = shift;
+
+    # Message has been sent, update it.
+    my $updateh = $self -> {"dbh"} -> prepare("UPDATE ".$self -> {"settings"} -> {"database"} -> {"messages"}."
+                                               SET updated = UNIX_TIMESTAMP(), visible = ?
+                                               WHERE id = ?");
+    $updateh -> execute($visible, $msgid)
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message update query: ".$self -> {"dbh"} -> errstr);
+}
+
+
 ## @method $ update_message($msgid, $args, $user)
 # Update the specified message to contain the values specified in the new args
 # hash. This will die outright if the message has state is 'sent' or 'aborted'.
