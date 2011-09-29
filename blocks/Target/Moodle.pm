@@ -31,7 +31,7 @@ package Target::Moodle;
 # included in the moodle discussion subject.
 
 use strict;
-use base qw(Target::Target); # This class is a Target module
+use base qw(Target); # This class is a Target module
 
 # ============================================================================
 #  Constructor
