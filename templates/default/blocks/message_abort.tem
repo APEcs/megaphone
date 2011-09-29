@@ -9,8 +9,7 @@
                         <td class="label top">{L_MESSAGE_DESTS}:</td>
                         <td class="field">***targmatrix***</td>
                     </tr>
-***cc***
-***bcc***
+***targethook***
                     <tr>
                         <td class="label">{L_MESSAGE_PREFIX}:</td>
                         <td class="field">***prefix***</td>
