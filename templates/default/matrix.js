@@ -15,16 +15,20 @@ function matrixClick(target)
 {
     var checked = 0;
 
-    // count how many checked checkboxes there are with the target class
-    $$('input.'+target).each(function(element, index) {
-        if(element.checked) ++checked;
-    });
+    // don't bother doing anything if there is no matching target
+    if($(target)) {
+        
+        // count how many checked checkboxes there are with the target class
+        $$('input.'+target).each(function(element, index) {
+            if(element.checked) ++checked;
+        });
 
-    // If there are any checked, show the stuff with the target id
-    if(checked) {
-        $(target).show();
-    } else {
-        $(target).hide();
+        // If there are any checked, show the stuff with the target id
+        if(checked) {
+            $(target).show();
+        } else {
+            $(target).hide();
+        }
     }
 }
 
