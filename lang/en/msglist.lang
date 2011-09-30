@@ -35,7 +35,7 @@ MSGLIST_STATE_PENDING    = This message is in a 'pending' state, meaning that it
 MSGLIST_STATE_SENT       = This message has been sent. You can view it, but you won't be able to edit it or prevent it from being sent. <strong>YOU SENT IT. YOU CAN'T UN-SEND IT!</strong> You can, however, clone a sent message to create a new message you can then edit.
 MSGLIST_STATE_EDITED     = This is an old version of a message that has been edited. All your message edits are retained for reference and auditing. You can not edit an edited message, and it will never be sent in its current form.
 MSGLIST_STATE_ABORTED    = This is an aborted message, one that was cancelled during its pending period. Aborted messages may be edited to create a new sendable message.
-
+MSGLIST_STATE_FAILED     = The system has tried to send this message, but it was unable to be delivered to one or more destinations. If a message is in this state, hover your mouse over the "Send failed" in the "Sent" column to see a popup containing a list of the destinations that failed, and why. Failed messages may be edited to create a new sendable message.
 
 NAVBOX_FIRST  = First
 NAVBOX_PREV   = Prev
@@ -44,3 +44,6 @@ NAVBOX_LAST   = Last
 NAVBOX_PAGE   = Page
 NAVBOX_PAGEOF = of
 NAVBOX_NEWMSG = Compose a new message
+
+MSGLIST_FAILPOPUP = This message could not be sent to one or more destinations. The errors recorded are show here, contact moodlesupport@cs.man.ac.uk if you can not resolve these errors yourself.<br/><br/>Errors:
+MSGLIST_FAILED_TITLE = Send failed
