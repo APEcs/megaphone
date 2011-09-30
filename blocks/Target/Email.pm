@@ -36,6 +36,7 @@ package Target::Email;
 
 use strict;
 use base qw(Target); # This class is a Target module
+use Logging qw(die_log);
 use HTML::Entities;
 
 # ============================================================================
@@ -429,17 +430,18 @@ sub send {
     $outfields -> {"subject"} = $outfields -> {"prefix"}." ".$message -> {"subject"};
 
     # Send the message!
-    $self -> {"template"} -> email_template("email/message.tem", {"***from***"     => $user -> {"realname"}." <".$user -> {"email"}.">",
-                                                                  "***to***"       => $self -> {"args"} -> {"to"},
-                                                                  "***replyto***"  => $outfields -> {"replyto"},
-                                                                  "***cc***"       => $outfields -> {"cc"} || "",
-                                                                  "***bcc***"      => $outfields -> {"bcc"} || "",
-                                                                  # subject and message need html entities stripping
-                                                                  "***subject***"  => decode_entities($outfields -> {"subject"}),
-                                                                  "***message***"  => decode_entities($message -> {"message"}),
-                                                                  "***realname***" => $user -> {"realname"},
-                                                                  "***rolename***" => $user -> {"rolename"},
-                                                              });
+    my $error = $self -> {"template"} -> email_template("email/message.tem", {"***from***"     => $user -> {"realname"}." <".$user -> {"email"}.">",
+                                                                              "***to***"       => $self -> {"args"} -> {"to"},
+                                                                              "***replyto***"  => $outfields -> {"replyto"},
+                                                                              "***cc***"       => $outfields -> {"cc"} || "",
+                                                                              "***bcc***"      => $outfields -> {"bcc"} || "",
+                                                                              # subject and message need html entities stripping
+                                                                              "***subject***"  => decode_entities($outfields -> {"subject"}),
+                                                                              "***message***"  => decode_entities($message -> {"message"}),
+                                                                              "***realname***" => $user -> {"realname"},
+                                                                              "***rolename***" => $user -> {"rolename"},
+                                                        });
+    return $error ? "Target::Email: $error\n" : undef;
 }
 
 
