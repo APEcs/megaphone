@@ -880,6 +880,7 @@ sub send_message {
                                              WHERE d.id = ?
                                              AND t.id = d.target_id");
 
+    my $errors = "";
     foreach my $destid (@{$message -> {"targset"}}) {
         $desth -> execute($destid)
             or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute destination lookup: ".$self -> {"dbh"} -> errstr);
@@ -895,14 +896,19 @@ sub send_message {
         $targetmod -> set_config($dest -> {"args"});
 
         # Got a target module, send the message
-        $targetmod -> send($message);
+        my $error = $targetmod -> send($message);
+
+        # If we have errors, record them
+        $errors .= $error if($error);
     }
 
     # Message has been sent, update it.
     my $updateh = $self -> {"dbh"} -> prepare("UPDATE ".$self -> {"settings"} -> {"database"} -> {"messages"}."
-                                               SET status = 'sent', updated = UNIX_TIMESTAMP(), sent = UNIX_TIMESTAMP(), visible = 1
+                                               SET status = ?, updated = UNIX_TIMESTAMP(), sent = UNIX_TIMESTAMP(), visible = 1, fail_info = ?
                                                WHERE id = ?");
-    $updateh -> execute($message -> {"id"})
+    $updateh -> execute($errors ? 'failed' : 'sent',
+                        $errors ? $errors : undef,
+                        $message -> {"id"})
         or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message update query: ".$self -> {"dbh"} -> errstr);
 
     return 1;
