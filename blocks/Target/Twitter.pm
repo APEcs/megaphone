@@ -52,7 +52,7 @@ use strict;
 use base qw(Target); # This class is a Target module
 use Logging qw(die_log);
 use Net::Twitter::Lite;
-
+use Data::Dumper;
 
 # ============================================================================
 #  Constructor
@@ -233,7 +233,7 @@ sub get_message {
     my $tweetr = $tweeth -> fetchrow_hashref();
     die_log($self -> {"cgi"} -> remote_host(), "No tweet mode set for message: ".$self -> {"dbh"} -> errstr) if(!$tweetr);
 
-    $message -> {"tweet_mode"} = $tweetr -> {"tweet_mode"};
+    $message -> {"tweet_mode"} = $tweetr -> {"tweetmode_id"};
 }
 
 
@@ -266,14 +266,12 @@ sub validate_message {
 # ============================================================================
 #  Message send functions
 
-## @method $ send($message)
-# Attempt to send the specified message as an email.
-#
-# @param message A reference to a hash containing the message to send.
-# @return undef on success, an error message on failure.
-sub send {
-    my $self      = shift;
-    my $message   = shift;
+## @method void send_truncate($message)
+# Send a message as a tweet, truncating the message if it exceeds the space
+# available in a tweet (140 characters).
+sub send_truncate {
+    my $self    = shift;
+    my $message = shift;
 
     my $nt = Net::Twitter::Lite->new(
         consumer_key        => $self -> {"args"} -> {"consumer_key"},
@@ -283,7 +281,65 @@ sub send {
         ssl => 1,
         );
 
-    $nt -> update($message -> {"message"});
+    # Truncate the message if needed, and append a '...' to indicate this.
+    my ($outmsg) = $message -> {"message"} =~ /^(.{1,137})\b/;
+    if($outmsg ne $message -> {"message"}) {
+        $outmsg =~ s/\s*$//;
+        $outmsg .= "...";
+    }
+
+    # Update the status!
+    $nt -> update($outmsg);
+}
+
+
+## @method void send_split($message)
+# Send a message as a tweet, splitting the message into multiple tweets if
+# it exceeds the 140 character limit.
+sub send_split {
+    my $self    = shift;
+    my $message = shift;
+
+    my $nt = Net::Twitter::Lite->new(
+        consumer_key        => $self -> {"args"} -> {"consumer_key"},
+        consumer_secret     => $self -> {"args"} -> {"consumer_secret"},
+        access_token        => $self -> {"args"} -> {"access_token"},
+        access_token_secret => $self -> {"args"} -> {"access_token_secret"},
+        ssl => 1,
+        );
+
+    my @outmsg = $message -> {"message"} =~ /(.{1,140})\b/g;
+
+    foreach my $msg (@outmsg) {
+        $nt -> update($msg);
+    }
+}
+
+
+## @method $ send($message)
+# Attempt to send the specified message as a tweet.
+#
+# @param message A reference to a hash containing the message to send.
+# @return undef on success, an error message on failure.
+sub send {
+    my $self      = shift;
+    my $message   = shift;
+
+    my $sendmethods = { "send_truncate" => \&send_truncate,
+                        "send_split"    => \&send_split,
+    };
+
+    # Get the twitter mode function
+    my $funch = $self -> {"dbh"} -> prepare("SELECT send_func FROM ".$self -> {"settings"} -> {"database"} -> {"twittermodes"}."
+                                             WHERE id = ?");
+    $funch -> execute($message -> {"tweet_mode"})
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute tweet mode lookup: ".$self -> {"dbh"} -> errstr);
+
+    my $mode = $funch -> fetchrow_arrayref();
+    die_log($self -> {"cgi"} -> remote_host(), "Illegal tweet mode set for message") if(!$mode);
+
+    # Call the function to do the send...
+    $sendmethods -> {$mode -> [0]} -> ($self, $message);
 }
 
 
