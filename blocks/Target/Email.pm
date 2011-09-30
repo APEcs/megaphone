@@ -105,7 +105,6 @@ sub generate_message {
         $args -> {"replyto_id"}    = 0;
         $args -> {"replyto_other"} = $user -> {"email"};
     }
-    print STDERR "generate_message: $args->{replyto_other}\n";
 
     return $self -> {"template"} -> load_template("target/email/message.tem", {"***cc1***"          => $args -> {"cc"}  ? $args -> {"cc"} -> [0]  : "",
                                                                                "***cc2***"          => $args -> {"cc"}  ? $args -> {"cc"} -> [1]  : "",
