@@ -1,0 +1,7 @@
+                    <tr>
+                        <td class="subtitle" colspan="2">{L_MESSAGE_SEC_TWITTER}:</td>
+                    </tr>
+                    <tr>
+                        <td class="label">{L_MESSAGE_TWITTER}:</td>
+                        <td class="field">***twittermode***</td>
+                    </tr>

@@ -1,0 +1,13 @@
+                    <tbody id="target-Twitter">
+                    <tr>
+                        <td class="subtitle" colspan="2">{L_MESSAGE_SEC_TWITTER}:</td>
+                    </tr>
+                    <tr>
+                        <td class="label"><label for="tweet_mode">{L_MESSAGE_TWITTER}:</label></td>
+                        <td class="field"><select size="1" name="tweet_mode" id="tweet_mode">
+***twittermode***
+                                          </select>
+                                          <script type="text/javascript" src="templates/default/target/twitter/textcounter.js"></script>
+                        </td>
+                    </tr>
+                    </tbody>
