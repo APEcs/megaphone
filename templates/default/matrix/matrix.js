@@ -33,23 +33,20 @@ function matrixClick(target)
 }
 
 
-function initTargets(element) 
+function initTargets() 
 {
-    element.getAllNext('td').each(function(el, i) {
-        el.getChildren('input').each(function(inel, ini) {
-            matrixClick(inel.get('class'));
-        });
+    matrixTargList.each(function(targ, index) {
+        matrixClick("target-"+targ);
     });
-    
 }
 
 
 window.addEvent('domready', function() {
     $$('td.recip').each(function(element, index) {
         element.addEvent('click', function() { toggleRecipient(element) });
-
-        if(index == 0) initTargets(element);
     });
+
+    initTargets();
 });
 
         

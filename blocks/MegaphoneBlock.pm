@@ -299,11 +299,14 @@ sub build_target_matrix {
 
     my $targets = $targeth -> fetchall_arrayref({}); # Fetch all the targets as a reference to an array of hash references.
 
-    # Make the header list...
+    # Make the header list and javascript target list...
     my $targetheader = "";
+    my $jstarglist   = "";
     my $targheadtem = $self -> {"template"} -> load_template("matrix/target.tem");
     foreach my $target (@{$targets}) {
         $targetheader .= $self -> {"template"} -> process_template($targheadtem, {"***name***" => $target -> {"name"}});
+        $jstarglist   .= "," if($jstarglist);
+        $jstarglist   .= '"'.$target -> {"name"}.'"';
     }
 
     # Now we can build the matrix itself
@@ -353,9 +356,10 @@ sub build_target_matrix {
                                                                     "***b64body***" => encode_base64($self -> {"template"} -> load_template("matrix/matrix-help.tem"))});
 
     # And we can return the filled-in table...
-    return $self -> {"template"} -> load_template("matrix/matrix.tem", {"***help***"    => $help,
-                                                                        "***targets***" => $targetheader,
-                                                                        "***matrix***"  => $matrix});
+    return $self -> {"template"} -> load_template("matrix/matrix.tem", {"***help***"     => $help,
+                                                                        "***targets***"  => $targetheader,
+                                                                        "***targlist***" => $jstarglist,
+                                                                        "***matrix***"   => $matrix});
 }
 
 

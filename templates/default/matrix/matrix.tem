@@ -7,4 +7,5 @@
 ***matrix***
 </table>
 </div>
-<script type="text/javascript" src="templates/default/matrix.js"></script>
+<script type="text/javascript">var matrixTargList = [ ***targlist*** ];</script>
+<script type="text/javascript" src="templates/default/matrix/matrix.js"></script>
