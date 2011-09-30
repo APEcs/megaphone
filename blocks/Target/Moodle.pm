@@ -32,6 +32,7 @@ package Target::Moodle;
 
 use strict;
 use base qw(Target); # This class is a Target module
+use Logging qw(die_log);
 
 # ============================================================================
 #  Constructor
