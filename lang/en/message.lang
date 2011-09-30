@@ -24,7 +24,6 @@ MESSAGE_SENDING    = The message will be sent to the recipient via this system.
 
 MESSAGE_SEC_EMAIL  = Email options
 MESSAGE_SEC_ALL    = Common options
-MESSAGE_SEC_TWITTER= Twitter options
 
 MESSAGE_ERRORS        = Message validation failed. The following error(s) were encountered during validation:
 MESSAGE_ERR_NOMATRIX  = No destinations have been selected for your message.
@@ -56,3 +55,7 @@ MESSAGE_ABORTINTRO    = You have selected the option to prevent the message belo
 MESSAGE_VIEWTITLE     = View message
 MESSAGE_VIEWINTRO     = Here you can see a copy of the message you have selected.
 MESSAGE_MSGLIST       = Return to the message list
+
+MESSAGE_SEC_TWITTER   = Twitter options
+MESSAGE_TWITTER       = Long tweets
+MESSAGE_BADTWEETMODE  = <span class="error">Unable to locate selected tweet mode.</span>
