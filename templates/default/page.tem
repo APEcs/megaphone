@@ -22,7 +22,7 @@
     <link href="templates/default/site.css" rel="stylesheet" type="text/css" />
 
     <!--[if IE]>
-    <style type="text/css"> 
+    <style type="text/css">
         /* place css fixes for all versions of IE in this conditional comment */
         .megaphone #sidebar2, .megaphone #sidebar1 { padding-top: 30px; }
         .megaphone #mainContent { zoom: 1; padding-top: 15px; }
@@ -49,13 +49,6 @@
     </div> <!-- #header -->
 
     <div id="mainContent">
-                <table class="notebox notebox-warning" id="livewarn">
-                    <tr>
-                        <td class="nbox-image"><img src="templates/default/images/important.png" width="48" height="48" alt="important" /></td>
-                        <td class="nbox-text">WARNING: This system is now "live" - messages sent by the system will go to the real destination rather than a testing location. If you need to do testing, use the 'Test' recipient!</td>
-                    </tr>
-                </table>
-                <script type="text/javascript">setTimeout(function() { $('livewarn').dissolve() }, 5000);</script>
 ***content***
     </div> <!-- #mainContent -->
 
