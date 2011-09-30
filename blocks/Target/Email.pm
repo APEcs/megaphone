@@ -285,7 +285,7 @@ sub get_message {
         }
     }
 
-    my $replyh = $self -> {"dbh"} -> prepare("SELECT *FROM ".$self -> {"settings"} -> {"database"} ->  {"messages_reply"}."
+    my $replyh = $self -> {"dbh"} -> prepare("SELECT * FROM ".$self -> {"settings"} -> {"database"} ->  {"messages_reply"}."
                                               WHERE message_id = ?");
     $replyh -> execute($msgid)
         or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto lookup query: ".$self -> {"dbh"} -> errstr);
