@@ -1,4 +1,3 @@
-        <script type="text/javascript" src="templates/default/textcounter.js"></script>
         <div class="message">
             <h2>{L_MESSAGE_TITLE}</h2>
             <div class="mbody">
