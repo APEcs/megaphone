@@ -228,8 +228,8 @@ sub update_message {
     die_log($self -> {"cgi"} -> remote_host(), "Attempt to edit message $msgid when it is in an uneditable state. Giving up in disgust.")
         if($message -> {"status"} eq "edited");
 
-    # Switch the old message to 'edited' status if needed (we don't want to change aborted or sent messages)
-    $self -> set_message_status($msgid, "edited") unless($message -> {"status"} eq "aborted" || $message -> {"status"} eq "sent");
+    # Switch the old message to 'edited' status if needed (we don't want to change aborted, failed, or sent messages)
+    $self -> set_message_status($msgid, "edited") unless($message -> {"status"} eq "aborted" || $message -> {"status"} eq "sent" || $message -> {"status"} eq "failed");
 
     # Create a new message
     return $self -> store_message($args, $user, $msgid);
@@ -896,10 +896,11 @@ sub send_message {
         $targetmod -> set_config($dest -> {"args"});
 
         # Got a target module, send the message
-        my $error = $targetmod -> send($message);
+        eval { $targetmod -> send($message) };
 
         # If we have errors, record them
-        $errors .= $error if($error);
+        $errors .= "<li>Target::".$self -> {"targets"} -> {$dest -> {"module_id"}} -> {"name"}.": $@</li>\n"
+            if($@);
     }
 
     # Message has been sent, update it.
