@@ -1,4 +1,4 @@
-                    <tbody id="target-email">
+                    <tbody id="target-Email">
                     <tr>
                         <td class="subtitle" colspan="2">{L_MESSAGE_SEC_EMAIL}:</td>
                     </tr>
