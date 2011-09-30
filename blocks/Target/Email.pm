@@ -441,7 +441,7 @@ sub send {
                                                                               "***realname***" => $user -> {"realname"},
                                                                               "***rolename***" => $user -> {"rolename"},
                                                         });
-    return $error ? "Target::Email: $error\n" : undef;
+    die_log($self -> {"cgi"} -> remote_host(), $error) if($error);
 }
 
 
