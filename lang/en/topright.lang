@@ -1,5 +1,5 @@
 TOPRIGHT_LOGIN     = Log in
 TOPRIGHT_LOGOUT    = Log out
-TOPRIGHT_MSGLIST   = My message list
+TOPRIGHT_MSGLIST   = One's message list <!-- Hey, don't blame me, this was Toby's idea! -->
 TOPRIGHT_LOGGEDIN  = Logged in as
 TOPRIGHT_NOTLOGGED = Not logged in
