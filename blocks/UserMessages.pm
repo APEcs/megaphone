@@ -37,7 +37,8 @@ my $stateweight = {"incomplete" => 0,
                    "pending"    => 1,
                    "sent"       => 2,
                    "edited"     => 3,
-                   "aborted"    => 4};
+                   "aborted"    => 4,
+                   "failed"     => 5};
 
 sub sortfn_state_asc {
     my $statea = $a ? $stateweight -> {$a -> {"status"}} : 0;
@@ -279,7 +280,8 @@ sub check_abort {
     return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_BADMSGID")) if(!$message);
 
     # Can't cancel messages unless they are 'pending'
-    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_MSGNOKILL")) unless($message -> {"status"} eq "pending");
+    return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_MSGNOKILL"))
+        unless($message -> {"status"} eq "pending");
 
     return $message;
 }
@@ -375,7 +377,7 @@ sub check_show {
 
     # Can't show messages if they aren't already sent and invisible
     return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_MSGNOSHOW"))
-        unless($message -> {"status"} eq "sent" && !$message -> {"visible"});
+        unless(($message -> {"status"} eq "sent" || $message -> {"status"} eq "failed") && !$message -> {"visible"});
 
     return $message;
 }
@@ -400,7 +402,7 @@ sub check_hide {
 
     # Can't hide messages unles they are sent and visible
     return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_MSGNOSHOW"))
-        unless($message -> {"status"} eq "sent" && $message -> {"visible"});
+        unless(($message -> {"status"} eq "sent" || $message -> {"status"} eq "failed") && $message -> {"visible"});
 
     return $message;
 }
@@ -484,6 +486,13 @@ sub build_sent_info {
     my $self    = shift;
     my $message = shift;
 
+    # Has the message failed? If so, return a reason
+    if($message -> {"status"} eq "failed") {
+        my $failpopup = $self -> {"template"} -> load_template("popup.tem", {"***title***"   => $self -> {"template"} -> replace_langvar("MSGLIST_FAILED_TITLE"),
+                                                                             "***b64body***" => encode_base64($self -> {"template"} -> load_template("messagelist/failedpopup.tem", {"***fails***" => $message -> {"fail_info"}}))});
+        return $self -> {"template"} -> load_template("messagelist/failed.tem", {"***failpopup***" => $failpopup});
+    }
+
     # find out how long is left...
     my $remain = $self -> delay_remain($message);
 
@@ -519,7 +528,7 @@ sub build_showhide {
                                                                                          "***way***"  => $way,
                                                                                          "***page***" => $page});
     my $hideshow = "";
-    foreach my $state ("incomplete", "pending", "sent", "edited", "aborted") {
+    foreach my $state ("incomplete", "pending", "sent", "edited", "aborted", "failed") {
         # If the state is hidden, output a 'show' option
         if($hideref -> {$state}) {
             $hideshow .= $self -> {"template"} -> process_template($showtem, {"***status***" => $state,
@@ -785,7 +794,7 @@ sub generate_messagelist {
 
     # First stage; we need to get a list of the user's messages. All of them.
     # We can't rely on SQL LIMIT and ORDER BY to get it right, unfortunately.
-    my $messh = $self -> {"dbh"} -> prepare("SELECT id, status, subject, updated, sent, visible, delaysend
+    my $messh = $self -> {"dbh"} -> prepare("SELECT id, status, subject, updated, sent, visible, delaysend, fail_info
                                              FROM ".$self -> {"settings"} -> {"database"} -> {"messages"}."
                                              WHERE user_id = ?");
     $messh -> execute($self -> {"session"} -> {"sessuser"})
@@ -857,7 +866,7 @@ sub generate_messagelist {
                                                                      "***subject***" => $message -> {"subject"},
                                                                      "***updated***" => $self -> {"template"} -> format_time($message -> {"updated"}),
                                                                      "***visible***" => $vistem[$message -> {"visible"}],
-                                                                     "***sent***"    => $message -> {"sent"} ? $self -> {"template"} -> format_time($message -> {"sent"}) : $self -> build_sent_info($message),
+                                                                     "***sent***"    => $message -> {"status"} eq "sent" ? $self -> {"template"} -> format_time($message -> {"sent"}) : $self -> build_sent_info($message),
                                                                      "***ops***"     => $self -> {"template"} -> process_template($optems -> {$message -> {"status"}}, {"***id***"       => $message -> {"id"},
                                                                                                                                                                         "***showhide***" => $self -> {"template"} -> process_template($viscont[$message -> {"visible"}], {"***id***" => $message -> {"id"}})
                                                                                                                                                                        }),
