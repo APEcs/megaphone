@@ -20,6 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package Login;
 
+## @class Login
+# A 'standalone' login implementation. This presents the user with a
+# login form, checks the credentials they enter, and then redirects
+# them back to the task they were performing that required a login.
 use strict;
 use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
 

@@ -20,6 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package MegaphoneCore;
 
+## @class MegaphoneCore
+# Implemention of the basic message composition interface. This presents
+# the user with the message composition form (with login form if needed),
+# and handles everything up to getting the message sent or into the queue.
 use strict;
 use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
 use Logging qw(die_log);

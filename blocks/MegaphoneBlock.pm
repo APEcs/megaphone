@@ -20,6 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package MegaphoneBlock;
 
+## @class MegaphoneBlock
+# The 'base' class for all Megaphone blocks. This extends the standard
+# webperl Block class with additional functions common to all Megaphone
+# UI and backend modules.
 use strict;
 use base qw(Block); # This class extends Block
 use MIME::Base64;   # Needed for base64 encoding of popup bodies.

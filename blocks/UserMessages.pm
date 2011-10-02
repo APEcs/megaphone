@@ -20,6 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package UserMessages;
 
+## @class UserMessages
+# Implements the user messages list interface. This allows the user to view
+# a complete, sortable, filterable list of the messages they have sent through
+# the system, and perform various operations on those messages.
 use strict;
 use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
 use HTML::Entities;

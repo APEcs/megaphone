@@ -20,12 +20,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package Target;
 
-use strict;
-use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
-
-## @class
+## @class Target
 # A base class for Target modules that provides minimal implementations
 # of the interface functions expected by the core.
+use strict;
+use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
 
 # ============================================================================
 #  General interface functions

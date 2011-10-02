@@ -21,6 +21,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package Cron;
 
+## @class Cron
+# This subclass of MegaphoneBlock implements the message send checks/
+# operation required to allow messages to be sent after a delay.
+#
 use strict;
 use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
 
@@ -55,4 +59,4 @@ sub page_display {
 }
 
 
-            
+

@@ -20,7 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package Target::Email;
 
-## @class
+## @class Target::Email
 # A simple email target implementation. Supported arguments are:
 #
 # to=<address list>  - specify a list of recipient addresses (comma separated)

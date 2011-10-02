@@ -20,7 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package Target::Twitter;
 
-## @class
+## @class Target::Twitter
 # A simple twitter target implementation. Supported arguments are:
 #
 # consumer_key=<key>

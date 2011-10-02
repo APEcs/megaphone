@@ -20,7 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package Target::Moodle;
 
-## @class
+## @class Target::Moodle
 # A moodle target implementation. Supported arguments are:
 #
 # forum_id=<fid>,course_id=<cid>,prefix=<1/0>;
