@@ -666,7 +666,7 @@ sub generate_basic_messagepage {
 ## @method $ generate_abort_form($message, $extraargs)
 # Generate a form prompting the user to confirm that a message should be aborted.
 #
-# @param messge A reference to a hash containing the message the user has selected to abort.
+# @param message A reference to a hash containing the message the user has selected to abort.
 # @param extraargs Extra arguments to store in hidden input elements.
 # @return The message abort confirmation form.
 sub generate_abort_form {
@@ -725,7 +725,7 @@ sub generate_abort_form {
 # Generate a form containing a copy of the selected message. Pretty similar to
 # generate_abort_form(), but meh.
 #
-# @param messge    A reference to a hash containing the message the user has selected to abort.
+# @param message    A reference to a hash containing the message the user has selected to abort.
 # @param extraargs Extra arguments to store in hidden input elements.
 # @return The message view form.
 sub generate_view_form {

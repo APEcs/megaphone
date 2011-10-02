@@ -777,7 +777,7 @@ sub generate_userdetails_form {
 # Generate a page containing a fatal error. This will produce a complete page,
 # excluding HTTP response header, and should be used to bypass normal page generation.
 #
-# @parma error The error to show in the page.
+# @param error The error to show in the page.
 # @return a complete error page.
 sub generate_fatal {
     my $self = shift;
