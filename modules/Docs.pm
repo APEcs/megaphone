@@ -19,7 +19,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# @section Webperl
+# @mainpage
+# @section index_intro Introduction
+# Megaphone is a highly modular, extensible perl-based message composition,
+# dispatch, and tracking web application written for the School of CS at
+# the University of Manchester. It provides facilities to allow a user to
+# compose a message through a simple web interface, and then send that
+# message via a variety of transports and systems to selected recipients.
+#
+# @section index_internal Internal architecture
+# @subsection index_webperl Webperl
 # The base of the Megaphone system is 'webperl', a suite of Perl classes
 # and modules originally developed by Chris Page to support his own websites,
 # and since reused in a number of large web systems (including the UK
@@ -35,6 +44,8 @@
 #   through the dynamic module loader. The Block class also includes a
 #   range of standard form validation support functions.
 #
+# See <a href="../webperl/">the WebPerl docs</a> for more details.
+#
 # @section MegaphoneBlock
 # MegaphoneBlock extends the Block class to provide functions common to all
 # Megaphone implementation modules. All Megaphone classes extend this class
@@ -42,10 +53,10 @@
 # use directly, rather its functions are called by its subclasses.
 #
 # The Megaphoneblock class is divided up into several distinct chunks of code:
-# 
+#
 # * functions in the 'Storage' section are concerned with interaction with
 #   the backend database. The store_message() and get_message() functions
 #   are Target-aware (that is, they will invoke the appropriate store and get
 #   functions in the available Target modules, to allow each of them to store
 #   or retrieve target-specific data for the message.)
-# * functions in the 'Fragment generators' 
+# * functions in the 'Fragment generators'
