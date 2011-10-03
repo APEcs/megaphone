@@ -23,7 +23,7 @@ package Target::Moodle;
 ## @class Target::Moodle
 # A moodle target implementation. Supported arguments are:
 #
-# forum_id=<fid>,course_id=<cid>,prefix=<1/0>;
+# forum_id=&lt;fid&gt;,course_id=&lt;cid&gt;,prefix=&lt;1/0&gt;;
 #
 # If multiple forum_id/course_id arguments are specified, this will
 # insert the message into each forum. the prefix is completely optional,

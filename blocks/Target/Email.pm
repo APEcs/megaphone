@@ -23,11 +23,11 @@ package Target::Email;
 ## @class Target::Email
 # A simple email target implementation. Supported arguments are:
 #
-# to=<address list>  - specify a list of recipient addresses (comma separated)
-# reply-to=<address> - specify the address that replies should go to, if not
-#                      replies will go to the From: address (the message owner).
-# cc=<address list>  - specify a list of cc recipients (comma sepatated)
-# bcc=<address list> - specify a list of bcc recipients (comma sepatated)
+# to=&lt;address list&gt;  - specify a list of recipient addresses (comma separated)
+# reply-to=&lt;address&gt; - specify the address that replies should go to, if not
+#                            specified, replies will go to the From: address (the message owner).
+# cc=&lt;address list&gt;  - specify a list of cc recipients (comma sepatated)
+# bcc=<&lt;ddress list&gt; - specify a list of bcc recipients (comma sepatated)
 #
 # Repeat arguments are concatenated, so these are equivalent:
 #
