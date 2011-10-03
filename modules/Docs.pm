@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# @mainpage
+## @mainpage
 # @section index_intro Introduction
 # Megaphone is a highly modular, extensible perl-based message composition,
 # dispatch, and tracking web application written for the School of CS at
@@ -60,3 +60,6 @@
 #   functions in the available Target modules, to allow each of them to store
 #   or retrieve target-specific data for the message.)
 # * functions in the 'Fragment generators'
+#
+
+1;
