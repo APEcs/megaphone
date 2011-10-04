@@ -173,7 +173,7 @@ sub validate_message {
 #  Message send functions
 
 ## @method $ send($message)
-# Attempt to send the specified message as a moodle forum post.
+# Attempt to send the specified message to the target system.
 #
 # @param message A reference to a hash containing the message to send.
 # @return undef on success, an error message on failure.
