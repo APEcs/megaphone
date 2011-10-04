@@ -21,7 +21,7 @@
 package Login;
 
 ## @class Login
-# A 'standalone' login implementation. This presents the user with a
+# A 'stand alone' login implementation. This presents the user with a
 # login form, checks the credentials they enter, and then redirects
 # them back to the task they were performing that required a login.
 use strict;

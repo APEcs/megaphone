@@ -122,7 +122,7 @@ sub generate_message_view {
 
 ## @method void store_message($args, $user, $mess_id, $prev_id)
 # Store the data for this target. This will store any target-specific
-# data in the args hash in the appropraite tables in the database.
+# data in the args hash in the appropriate tables in the database.
 #
 # @param args    A reference to a hash containing the message data.
 # @param user    A reference to a hash containing the user's data.

@@ -21,7 +21,7 @@
 package MegaphoneCore;
 
 ## @class MegaphoneCore
-# Implemention of the basic message composition interface. This presents
+# Implementation of the basic message composition interface. This presents
 # the user with the message composition form (with login form if needed),
 # and handles everything up to getting the message sent or into the queue.
 use strict;
@@ -78,7 +78,7 @@ sub generate_message {
 # Generate the content of the message form, optionally including the login block
 # if the user has not yet logged in.
 #
-# @param args         A reference to a hash containing the arguments to prepopulate the message form with.
+# @param args         A reference to a hash containing the arguments to pre-populate the message form with.
 # @param login_errors A string containing errors related to logging in, or undef.
 # @param form_errors  A string containing errors related to the message form itself.
 # @return A string containing the message form.

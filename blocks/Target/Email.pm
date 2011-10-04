@@ -26,8 +26,8 @@ package Target::Email;
 # to=&lt;address list&gt;  - specify a list of recipient addresses (comma separated)
 # reply-to=&lt;address&gt; - specify the address that replies should go to, if not
 #                            specified, replies will go to the From: address (the message owner).
-# cc=&lt;address list&gt;  - specify a list of cc recipients (comma sepatated)
-# bcc=<&lt;ddress list&gt; - specify a list of bcc recipients (comma sepatated)
+# cc=&lt;address list&gt;  - specify a list of cc recipients (comma separated)
+# bcc=&lt;address list&gt; - specify a list of bcc recipients (comma separated)
 #
 # Repeat arguments are concatenated, so these are equivalent:
 #
@@ -229,7 +229,7 @@ sub generate_message_view {
 
 ## @method void store_message($args, $user, $mess_id, $prev_id)
 # Store the data for this target. This will store any target-specific
-# data in the args hash in the appropraite tables in the database.
+# data in the args hash in the appropriate tables in the database.
 #
 # @param args    A reference to a hash containing the message data.
 # @param user    A reference to a hash containing the user's data.

@@ -104,7 +104,7 @@ sub store_message {
                       $args -> {"delaysend"})
         or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message insert: ".$self -> {"dbh"} -> errstr);
 
-    # Get the id of the newly created message. This is messy, but DBI's last_insert_id() is flakey as hell
+    # Get the id of the newly created message. This is messy, but DBI's last_insert_id() is flaky as hell
     my $messid = $self -> {"dbh"} -> {"mysql_insertid"};
     die_log($self -> {"cgi"} -> remote_host(), "Unable to get ID of new message. This should not happen.") if(!$messid);
 
@@ -261,7 +261,7 @@ sub update_userdetails {
 
 
 # ============================================================================
-#  Frgment generators
+#  Fragment generators
 
 ## @method $ build_target_matrix($activelist, $readonly)
 # Generate the table containing the target/recipient matrix. This will generate
@@ -509,7 +509,7 @@ sub validate_message {
                                                WHERE m.id = ?
                                                AND t.id = m.target_id");
 
-    # check that we have some seleted destinations, and they are valid
+    # check that we have some selected destinations, and they are valid
     my @targset = $self -> {"cgi"} -> param('matrix');
     my @checked_targs;
     $args -> {"targused"} = {};
@@ -544,7 +544,7 @@ sub validate_message {
     }
 
     # Check that the selected prefix is valid...
-    # Has the user selected the 'other prefix' option? If so, check they enetered a prefixe
+    # Has the user selected the 'other prefix' option? If so, check they entered a prefix
     if($self -> {"cgi"} -> param("prefix_id") == 0) {
         $args -> {"prefix_id"} = 0;
         ($args -> {"prefix_other"}, $error) = $self -> validate_string("prefix_other", {"required" => 1,
@@ -702,7 +702,7 @@ sub generate_message_confirmform {
 
 
 ## @method $generate_login($error, $full)
-# Generate the 'login' block to send to the user. This will not prepopulate the form fields, even
+# Generate the 'login' block to send to the user. This will not pre-populate the form fields, even
 # after the user has submitted and received an error - the user must fill in the details each time.
 #
 # @param error An error message to display in the login form.
@@ -851,7 +851,7 @@ sub delay_remain {
 ## @method $ send_message($msgid, $force)
 # Send the message to all the selected destinations. This will do nothing if
 # the message is waiting on a delayed send, unless force is set, in which case
-# the message will always be sent if posible.
+# the message will always be sent if possible.
 #
 # @param msgid The id of the message to send.
 # @param force Force the message to be sent, ignoring the message delay.

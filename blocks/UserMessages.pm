@@ -87,7 +87,7 @@ sub sortfn_subject_asc {
     my $res = $subja cmp $subjb;
     return $res if($res); # If the result is non-zero, the subjects differ
 
-    # subjects are the same, compare statess
+    # subjects are the same, compare states
     my $statea = $a ? $stateweight -> {$a -> {"status"}} : 0;
     my $stateb = $b ? $stateweight -> {$b -> {"status"}} : 0;
     $res = $statea <=> $stateb;
@@ -106,7 +106,7 @@ sub sortfn_subject_desc {
     print "Comparing $subjb cmp $subja = $res\n";
     return $res if($res); # If the result is non-zero, the subjects differ
 
-    # subjects are the same, compare statess
+    # subjects are the same, compare states
     my $statea = $a ? $stateweight -> {$a -> {"status"}} : 0;
     my $stateb = $b ? $stateweight -> {$b -> {"status"}} : 0;
     $res = $stateb <=> $statea;
@@ -404,7 +404,7 @@ sub check_hide {
     my $message = $self -> get_message($msgid);
     return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_BADMSGID")) if(!$message);
 
-    # Can't hide messages unles they are sent and visible
+    # Can't hide messages unless they are sent and visible
     return $self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_MSGNOSHOW"))
         unless(($message -> {"status"} eq "sent" || $message -> {"status"} eq "failed") && $message -> {"visible"});
 
@@ -588,7 +588,7 @@ sub get_msglist_args {
 
 
 ## @method $ get_hide_options()
-# Create a hash containing the currently set hide options, and return a refernce
+# Create a hash containing the currently set hide options, and return a reference
 # to it.
 #
 # @return A reference to a hash of hide options
@@ -1078,6 +1078,5 @@ sub page_display {
                                                                "***content***"   => $content});
 
 }
-
 
 1;
