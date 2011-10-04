@@ -47,13 +47,13 @@
 #
 # See <a href="../webperl/">the WebPerl docs</a> for more details.
 #
-# @section index_mpblock MegaphoneBlock
+# @subsection index_mpblock MegaphoneBlock
 # MegaphoneBlock extends the Block class to provide functions common to all
 # Megaphone implementation modules. All Megaphone classes extend this class
 # (and, through it, Block) to provide their features. MegaphoneBlock is never
 # used directly, rather its functions are called by its subclasses.
 #
-# @section index_level2 MegaphoneCore, UserMessages, Login, and Cron
+# @subsection index_level2 MegaphoneCore, UserMessages, Login, and Cron
 # The actual 'user interface' classes build on top of MegaphoneBlock, each
 # class concentrating on implementing a different aspect of the system:
 #
@@ -73,7 +73,7 @@
 # When loaded by index.cgi, the module's page_display() function is called
 # to perform module-specific logic and page generation.
 #
-# @section index_target Target
+# @subsection index_target Target
 # Target is used as the base class for message target implementation modules.
 # All modules that handle sending messages to other systems must be added
 # as subclasses of Target to work correctly, and the Target class extends
@@ -110,8 +110,94 @@
 #   and handle the storage and retrieval of message data. Target::Twitter is a
 #   simple example of this form of Target subclass.
 #
+# This page discusses how to create both sorts of targets, and then provides
+# information anout how to make Megaphone aware of your new target.
+#
 # @section creating_optionless Creating optionless targets.
 #
-# Creating an optionless Target subclass involves implementing a single function
-# in your new module
+# To create an optionless Target subclass you <b>must</b> provide your own send()
+# implementation. You will probably also want to implement your own set_config()
+# function, to convert any arguments set in the database for your target into
+# something your send function can use. A very minimal example Target subclass would be:
+# \verbatim
+# package Target::YourTarget; # All targets must be in the Target:: namespace
+# use strict;
+# use base qw(Target);        # All target classes must extend Target
+#
+# sub send() {
+#     my $self    = shift;
+#     my $message = shift;
+#
+#     # Do something with $message here to send it to your system
+# }
+#
+# 1;
+# \endverbatim
+#
+# The message argument is a reference to a hash containing the data to be sent to
+# your target. The basic contents are:
+# \verbatim
+# my $message = {
+#     'created'      => '',       # unix timestamp containing message creation time
+#     'delaysend'    => '',       # 0 for no delay, 1 for delay
+#     'format'       => 'plain',  # message body format - 'plain' or 'html'
+#     'fail_info'    => undef,    # Failure reason, undef in send(), do not edit.
+#     'id'           => '',       # id of the message being sent
+#     'message'      => '',       # The message body text
+#     'prefix_id'    => '1',      # Selected prefix id. 0 = use prefix_other
+#     'prefix_other' => undef,    # custom prefix text
+#     'previous_id'  => undef,    # id of the message that this is an edit of
+#     'sent'         => undef,    # sent timeout. undef in send(), do not edit.
+#     'status'       => 'pending',# message status. Must be 'pending' to send!
+#     'subject'      => '',       # The message subject
+#     'targset'      => [ '9' ],  # array of selected recipients_targets rows
+#     'targused'     => {         # hash of used Target module ids.
+#         '101' => 1
+#     },
+#     'updated'      => '',       # unix timestamp of last update
+#     'visible'      => '0',      # Always 0 in send(), do not edit.
+#     'user_id'      => ''        # ID of the message owner
+# };
+# \endverbatim
+#
+# Other targets may have added their own data to the message hash, but the above
+# values will always be available regardless of the other Target subclasses in the
+# system.
+#
+# The $self argument is a reference to a hash which will contain, among other things,
+# references to the cgi, dbh, template, settings, and session objects - you may use
+# them as needed when sending your message.
+#
+# @section creating_options Creating Target modules with options
+#
+# Sometimes your intended target system will require additional information from the
+# user (for example, the Target::Email class allows users to enter cc/bcc and custom
+# Reply-To information, and Target::Twitter lets the user decide whether to truncate
+# or split long messages when posting to twitter.) Megaphone has been designed to
+# support this level of module-specific data collection without the need to modify
+# the core code in any way: Target modules that need to collect additional information
+# from the user need to implement a number of functions to collect, validate, store,
+# retrieve, and display their data, and those functions are called by the core code
+# as needed.
+#
+# Implementing a Target module with options basically involves providing versions of
+# all the functions defined in Target, and usually an implementation of new() to set
+# the module's options. Please see the Target:Twitter module for a simple example.
+#
+# @section creating_register Making Megaphone aware of the new target
+#
+# Simply creating the new Target subclass is not enough to make it available to users;
+# you need to tell Megaphone that it exists, and set up and destination-specific
+# arguments to be passed to it during message sending. To do this, you need to add
+# entries to three tables in the database:
+#
+# - create an entry for the new module in the mp_modules table. As a rule of thumb,
+#   Target subclasses should use IDs over 100.
+# - create an entry in mp_targets giving the human-readable target name, and the ID
+#   of the module just added to the mp_modules table.
+# - add entries to mp_recipients_targets for each recipient you need to support with
+#   your target module, supplying any recipient-specific arguments necessary in the
+#   args column.
+#
+# Once you have completed these steps, your new target will be available to users.
 1;
