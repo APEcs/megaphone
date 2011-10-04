@@ -31,8 +31,8 @@ package Target::Email;
 #
 # Repeat arguments are concatenated, so these are equivalent:
 #
-# to=foo@bar.com;to=wibble@nowhere.com
-# to=foo@bar.com,wibble@nowhere.com
+# to=addressA;to=addressB
+# to=addressA,addressB
 
 use strict;
 use base qw(Target); # This class is a Target module
