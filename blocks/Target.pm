@@ -169,4 +169,19 @@ sub validate_message {
     return "";
 }
 
+# ============================================================================
+#  Message send functions
+
+## @method $ send($message)
+# Attempt to send the specified message as a moodle forum post.
+#
+# @param message A reference to a hash containing the message to send.
+# @return undef on success, an error message on failure.
+sub send {
+    my $self    = shift;
+    my $message = shift;
+
+    return undef;
+}
+
 1;
