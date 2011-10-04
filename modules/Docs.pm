@@ -38,7 +38,8 @@
 # * dynamic loading of classes on demand (allowing the creation of plugin
 #   mechanisms.)
 # * template processing, with multiple language support
-# * cookie or query string sessions, with optional persistent sessions.
+# * cookie-based sessions, with optional persistent sessions and query-string
+#   SID fallback.
 # * utility modules for loading and saving configuration files
 # * a 'Block' class that serves as the base class for plugin modules loaded
 #   through the dynamic module loader. The Block class also includes a
@@ -46,20 +47,38 @@
 #
 # See <a href="../webperl/">the WebPerl docs</a> for more details.
 #
-# @section MegaphoneBlock
+# @section index_mpblock MegaphoneBlock
 # MegaphoneBlock extends the Block class to provide functions common to all
 # Megaphone implementation modules. All Megaphone classes extend this class
 # (and, through it, Block) to provide their features. MegaphoneBlock is never
 # use directly, rather its functions are called by its subclasses.
 #
-# The Megaphoneblock class is divided up into several distinct chunks of code:
+# @section index_level2 MegaphoneCore, UserMessages, Login, and Cron
+# The actual 'user interface' classes build on top of MegaphoneBlock, each
+# class concentrating on implementing a different aspect of the system:
 #
-# * functions in the 'Storage' section are concerned with interaction with
-#   the backend database. The store_message() and get_message() functions
-#   are Target-aware (that is, they will invoke the appropriate store and get
-#   functions in the available Target modules, to allow each of them to store
-#   or retrieve target-specific data for the message.)
-# * functions in the 'Fragment generators'
+# * MegaphoneCore implements the basic message composition, editing, and
+#   confirmation web interface.
+# * UserMessages generates the list of messages a user has composed, and
+#   provides options to manipulate them.
+# * Login implements a 'stand-alone' login page, used when the user attempts
+#   to access an area of the system that requires access control when they
+#   are not currently logged in.
+# * Cron provides the message check and send facility required to support
+#   delayed message sending.
+#
+# These UI modules are never invoked directly - the index.cgi script looks
+# for a 'block' argument in the query string or posted data, and uses that
+# to determine which of the UI modules should be loaded to serve the page.
+# When loaded by index.cgi, the module's page_display() function is called
+# to perform module-specific logic and page generation.
+#
+# @section index_target Target
+# Target is used as the base class for message target implementation modules.
+# All modules that handle sending messages to other systems must be added
+# as subclasses of Target to work correctly, and the Target class extends
+# MegaphoneBlock to provide the minimal interface that individual Target
+# subclasses may override to provide more useful features.
 #
 
 1;
