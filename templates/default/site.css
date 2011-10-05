@@ -402,3 +402,7 @@ img.link {
     padding: 0;
     margin: 0;
 }
+
+.iewarning {
+    display: none;
+}

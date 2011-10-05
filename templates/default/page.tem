@@ -27,6 +27,7 @@
         .megaphone #sidebar2, .megaphone #sidebar1 { padding-top: 30px; }
         .megaphone #mainContent { zoom: 1; padding-top: 15px; }
         /* the above proprietary zoom property gives IE the hasLayout it needs to avoid several bugs */
+        .iewarning { display: block; }
     </style>
     <![endif]-->
 
@@ -47,8 +48,13 @@
             <ul>***topright***</ul>
         </div>
     </div> <!-- #header -->
-
     <div id="mainContent">
+        <table class="notebox notebox-warning iewarning">
+            <tr>
+                <td class="nbox-image"><img src="templates/default/images/important.png" width="48" height="48" alt="important" /></td>
+                <td class="nbox-text">{L_PAGE_IEISCRAP}</td>
+            </tr>
+        </table>
 ***content***
     </div> <!-- #mainContent -->
 
