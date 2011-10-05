@@ -93,7 +93,46 @@
 #
 # @section index_schema Database schema
 #
+# A diagram illustrating the database schema is <a href="../megaphone_schema.png">available here</a>.
+# You may wish to refer to that image while reading the remainder of this section.
 #
+# The Megaphone database schema consists of four 'groups' of tables, with some
+# connections between them:
+#
+# - mp_settings: webperl's settings table is an isolated table containing a list
+#   of key-value pairs representing the system configuration.
+# - mp_sessions and mp_session_keys: webperl's session tables, each session and
+#   session key contains the ID of the user who owns the session.
+# - mp_blocks and mp_modules: webperl's module and block handling tables. All
+#   dynamically loadable modules appear in the mp_modules table, while web-accessible
+#   modules also have entries in the mp_blocks table. Dynamically loadable Target
+#   modules are recorded in the mp_modules table, and the IDs given there are
+#   used in the mp_targets table.
+# - the remaining tables are Megaphone-specific.
+#
+# The majority of tables in the database are hopefully self-explanatory, but what follows
+# is a summary of the important tables:
+#
+# - mp_users contains the list of users who have successfully logged into the system
+#   at least once. The first time a user logs in (and is listed in the mp_authorised_users
+#   table), a new row is created for them in the mp_users table - it is not necessary
+#   to create entries for users in the mp_users table before they log in. However, the
+#   user must appear in the mp_authorised_users table to log in, and if their entry in
+#   the mp_authorised_users table is removed, they will be unable to log in even if
+#   they provide the correct credentials and even have an entry in mp_users.
+# - mp_messages stores the list of all messages composed in the system, and the data
+#   about the messages. It is important to note that mp_messages only stores the
+#   common information about each message - target specific information should be
+#   recorded in a separate tables, <b>never</b> modify the mp_messages table to store
+#   target-specific data.
+# - mp_recipients, mp_targets, and mp_recipients_targets store the list of recipient names,
+#   target names and the IDs of the Target modules that handle the target, and a mapping
+#   between recipients and targets. The latter table forms the basis of the Destinations
+#   table shown to the user, and it contains any recipient-specific data to pass to the
+#   responsible Target module when it is invoked to send a message.
+# - mp_message_dests contains the list of selected mp_recipients_targets rows for a given
+#   message: the list of recipients the user wants the message to go to, and the systems
+#   the message should be sent through.
 #
 # @page creating_targets Creating Target modules
 #
@@ -181,13 +220,13 @@
 # as needed.
 #
 # Implementing a Target module with options basically involves providing versions of
-# all the functions defined in Target, and usually an implementation of new() to set
-# the module's options. Please see the Target:Twitter module for a simple example.
+# all the functions defined in Target. Please see the Target::Twitter module for a
+# simple example.
 #
 # @section creating_register Making Megaphone aware of the new target
 #
 # Simply creating the new Target subclass is not enough to make it available to users;
-# you need to tell Megaphone that it exists, and set up and destination-specific
+# you need to tell Megaphone that it exists, and set up any destination-specific
 # arguments to be passed to it during message sending. To do this, you need to add
 # entries to three tables in the database:
 #
