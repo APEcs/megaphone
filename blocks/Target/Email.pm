@@ -445,7 +445,7 @@ sub send {
                                                                               "***message***"   => decode_entities($message -> {"message"}),
                                                                               "***realname***"  => $user -> {"realname"},
                                                                               "***rolename***"  => $user -> {"rolename"},
-                                                                              "***signature***" => $signature,
+                                                                              "***signature***" => decode_entities($signature),
                                                         });
     die_log($self -> {"cgi"} -> remote_host(), $error) if($error);
 }
