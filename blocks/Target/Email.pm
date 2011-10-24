@@ -429,17 +429,23 @@ sub send {
     # Prepend the prefix to the message
     $outfields -> {"subject"} = $outfields -> {"prefix"}." ".$message -> {"subject"};
 
+    my $signature = $user -> {"signature"};
+    $signature = $self -> {"template"} -> load_template("email/sigblock.tem", {"***realname***" => $user -> {"realname"},
+                                                                               "***rolename***" => $user -> {"rolename"}})
+        if(!$signature);
+
     # Send the message!
-    my $error = $self -> {"template"} -> email_template("email/message.tem", {"***from***"     => $user -> {"realname"}." <".$user -> {"email"}.">",
-                                                                              "***to***"       => $self -> {"args"} -> {"to"},
-                                                                              "***replyto***"  => $outfields -> {"replyto"},
-                                                                              "***cc***"       => $outfields -> {"cc"} || "",
-                                                                              "***bcc***"      => $outfields -> {"bcc"} || "",
+    my $error = $self -> {"template"} -> email_template("email/message.tem", {"***from***"      => $user -> {"realname"}." <".$user -> {"email"}.">",
+                                                                              "***to***"        => $self -> {"args"} -> {"to"},
+                                                                              "***replyto***"   => $outfields -> {"replyto"},
+                                                                              "***cc***"        => $outfields -> {"cc"} || "",
+                                                                              "***bcc***"       => $outfields -> {"bcc"} || "",
                                                                               # subject and message need html entities stripping
-                                                                              "***subject***"  => decode_entities($outfields -> {"subject"}),
-                                                                              "***message***"  => decode_entities($message -> {"message"}),
-                                                                              "***realname***" => $user -> {"realname"},
-                                                                              "***rolename***" => $user -> {"rolename"},
+                                                                              "***subject***"   => decode_entities($outfields -> {"subject"}),
+                                                                              "***message***"   => decode_entities($message -> {"message"}),
+                                                                              "***realname***"  => $user -> {"realname"},
+                                                                              "***rolename***"  => $user -> {"rolename"},
+                                                                              "***signature***" => $signature,
                                                         });
     die_log($self -> {"cgi"} -> remote_host(), $error) if($error);
 }
