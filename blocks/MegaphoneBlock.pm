@@ -253,9 +253,9 @@ sub update_userdetails {
     die_log($self -> {"cgi"} -> remote_host(), "Rolename is not set. This should not happen!") unless($args -> {"rolename"});
 
     my $updateh = $self -> {"dbh"} -> prepare("UPDATE ".$self -> {"settings"} -> {"database"} -> {"users"}."
-                                               SET email = ?, realname = ?, rolename = ?, updated = UNIX_TIMESTAMP()
+                                               SET email = ?, realname = ?, rolename = ?, signature = ?, updated = UNIX_TIMESTAMP()
                                                WHERE user_id = ?");
-    $updateh -> execute($args -> {"email"}, $args -> {"realname"}, $args -> {"rolename"}, $args -> {"user_id"})
+    $updateh -> execute($args -> {"email"}, $args -> {"realname"}, $args -> {"rolename"}, $args -> {"signature"}, $args -> {"user_id"})
         or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute user details update: ".$self -> {"dbh"} -> errstr);
 }
 
@@ -433,6 +433,10 @@ sub validate_userdetails {
                                                                         "nicename" => $self -> {"template"} -> replace_langvar("DETAILS_ROLE"),
                                                                         "minlen"   => 1,
                                                                         "maxlen"   => 255});
+    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error}) if($error);
+
+    ($args -> {"signature"}, $error) = $self -> validate_string("signature", {"required" => 0,
+                                                                              "nicename" => $self -> {"template"} -> replace_langvar("DETAILS_SIG")});
     $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error}) if($error);
 
     # Wrap the errors up, if we have any
@@ -760,7 +764,8 @@ sub generate_userdetails_form {
                                                                                      "***error***" => $error,
                                                                                      "***name***"  => $args -> {"realname"},
                                                                                      "***email***" => $args -> {"email"},
-                                                                                     "***role***"  => $args -> {"rolename"}});
+                                                                                     "***role***"  => $args -> {"rolename"},
+                                                                                     "***sig***"   => $args -> {"signature"}});
     # If we have args, add them as a hidden values
     my $hidetem = $self -> {"template"} -> load_template("hiddenarg.tem");
     foreach my $arg (keys(%{$args})) {
