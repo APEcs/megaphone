@@ -3,6 +3,7 @@ DETAILS_MESSAGE = Please enter your details below. The information you enter her
 DETAILS_NAME    = Real name
 DETAILS_EMAIL   = Email address
 DETAILS_ROLE    = SoCS role
+DETAILS_SIG     = Signature
 DETAILS_SET     = Set details
 DETAILS_NEWUSER = This appears to be the first time you have logged into the system. Before your message can be sent, the system needs to collect some information about you.
 

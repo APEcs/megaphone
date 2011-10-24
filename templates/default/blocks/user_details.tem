@@ -19,6 +19,10 @@
                         <td class="field"><input name="role" id="role" type="text" size="50" maxlength="255" value="***role***"/></td>
                     </tr>
                     <tr>
+                        <td class="label top"><label for="signature">{L_DETAILS_SIG}:</label></td>
+                        <td class="field"><textarea name="signature" id="signature" cols="76" rows="6">***sig***</textarea></td>
+                    </tr>
+                    <tr>
                         <td class="label"></td>
                         <td class="field"><input type="submit" name="setname" id="setname" value="{L_DETAILS_SET}" /></td>
                     </tr>
