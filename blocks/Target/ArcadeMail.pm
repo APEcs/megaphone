@@ -493,7 +493,7 @@ sub send {
             $recipients .= $self -> {"template"} -> load_template("email/debugrecipients.tem", {"***num***"  => ++$mailnum,
                                                                                                 "***to***"   => $fields -> {"to"},
                                                                                                 "***cc***"   => $fields -> {"cc"},
-                                                                                                "***bcc***"  => $fields -> {"bcco"}});
+                                                                                                "***bcc***"  => $fields -> {"bcc"}});
         }
 
         $error = $self -> {"template"} -> email_template("email/debugmessage.tem", {"***from***"       => $user -> {"realname"}." <".$user -> {"email"}.">",
