@@ -473,7 +473,7 @@ sub send {
         if(!$signature);
 
     # Get recipients from ARCADE
-    $self -> get_arcade_recipients(\@recip_queue, $self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::ARCADE_field"});
+    my $arcadeusers = $self -> get_arcade_recipients(\@recip_queue, $self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::ARCADE_field"});
 
     # If we have debugging enabled, the message should just go to the reply-to address
     my $error;
@@ -490,15 +490,16 @@ sub send {
                 }
             }
 
-            my $recipients .= $self -> {"template"} -> load_template("email/debugrecipients.tem", {"***num***"  => ++$mailnum,
-                                                                                                   "***to***"   => $fields -> {"to"},
-                                                                                                   "***cc***"   => $fields -> {"cc"},
-                                                                                                   "***bcc***"  => $fields -> {"bcc"}});
+            my $recipients .= $self -> {"template"} -> load_template("email/debugrecipients.tem", {"***num***"   => ++$mailnum,
+                                                                                                   "***to***"    => $fields -> {"to"},
+                                                                                                   "***cc***"    => $fields -> {"cc"},
+                                                                                                   "***bcc***"   => $fields -> {"bcc"}});
 
             $error = $self -> {"template"} -> email_template("email/debugmessage.tem", {"***from***"       => $user -> {"realname"}." <".$user -> {"email"}.">",
                                                                                         "***replyto***"    => $outfields -> {"replyto"},
                                                                                         "***to***"         => $outfields -> {"replyto"},
                                                                                         "***recipients***" => $recipients,
+                                                                                        "***count***"      => $arcadeusers,
                                                                                         "***subject***"    => decode_entities($outfields -> {"subject"}),
                                                                                         "***message***"    => decode_entities($message -> {"message"}),
                                                                                         "***realname***"   => $user -> {"realname"},
@@ -634,7 +635,7 @@ sub arcade_command {
 }
 
 
-## @method void get_arcade_recipients($recip_queue, $mode)
+## @method $ get_arcade_recipients($recip_queue, $mode)
 # Get the list of students recored in arcade for the current destination
 # (if appropriate). This will add students to the recipient queue with
 # the specified destination mode ('to', 'cc', or 'bcc')
@@ -642,10 +643,12 @@ sub arcade_command {
 # @param recip_queue A reference to an array containing the recipient queue.
 # @param mode        The destination mode to add ARCADE recipients as (must
 #                    be 'to', 'cc', or 'bcc).
+# @return The number of recipients added to the queue.
 sub get_arcade_recipients {
     my $self        = shift;
     my $recip_queue = shift;
     my $mode        = shift;
+    my $count       = 0;
 
     # Do nothing if we have no courseid values specified
     return if(!$self -> {"args"} -> {"course"});
@@ -681,12 +684,16 @@ sub get_arcade_recipients {
                 my ($username) = $user =~ /(\w+)$/;
 
                 # If the username was obtained, add it to the recipient queue
-                push(@{$recip_queue}, {"address" => $username.'@'.$self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::ARCADE_domain"},
-                                       "mode"    => $mode})
-                    if($username);
+                if($username) {
+                    push(@{$recip_queue}, {"address" => $username.'@'.$self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::ARCADE_domain"},
+                                           "mode"    => $mode});
+                    ++$count;
+                }
             }
         }
     }
+
+    return $count;
 };
 
 1;
