@@ -420,8 +420,10 @@ sub send {
     # work out the to/bcc/cc fields and the recipient queue
     my @recip_queue;
     foreach my $mode ("to", "cc", "bcc") {
+        my $addresses = "";
+
         # merge arguments set by the user to ensure that we have a single string of csv
-        my $addresses = join(",", @{$message -> {$mode}}) || "";
+        $addresses = join(",", @{$message -> {$mode}}) if($message -> {$mode});
 
         # prepend values set in the database
         $addresses = $self -> {"args"} -> {$mode}.",".$addresses
