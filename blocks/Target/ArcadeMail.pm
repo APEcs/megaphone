@@ -432,6 +432,7 @@ sub send {
         # split them again so we can do recipient limiting
         my @recipients = split(/,/, $addresses);
 
+        # Build the recipients list
         foreach my $recip (@recipients) {
             push(@recip_queue, {"address" => $recip, "mode" => $mode});
         }
@@ -475,18 +476,26 @@ sub send {
     # Get recipients from ARCADE
     my $arcadeusers = $self -> get_arcade_recipients(\@recip_queue, $self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::ARCADE_field"});
 
+    # potentially have duplicate recipients in the recipient queue at this point. Strip them.
+    my @unique_queue = ();
+	my %seen   = ();
+	foreach my $recip (@recip_queue) {
+		next if($seen{ $recip -> {"address"} }++);
+		push(@unique_queue, $recip);
+    }
+
     # If we have debugging enabled, the message should just go to the reply-to address
     my $error;
     if($self -> {"args"} -> {"debugmode"}) {
         # Build the recipients block
         my $mailnum = 0;
-        for(my $start = 0; $start < scalar(@recip_queue); $start += $self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::recipient_limit"}) {
+        for(my $start = 0; $start < scalar(@unique_queue); $start += $self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::recipient_limit"}) {
             my $fields = {};
 
             for(my $pos = 0; $pos < $self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::recipient_limit"}; ++$pos) {
-                if(defined($recip_queue[$start + $pos])) {
-                    $fields -> {$recip_queue[$start + $pos] -> {"mode"}} .= "," if($fields -> {$recip_queue[$start + $pos] -> {"mode"}});
-                    $fields -> {$recip_queue[$start + $pos] -> {"mode"}} .= $recip_queue[$start + $pos] -> {"address"};
+                if(defined($unique_queue[$start + $pos])) {
+                    $fields -> {$unique_queue[$start + $pos] -> {"mode"}} .= "," if($fields -> {$unique_queue[$start + $pos] -> {"mode"}});
+                    $fields -> {$unique_queue[$start + $pos] -> {"mode"}} .= $unique_queue[$start + $pos] -> {"address"};
                 }
             }
 
@@ -509,13 +518,13 @@ sub send {
         }
     } else {
         # Send the messages!
-        for(my $start = 0; $start < scalar(@recip_queue); $start += $self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::recipient_limit"}) {
+        for(my $start = 0; $start < scalar(@unique_queue); $start += $self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::recipient_limit"}) {
             my $fields = {};
 
             for(my $pos = 0; $pos < $self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::recipient_limit"}; ++$pos) {
-                if(defined($recip_queue[$start + $pos])) {
-                    $fields -> {$recip_queue[$start + $pos] -> {"mode"}} .= "," if($fields -> {$recip_queue[$start + $pos] -> {"mode"}});
-                    $fields -> {$recip_queue[$start + $pos] -> {"mode"}} .= $recip_queue[$start + $pos] -> {"address"};
+                if(defined($unique_queue[$start + $pos])) {
+                    $fields -> {$unique_queue[$start + $pos] -> {"mode"}} .= "," if($fields -> {$unique_queue[$start + $pos] -> {"mode"}});
+                    $fields -> {$unique_queue[$start + $pos] -> {"mode"}} .= $unique_queue[$start + $pos] -> {"address"};
                 }
             }
 
