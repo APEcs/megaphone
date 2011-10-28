@@ -634,10 +634,10 @@ sub get_arcade_recipients {
     my $mode        = shift;
 
     # Do nothing if we have no courseid values specified
-    return if(!$self -> {"args"} -> {"courseid"});
+    return if(!$self -> {"args"} -> {"course"});
 
     # Start of by getting a list of courses to check...
-    my @courses = split(/,/, $self -> {"args"} -> {"courseid"});
+    my @courses = split(/,/, $self -> {"args"} -> {"course"});
 
     # Ask ARCADE for users for each course
     foreach my $course (@courses) {
