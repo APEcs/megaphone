@@ -418,7 +418,7 @@ sub send {
     die_log($self -> {"cgi"} -> remote_host(), "Unable to get user details for message ".$message -> {"id"}) if(!$user);
 
     # work out the to/bcc/cc fields and the recipient queue
-    my @recip_queue;
+    my @recip_queue = ();
     foreach my $mode ("to", "cc", "bcc") {
         my $addresses = "";
 
@@ -484,8 +484,10 @@ sub send {
             my $fields = {};
 
             for(my $pos = 0; $pos < $self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::recipient_limit"}; ++$pos) {
-                $fields -> {$recip_queue[$start + $pos] -> {"mode"}} .= "," if($fields -> {$recip_queue[$start + $pos] -> {"mode"}});
-                $fields -> {$recip_queue[$start + $pos] -> {"mode"}} .= $recip_queue[$start + $pos] -> {"address"};
+                if(defined($recip_queue[$start + $pos])) {
+                    $fields -> {$recip_queue[$start + $pos] -> {"mode"}} .= "," if($fields -> {$recip_queue[$start + $pos] -> {"mode"}});
+                    $fields -> {$recip_queue[$start + $pos] -> {"mode"}} .= $recip_queue[$start + $pos] -> {"address"};
+                }
             }
 
             $recipients .= $self -> {"template"} -> load_template("email/debugrecipients.tem", {"***num***"  => ++$mailnum,
