@@ -479,7 +479,7 @@ sub send {
     my $error;
     if($self -> {"args"} -> {"debugmode"}) {
         # Build the recipients block
-        my ($recipients, $mailnum) = ("", 0);
+        my $mailnum = 0;
         for(my $start = 0; $start < scalar(@recip_queue); $start += $self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::recipient_limit"}) {
             my $fields = {};
 
@@ -490,10 +490,10 @@ sub send {
                 }
             }
 
-            $recipients .= $self -> {"template"} -> load_template("email/debugrecipients.tem", {"***num***"  => ++$mailnum,
-                                                                                                "***to***"   => $fields -> {"to"},
-                                                                                                "***cc***"   => $fields -> {"cc"},
-                                                                                                "***bcc***"  => $fields -> {"bcc"}});
+            my $recipients .= $self -> {"template"} -> load_template("email/debugrecipients.tem", {"***num***"  => ++$mailnum,
+                                                                                                   "***to***"   => $fields -> {"to"},
+                                                                                                   "***cc***"   => $fields -> {"cc"},
+                                                                                                   "***bcc***"  => $fields -> {"bcc"}});
 
             $error = $self -> {"template"} -> email_template("email/debugmessage.tem", {"***from***"       => $user -> {"realname"}." <".$user -> {"email"}.">",
                                                                                         "***replyto***"    => $outfields -> {"replyto"},
