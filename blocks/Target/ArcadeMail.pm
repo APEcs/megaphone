@@ -573,7 +573,7 @@ sub arcade_connect {
 
     local *SOCK;
 
-    my $iaddr   = inet_aton($self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::ARCADE_host"}) || die "Unable to resolve Arcade host";
+    my $iaddr   = inet_aton($self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::ARCADE_host"}) || die "Unable to resolve Arcade host ".$self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::ARCADE_host"};
     my $paddr   = sockaddr_in($self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::ARCADE_port"}, $iaddr);
     my $proto   = getprotobyname('tcp');
 
@@ -596,6 +596,7 @@ sub arcade_connect {
 #         command failed for some reason (unknown command, unknown course, etc)
 #         this will return an empty string.
 sub arcade_command {
+    my $self = shift;
     my $command = shift;
     my $course = shift;
 
@@ -603,7 +604,7 @@ sub arcade_command {
     $course =~ s/^COMP//;
 
     # Get a connection to ARCADE
-    local *SOCK = arcade_connect();
+    local *SOCK = $self -> arcade_connect();
 
     # Send it the command and course,
     print SOCK "$command:$course\n";
@@ -655,7 +656,7 @@ sub get_arcade_recipients {
         }
 
         # Here we go...
-        my $result = arcade_command($cmd, $cid);
+        my $result = $self -> arcade_command($cmd, $cid);
         if($result) {
 
             # ARCADE returned one or more users, so split the string by lines
