@@ -494,33 +494,44 @@ sub send {
                                                                                                 "***to***"   => $fields -> {"to"},
                                                                                                 "***cc***"   => $fields -> {"cc"},
                                                                                                 "***bcc***"  => $fields -> {"bcc"}});
-        }
 
-        $error = $self -> {"template"} -> email_template("email/debugmessage.tem", {"***from***"       => $user -> {"realname"}." <".$user -> {"email"}.">",
-                                                                                    "***replyto***"    => $outfields -> {"replyto"},
-                                                                                    "***to***"         => $outfields -> {"replyto"},
-                                                                                    "***recipients***" => $recipients,
-                                                                                    "***subject***"    => decode_entities($outfields -> {"subject"}),
-                                                                                    "***message***"    => decode_entities($message -> {"message"}),
-                                                                                    "***realname***"   => $user -> {"realname"},
-                                                                                    "***rolename***"   => $user -> {"rolename"},
-                                                                                    "***signature***"  => decode_entities($signature),
-                                                         });
+            $error = $self -> {"template"} -> email_template("email/debugmessage.tem", {"***from***"       => $user -> {"realname"}." <".$user -> {"email"}.">",
+                                                                                        "***replyto***"    => $outfields -> {"replyto"},
+                                                                                        "***to***"         => $outfields -> {"replyto"},
+                                                                                        "***recipients***" => $recipients,
+                                                                                        "***subject***"    => decode_entities($outfields -> {"subject"}),
+                                                                                        "***message***"    => decode_entities($message -> {"message"}),
+                                                                                        "***realname***"   => $user -> {"realname"},
+                                                                                        "***rolename***"   => $user -> {"rolename"},
+                                                                                        "***signature***"  => decode_entities($signature),
+                                                             });
+        }
     } else {
-        # Send the message!
-        my $error = $self -> {"template"} -> email_template("email/message.tem", {"***from***"      => $user -> {"realname"}." <".$user -> {"email"}.">",
-#                                                                                  "***to***"        => $self -> {"args"} -> {"to"},
-#                                                                                  "***replyto***"   => $outfields -> {"replyto"},
-#                                                                                  "***cc***"        => $outfields -> {"cc"} || "",
-#                                                                                  "***bcc***"       => $outfields -> {"bcc"} || "",
-                                                                                  "***to***"         => $outfields -> {"replyto"},
-                                                                                  # subject and message need html entities stripping
-                                                                                  "***subject***"   => decode_entities($outfields -> {"subject"}),
-                                                                                  "***message***"   => decode_entities($message -> {"message"}),
-                                                                                  "***realname***"  => $user -> {"realname"},
-                                                                                  "***rolename***"  => $user -> {"rolename"},
-                                                                                  "***signature***" => decode_entities($signature),
-                                                            });
+        # Send the messages!
+        for(my $start = 0; $start < scalar(@recip_queue); $start += $self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::recipient_limit"}) {
+            my $fields = {};
+
+            for(my $pos = 0; $pos < $self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::recipient_limit"}; ++$pos) {
+                if(defined($recip_queue[$start + $pos])) {
+                    $fields -> {$recip_queue[$start + $pos] -> {"mode"}} .= "," if($fields -> {$recip_queue[$start + $pos] -> {"mode"}});
+                    $fields -> {$recip_queue[$start + $pos] -> {"mode"}} .= $recip_queue[$start + $pos] -> {"address"};
+                }
+            }
+
+            $error = $self -> {"template"} -> email_template("email/message.tem", {"***from***"      => $user -> {"realname"}." <".$user -> {"email"}.">",
+                                                                                   "***replyto***"   => $outfields -> {"replyto"},
+                                                                                   "***to***"        => $fields -> {"to"} || "",
+                                                                                   "***cc***"        => $fields -> {"cc"} || "",
+                                                                                   "***bcc***"       => $fields -> {"bcc"} || "",
+
+                                                                                   # subject and message need html entities stripping
+                                                                                   "***subject***"   => decode_entities($outfields -> {"subject"}),
+                                                                                   "***message***"   => decode_entities($message -> {"message"}),
+                                                                                   "***realname***"  => $user -> {"realname"},
+                                                                                   "***rolename***"  => $user -> {"rolename"},
+                                                                                   "***signature***" => decode_entities($signature),
+                                                             });
+        }
     }
 
     die_log($self -> {"cgi"} -> remote_host(), $error) if($error);
