@@ -63,6 +63,7 @@ package Target::ArcadeMail;
 use strict;
 use base qw(Target); # This class is a Target module
 use Logging qw(die_log);
+use Encode;
 use HTML::Entities;
 use List::Util;
 use Socket;
@@ -484,6 +485,10 @@ sub send {
 		push(@unique_queue, $recip);
     }
 
+    # Fix up fields that may contain special chars
+    $outfields -> {"message"} = decode_entities($message -> {"message"});
+    $outfields -> {"subject"} = decode_entities($outfields -> {"subject"});
+
     # If we have debugging enabled, the message should just go to the reply-to address
     my $error;
     if($self -> {"args"} -> {"debugmode"}) {
@@ -509,8 +514,8 @@ sub send {
                                                                                         "***to***"         => $outfields -> {"replyto"},
                                                                                         "***recipients***" => $recipients,
                                                                                         "***count***"      => $arcadeusers,
-                                                                                        "***subject***"    => decode_entities($outfields -> {"subject"}),
-                                                                                        "***message***"    => decode_entities($message -> {"message"}),
+                                                                                        "***subject***"    => Encode::encode_utf8($outfields -> {"subject"}),
+                                                                                        "***message***"    => Encode::encode_utf8($outfields -> {"message"}),
                                                                                         "***realname***"   => $user -> {"realname"},
                                                                                         "***rolename***"   => $user -> {"rolename"},
                                                                                         "***signature***"  => decode_entities($signature),
@@ -535,8 +540,8 @@ sub send {
                                                                                    "***bcc***"       => $fields -> {"bcc"} || "",
 
                                                                                    # subject and message need html entities stripping
-                                                                                   "***subject***"   => decode_entities($outfields -> {"subject"}),
-                                                                                   "***message***"   => decode_entities($message -> {"message"}),
+                                                                                   "***subject***"   => Encode::encode_utf8($outfields -> {"subject"}),
+                                                                                   "***message***"   => Encode::encode_utf8($outfields -> {"message"}),
                                                                                    "***realname***"  => $user -> {"realname"},
                                                                                    "***rolename***"  => $user -> {"rolename"},
                                                                                    "***signature***" => decode_entities($signature),
