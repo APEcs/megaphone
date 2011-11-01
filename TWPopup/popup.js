@@ -26,10 +26,12 @@ var Popup = new Class({
         onShow: function(popup){
             // uses the long version of fading in, as fade('in')
             // may not work properly on initial load. NFC why this is.
-            popup.get('tween').start('opacity', 0, 1);
+            // popup.get('tween').start('opacity', 0, 1);
+            popup.fade('in');
         },
         onHide: function(popup){
-            popup.get('tween').start('opacity', 1, 0);
+            //popup.get('tween').start('opacity', 1, 0);
+            popup.fade('out');
         },
         showDelay: 100,
         hideDelay: 100,
