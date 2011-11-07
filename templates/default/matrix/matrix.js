@@ -32,6 +32,9 @@ function toggleRecipient(element)
                  }
              }
         });
+
+        var zebra = new ZebraTable();
+        zebra.zebraize($('matrix'));
     } else {
         element.getAllNext('td').each(function(el, i) {
             el.getChildren('input').each(function(inel, ini) {

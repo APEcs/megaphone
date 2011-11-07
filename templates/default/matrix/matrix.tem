@@ -1,5 +1,5 @@
 <div class="matrix">
-<table class="matrix zebra">
+<table id="matrix" class="matrix zebra">
     <tr>
         <th class="help">***help***</th>
 ***targets***
