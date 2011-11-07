@@ -32,19 +32,27 @@ package Target::ArcadeMail;
 # course=&lt;[cmd:]cid&gt; - the course code to query for additional bcc recipients. Leading
 #                            'COMP' will be ignored if provided. Multiple courseids may be
 #                            provided (either as comma separated values, or multiple courseid= )
-#                            to compound several courses together. The course id may be prceeded
-#                            by a command and colon, allowing you to set the ARCADE command to use
-#                            rather than the default. <b>Replace any commas in the command with .
-#                            or you will break argument parsing. The system will change them back
-#                            to commas as needed!</b>
-# debugmode=1|0            - if provided, and set to 1, emails are not sent normally. Instead,
-#                            a single email is sent to the user(s) specified in the reply-to for
-#                            the email listing the recipients the message would have gone to.
+#                            to compound several courses together. Course ids may optionally be
+#                            preceeded by an ARCADE command to execute to fetch the student data.
+#                            If a command is specified, the result <b>must</b> have the student
+#                            degree in the second field, and the username in the last field.
 #
 # Repeat arguments are concatenated, so these are equivalent:
 #
 # to=addressA;to=addressB
 # to=addressA,addressB
+#
+# The following arguments may only be specified once per destination:
+#
+# filter=&lt;regexp&gt;    - an optional filter to apply to degree results from ARCADE. This should
+#                            be the body of a regexp to match against the degree field for each
+#                            student fetched from ARCADE. If the regexp matches, the student is
+#                            added to the recipient list, otherwise they are skipped. If the first
+#                            character is !, the student is only added if the regexp does not match.
+#                            Note that the match is case sensitive!
+# debugmode=1|0            - if provided, and set to 1, emails are not sent normally. Instead,
+#                            a single email is sent to the user(s) specified in the reply-to for
+#                            the email listing the recipients the message would have gone to.
 #
 # In addition, the following settings are supported system-wide via mp_settings. The ARCADE_*
 # settings MUST BE SET if any destinations include courseid settings.
@@ -56,8 +64,8 @@ package Target::ArcadeMail;
 # Target::ArcadeMail::ARCADE_host      - hostname of the ARCADE server to query.
 # Target::ArcadeMail::ARCADE_port      - port ARCADE is listening on.
 # Target::ArcadeMail::ARCADE_auth      - Auth data to send to ARCADE. Should be specialProtocol:serverUser:serverPassword
-# Target::ArcadeMail::ARCADE_commmand  - Default command to use when a course does not specify one. Generally
-#                                        should be: course regnumbers, tutgroups, names and usernames
+# Target::ArcadeMail::ARCADE_commmand  - ARCADE command to use when looking up students. Generally
+#                                        should be: course regnumbers, degrees, tutgroups, tutors, names and usernames
 # Target::ArcadeMail::ARCADE_domain    - domain that users obtained from ARCADE should be in. eg: cs.man.ac.uk
 
 use strict;
@@ -667,7 +675,15 @@ sub get_arcade_recipients {
     # Do nothing if we have no courseid values specified
     return if(!$self -> {"args"} -> {"course"});
 
-    # Start of by getting a list of courses to check...
+    # Fix up the regexp if needed
+    my $filter = $self -> {"args"} -> {"filter"};
+    my $fmode  = "match";
+    if($filter && $filter =~ /^!/) {
+        $filter = substr($filter, 1);
+        $fmode  = "exclude";
+    }
+
+    # Now get a list of courses to check...
     my @courses = split(/,/, $self -> {"args"} -> {"course"});
 
     # Ask ARCADE for users for each course
@@ -693,9 +709,18 @@ sub get_arcade_recipients {
             my @users = split(/^/, $result);
             foreach my $user (@users) {
 
-                # Grab the username out of the line
+                # Grab the fields out of the line. $fields[1] must be the degree,
+                # and $fields[scalar(@fields) - 1] must be the username
                 chomp($user);
-                my ($username) = $user =~ /(\w+)$/;
+                my @fields = split(/\t/, $user);
+
+                # Skip users unless there is no filtering, or the filter mode is match and the degree matches,
+                # or the filter mode is exlude and the degree doesn't match.
+                next unless(!$filter ||
+                            ($fmode eq "match"   && $fields[1] =~ /$filter/) ||
+                            ($fmode eq "exclude" && $fields[1] !~ /$filter/));
+
+                my $username = $fields[scalar(@fields) - 1];
 
                 # If the username was obtained, add it to the recipient queue
                 if($username) {
