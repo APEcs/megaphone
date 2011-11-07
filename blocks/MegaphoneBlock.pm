@@ -348,7 +348,19 @@ sub build_active_destinations {
 }
 
 
-
+## @method $ build_matrix_rows($recipients, $targets, $readonly, $tem_cache, $showtree, $idlist, $depth)
+# Recursively generate the rows that should appear in the destination matrix table.
+# This will go through the specified recipients hash, generating rows for each
+# entry and recursing into child trees as needed.
+#
+# @param recipients A reference to a hash of recipients.
+# @param targets    A reference to an array of targets.
+# @param readonly   If true, the generate table is a read-only and users can not enable/disable destinations.
+# @param tem_cache  A reference to a hash of cached templates.
+# @param showtree   If set to true, the current recipient tree is visible.
+# @param idlist     The id path to the current level of the tree (normally you will not provide this).
+# @param depth      The current tree depth (normally you will not provide this).
+# @return A string containing rows to place in the destination matrix body.
 sub build_matrix_rows {
     my $self       = shift;
     my $recipients = shift;
@@ -384,6 +396,7 @@ sub build_matrix_rows {
             }
         }
 
+        # Build CSS stuff to make the folding happen...
         my $extraclass = "";
         $extraclass .= "parent" if($recipients -> {$recip} -> {"children"});
         $extraclass .= ($recipients -> {$recip} -> {"active_children"} ? " open" : " closed");
