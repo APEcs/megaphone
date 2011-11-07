@@ -25,7 +25,7 @@ package Target::Moodle;
 #
 # - forum_id=&lt;fid&gt; - ID of the forum to post to
 # - course_id=&lt;cid&gt; - course id the forum resides in
-# - prefix=&lt;1/0&gt;; - if set, the subject prefix is used. Otherwise it is omitted (the default).
+# - prefix=&lt;1/0&gt; - if set, the subject prefix is used. Otherwise it is omitted (the default).
 #
 # If multiple forum_id/course_id arguments are specified, this will
 # insert the message into each forum. The prefix is completely optional,
