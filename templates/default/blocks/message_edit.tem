@@ -7,7 +7,7 @@
                 <table class="formtable">
                     <tbody id="dests">
                     <tr>
-                        <td class="subtitle" colspan="2">{L_MESSAGE_DESTS}:</td>
+                        <td class="subtitle required" colspan="2">{L_MESSAGE_DESTS}:</td>
                     </tr>
                     <tr>
                         <td class="label">&nbsp;</td>
