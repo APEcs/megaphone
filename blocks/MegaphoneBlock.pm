@@ -951,6 +951,8 @@ sub generate_fatal {
 ## @method $ generate_topright()
 # Generate the username/login/logout links at the top right of the page, based on
 # whether the user has logged in yet or not.
+#
+# @return A string containing the content to show in the page top-right menu block.
 sub generate_topright {
     my $self = shift;
 
@@ -964,6 +966,19 @@ sub generate_topright {
 
     # User hasn't logged in, return the basic login stuff
     return $self -> {"template"} -> load_template("topright_loggedout.tem");
+}
+
+
+## @method $ generate_sitewarn()
+# Generate the site warning box, if a warning is currently set.
+#
+# @return A string containing the site warning, if one is set, or "".
+sub generate_sitewarn {
+    my $self = shift;
+
+    return "" if(!$self -> {"settings"} -> {"config"} -> {"site_warning"});
+
+    return $self -> {"template"} -> load_template("blocks/error_box.tem", {"***message***" => $self -> {"settings"} -> {"config"} -> {"site_warning"}});
 }
 
 

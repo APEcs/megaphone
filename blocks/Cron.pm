@@ -54,6 +54,7 @@ sub page_display {
     # Done sending, return the filled in page template
     return $self -> {"template"} -> load_template("page.tem", {"***title***"     => $self -> {"template"} -> replace_langvar("CRON_TITLE"),
                                                                "***topright***"  => $self -> generate_topright(),
+                                                               "***sitewarn***"  => $self -> generate_sitewarn(),
                                                                "***extrahead***" => "",
                                                                "***content***"   => $body});
 }
