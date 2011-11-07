@@ -1,4 +1,3 @@
-
 /* Script: popup.js
  *  
  *  A class to create popups in a document, relative to another element with a user-
@@ -277,11 +276,11 @@ function isString() {
 function buildpopup(element, hDel, sDel, xOff, yOff, hEl, sys) 
 {
     // Get the child inner
-    var core = element.getElement('span.twpopup-inner');
-    if(core == null) alert("Malformed element, can't get core!");
+    var coreElem = element.getElement('span.twpopup-inner');
+    if(!coreElem) return;
 
     // Get the element title and parse if it needed...
-    var title = core.getProperty('title');
+    var title = coreElem.getProperty('title');
     if(title) {
         // nuke the title to prevent stray popups
         element.removeProperty('title');
@@ -302,7 +301,7 @@ function buildpopup(element, hDel, sDel, xOff, yOff, hEl, sys)
     }
 
     new Popup(element, 
-              { coreElem: core,
+              { coreElem: coreElem,
                 hideDelay: hDel,
                 showDelay: sDel,
                 offset: {'x': xOff, 'y': yOff},

@@ -29,6 +29,7 @@ use base qw(Block); # This class extends Block
 use MIME::Base64;   # Needed for base64 encoding of popup bodies.
 use HTML::Entities;
 use Logging qw(die_log);
+use Data::Dumper;
 
 # ============================================================================
 #  Constructor
@@ -263,6 +264,161 @@ sub update_userdetails {
 # ============================================================================
 #  Fragment generators
 
+## @method $ build_recipient_tree($parent)
+# Recrusively build a tree of recipients from the database.
+#
+# @param parent The ID of the parent element, 0 indicates the root level.
+# @return A reference to a hash containing the recipient subtree for the
+#         parent element, or undef if there are no children of parent.
+sub build_recipient_tree {
+    my $self   = shift;
+    my $parent = shift;
+
+    my $reciph  = $self -> {"dbh"} -> prepare("SELECT * FROM ".$self -> {"settings"} -> {"database"} -> {"recipients"}."
+                                               WHERE parent = ?
+                                               ORDER BY position");
+    $reciph -> execute($parent)
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to obtain list of targets: ".$self -> {"dbh"} -> errstr);
+
+    my $recipients;
+    # Store each recipient, and recursively determine whether it has children
+    while(my $recip = $reciph -> fetchrow_hashref()) {
+        $recipients -> {$recip -> {"position"}} -> {"id"}       = $recip -> {"id"};
+        $recipients -> {$recip -> {"position"}} -> {"name"}     = $recip -> {"name"};
+        $recipients -> {$recip -> {"position"}} -> {"children"} = $self -> build_recipient_tree($recip -> {"id"});
+    }
+
+    # This'll either be a tree of recipients, or undef for nothing here at all...
+    return $recipients;
+}
+
+
+## @method $ build_active_destinations($recipients, $targets, $activehash, $matrixh)
+# Recursively traverse the recipients, and for each target mark whether
+# the user has opted to contact the recipient through it.
+#
+# @param recipients A reference to a hash of recipients.
+# @param targets    A reference to an array of targets.
+# @param activehash A reference to a hash containing active recipient/target pairs.
+# @param matrixh    A cached query to check recipient/target selection in the
+#                   database.
+# @return The number of active destinations in the current subtree.
+sub build_active_destinations {
+    my $self       = shift;
+    my $recipients = shift;
+    my $targets    = shift;
+    my $activehash = shift;
+    my $matrixh    = shift;
+
+    # Go through each recipient at the current level checking whether it is
+    # active, and then check its children if needed.
+    my $active = 0;
+    foreach my $recip (keys(%{$recipients})) {
+        # check the current recipient against all targets
+        foreach my $target (@{$targets}) {
+            $matrixh -> execute($recipients -> {$recip} -> {"id"}, $target -> {"id"})
+                or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute target/recipient map query: ".$self -> {"dbh"} -> errstr);
+
+            # is the recipient/target pair supported as a destination?
+            my $matrow = $matrixh -> fetchrow_arrayref();
+            if($matrow) {
+                # Yes, it is.
+                $recipients -> {$recip} -> {"supported_dest"} -> {$target -> {"id"}} = $matrow -> [0];
+
+                # Has the user selected it as a destination?
+                if($activehash -> {$matrow -> [0]}) {
+                    ++$active;
+                    $recipients -> {$recip} -> {"active"} -> {$target -> {"id"}} = 1;
+                }
+            } else {
+                # Not a supported destination...
+                $recipients -> {$recip} -> {"supported_dest"} -> {$target -> {"id"}} = 0;
+            }
+        }
+
+        # If the current recipient has children, mark and count them.
+        $recipients -> {$recip} -> {"active_children"} = $self -> build_active_destinations($recipients -> {$recip} -> {"children"}, $targets, $activehash, $matrixh)
+            if($recipients -> {$recip} -> {"children"});
+
+        # And update the running count for the whole tree
+        $active += $recipients -> {$recip} -> {"active_children"};
+    }
+
+    return $active;
+}
+
+
+
+sub build_matrix_rows {
+    my $self       = shift;
+    my $recipients = shift;
+    my $targets    = shift;
+    my $readonly   = shift;
+    my $tem_cache  = shift;
+    my $showtree   = shift;
+    my $idlist     = shift;
+    my $depth      = shift || 0;
+
+    my $matrix = "";
+    foreach my $recip (sort keys(%{$recipients})) {
+        my $data = "";
+
+        # Each row should consist of an entry for each target...
+        foreach my $target (@{$targets}) {
+
+            # Is the destination supported?
+            if($recipients -> {$recip} -> {"supported_dest"} -> {$target -> {"id"}}) {
+                # Yes, output either a checkbox or a marker...
+                my $destid = $recipients -> {$recip} -> {"supported_dest"} -> {$target -> {"id"}};
+                my $active = $recipients -> {$recip} -> {"active"} -> {$target -> {"id"}};
+                if(!$readonly) {
+                    $data .= $self -> {"template"} -> process_template($tem_cache -> {"recipentrytem"}, {"***data***" => $self -> {"template"} -> process_template($tem_cache -> {"recipacttem"}, {"***id***"      => $destid,
+                                                                                                                                                                                                    "***name***"    => $target -> {"name"},
+                                                                                                                                                                                                    "***checked***" => $active ? 'checked="checked"' : ""})});
+                } else {
+                    $data .= $self -> {"template"} -> process_template($tem_cache -> {"recipentrytem"}, {"***data***" => ($active ? $tem_cache -> {"recipact_ontem"} : $tem_cache -> {"recipact_offtem"})});
+                }
+            } else {
+                # Nope, output a X marker
+                $data .= $self -> {"template"} -> process_template($tem_cache -> {"recipentrytem"}, {"***data***" => $tem_cache -> {"recipinacttem"}});
+            }
+        }
+
+        my $extraclass = "";
+        $extraclass .= "parent" if($recipients -> {$recip} -> {"children"});
+        $extraclass .= ($recipients -> {$recip} -> {"active_children"} ? " open" : " closed");
+
+        my $extrastyle = "";
+        $extrastyle = "margin-left: ".($depth * 20)."px" if($depth);
+
+        my $rowclass = ($recipients -> {$recip} -> {"active_children"} ? " open" : " closed");
+        my $rowstyle = ($showtree ? "" : "display: none");
+
+        # Can't update the original idlist, or we'll concatenate ids we shouldn't
+        my $myidlist = $idlist || "";
+        $myidlist .= "/" if($myidlist);
+        $myidlist .= $recipients -> {$recip} -> {"id"};
+
+        # Now squirt out the row
+        $matrix .= $self -> {"template"} -> process_template($tem_cache -> {"reciptem"}, {"***idlist***"     => $myidlist,
+                                                                                          "***rowclass***"   => $rowclass,
+                                                                                          "***rowstyle***"   => $rowstyle,
+                                                                                          "***tdclass***"    => $extraclass,
+                                                                                          "***name***"       => $recipients -> {$recip} -> {"name"},
+                                                                                          "***id***"         => $recipients -> {$recip} -> {"id"},
+                                                                                          "***targets***"    => $data,
+                                                                                          "***extraclass***" => $extraclass,
+                                                                                          "***extrastyle***" => $extrastyle});
+
+        # Recurse if needed
+        $matrix .= $self -> build_matrix_rows($recipients -> {$recip} -> {"children"}, $targets, $readonly, $tem_cache, $recipients -> {$recip} -> {"active_children"}, $myidlist, $depth + 1)
+            if($recipients -> {$recip} -> {"children"});
+    }
+
+    return $matrix;
+}
+
+
 ## @method $ build_target_matrix($activelist, $readonly)
 # Generate the table containing the target/recipient matrix. This will generate
 # a table listing the supported targets horizontally, and the supported recipients
@@ -291,11 +447,8 @@ sub build_target_matrix {
         $activehash -> {$active} = 1;
     }
 
-    # Okay, now we can start to build the matrix. We need queries for the targets, recipients, and the map table
+    # Start the process of matrix generation by obtaining the list of known targets in the system
     my $targeth = $self -> {"dbh"} -> prepare("SELECT * FROM ".$self -> {"settings"} -> {"database"} -> {"targets"}." ORDER BY name");
-    my $reciph  = $self -> {"dbh"} -> prepare("SELECT * FROM ".$self -> {"settings"} -> {"database"} -> {"recipients"}." ORDER BY id");
-    my $matrixh = $self -> {"dbh"} -> prepare("SELECT id FROM ".$self -> {"settings"} -> {"database"} -> {"recip_targs"}."
-                                               WHERE recipient_id = ? AND target_id = ?");
 
     # We should prefetch the targets as we need to process them repeatedly during the matrix generation
     $targeth -> execute()
@@ -313,47 +466,27 @@ sub build_target_matrix {
         $jstarglist   .= '"'.$target -> {"name"}.'"';
     }
 
+
+    # Now build a hash of recipients, potentially structured as a tree
+    my $recipients = $self -> build_recipient_tree(0);
+
+    # Precache the recipient/target lookup query for speed
+    my $matrixh = $self -> {"dbh"} -> prepare("SELECT id FROM ".$self -> {"settings"} -> {"database"} -> {"recip_targs"}."
+                                               WHERE recipient_id = ? AND target_id = ?");
+
+    # Go through the recipient tree, marking active elements
+    $self -> build_active_destinations($recipients, $targets, $activehash, $matrixh);
+
     # Now we can build the matrix itself
-    my $matrix = "";
-    my $reciptem        = $self -> {"template"} -> load_template("matrix/recipient.tem");
-    my $recipentrytem   = $self -> {"template"} -> load_template("matrix/reciptarg.tem");
-    my $recipacttem     = $self -> {"template"} -> load_template("matrix/reciptarg-active.tem");
-    my $recipinacttem   = $self -> {"template"} -> load_template("matrix/reciptarg-inactive.tem");
-    my $recipact_ontem  = $self -> {"template"} -> load_template("matrix/reciptarg-active_ticked.tem");
-    my $recipact_offtem = $self -> {"template"} -> load_template("matrix/reciptarg-active_unticked.tem");
+    my $tem_cache = {};
+    $tem_cache -> {"reciptem"}        = $self -> {"template"} -> load_template("matrix/recipient.tem");
+    $tem_cache -> {"recipentrytem"}   = $self -> {"template"} -> load_template("matrix/reciptarg.tem");
+    $tem_cache -> {"recipacttem"}     = $self -> {"template"} -> load_template("matrix/reciptarg-active.tem");
+    $tem_cache -> {"recipinacttem"}   = $self -> {"template"} -> load_template("matrix/reciptarg-inactive.tem");
+    $tem_cache -> {"recipact_ontem"}  = $self -> {"template"} -> load_template("matrix/reciptarg-active_ticked.tem");
+    $tem_cache -> {"recipact_offtem"} = $self -> {"template"} -> load_template("matrix/reciptarg-active_unticked.tem");
 
-    $reciph -> execute()
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to obtain list of recipients: ".$self -> {"dbh"} -> errstr);
-
-    while(my $recipient = $reciph -> fetchrow_hashref()) {
-        my $data = "";
-        # Each row should consist of an entry for each target...
-        foreach my $target (@{$targets}) {
-            $matrixh -> execute($recipient -> {"id"}, $target -> {"id"})
-                or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute target/recipient map query: ".$self -> {"dbh"} -> errstr);
-
-            # Do we have the ability to send to this recipient at this target?
-            my $matrow = $matrixh -> fetchrow_arrayref();
-            if($matrow) {
-                # Yes, output either a checkbox or a marker...
-                if(!$readonly) {
-                    $data .= $self -> {"template"} -> process_template($recipentrytem, {"***data***" => $self -> {"template"} -> process_template($recipacttem, {"***id***"      => $matrow -> [0],
-                                                                                                                                                                 "***name***"    => $target -> {"name"},
-                                                                                                                                                                 "***checked***" => $activehash -> {$matrow -> [0]} ? 'checked="checked"' : ""})});
-                } else {
-                    $data .= $self -> {"template"} -> process_template($recipentrytem, {"***data***" => ($activehash -> {$matrow -> [0]} ? $recipact_ontem : $recipact_offtem)});
-                }
-            } else {
-                # Nope, output a X marker
-                $data .= $self -> {"template"} -> process_template($recipentrytem, {"***data***" => $recipinacttem});
-            }
-        }
-
-        # Now squirt out the row
-        $matrix .= $self -> {"template"} -> process_template($reciptem, {"***name***"    => $recipient -> {"name"},
-                                                                         "***id***"      => $recipient -> {"id"},
-                                                                         "***targets***" => $data});
-    }
+    my $matrix = $self -> build_matrix_rows($recipients, $targets, $readonly, $tem_cache, 1);
 
     # We have almost all we need - load the help for the matrix
     my $help = $self -> {"template"} -> load_template("popup.tem", {"***title***"   => $self -> {"template"} -> replace_langvar("MATRIX_HELP_TITLE"),

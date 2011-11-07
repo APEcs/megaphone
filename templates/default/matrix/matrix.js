@@ -1,13 +1,45 @@
 
 function toggleRecipient(element) 
 {
-    element.getAllNext('td').each(function(el, i) {
-        el.getChildren('input').each(function(inel, ini) {
-            inel.checked = !inel.checked;
+    if(element.hasClass('parent')) {
+        var tdid   = element.get('id'); // The element is a td, the id will be recip_<id>
+        var rowid  = tdid.substr(6);    // Get the id we are interested in
+        var rowdiv = element.getElement('div');
 
-            matrixClick(inel.get('class'));
+        var isclosed = element.hasClass('closed');
+        if(isclosed) {
+            element.removeClass('closed');
+            element.addClass('open');
+            rowdiv.removeClass('closed');
+            rowdiv.addClass('open');
+        } else {
+            element.removeClass('open');
+            element.addClass('closed');
+            rowdiv.removeClass('open');
+            rowdiv.addClass('closed');
+        }
+        
+        // Handle folding of recipients...
+        $$('tr.reciprow').each(function(el, i) {
+             var id = el.get('id');
+
+             // Anything that starts with the rowid, but does not equal it, needs to be handled
+             if((id.substring(0, rowid.length) == rowid) && (id != rowid)) {
+                 if(isclosed) {
+                     el.setStyle('display', 'table-row');
+                 } else {
+                     el.setStyle('display', 'none');
+                 }
+             }
         });
-    });
+    } else {
+        element.getAllNext('td').each(function(el, i) {
+            el.getChildren('input').each(function(inel, ini) {
+                inel.checked = !inel.checked;
+                matrixClick(inel.get('class'));
+            });
+        });
+    }
 }
 
 

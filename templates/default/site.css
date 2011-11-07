@@ -226,10 +226,10 @@ img.control {
 
 div.matrix {
     width: 100%;
-    max-height: 14em;
+    max-height: 15em;
     overflow: auto;
     overflow-x: auto;
-    overflow-y: auto;
+    overflow-y: scroll;
 }
 
 table.matrix {
@@ -406,3 +406,17 @@ img.link {
 .iewarning {
     display: none;
 }
+
+div.recipient {
+    padding-left: 13px;
+    background-origin: padding-box;
+}
+
+div.recipient.parent.open {
+    background: url(images/blockopen.png) left center no-repeat;
+}
+
+div.recipient.parent.closed {
+    background: url(images/blockclose.png) left center no-repeat;
+}
+

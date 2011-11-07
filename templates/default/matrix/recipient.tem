@@ -1,4 +1,4 @@
-    <tr>
-        <td  class="recip" id="recip_***id***">***name***</td>
+    <tr id="***idlist***" style="***rowstyle***" class="reciprow ***rowclass***">
+        <td class="recip ***tdclass***" id="recip_***idlist***"><div class="recipient ***extraclass***" style="***extrastyle***">***name***</div></td>
 ***targets***
     </tr>
