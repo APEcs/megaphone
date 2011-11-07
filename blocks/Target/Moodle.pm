@@ -23,10 +23,12 @@ package Target::Moodle;
 ## @class Target::Moodle
 # A moodle target implementation. Supported arguments are:
 #
-# forum_id=&lt;fid&gt;,course_id=&lt;cid&gt;,prefix=&lt;1/0&gt;;
+# - forum_id=&lt;fid&gt; - ID of the forum to post to
+# - course_id=&lt;cid&gt; - course id the forum resides in
+# - prefix=&lt;1/0&gt;; - if set, the subject prefix is used. Otherwise it is omitted (the default).
 #
 # If multiple forum_id/course_id arguments are specified, this will
-# insert the message into each forum. the prefix is completely optional,
+# insert the message into each forum. The prefix is completely optional,
 # and defaults to 0, if true then the subject prefix for the message is
 # included in the moodle discussion subject.
 

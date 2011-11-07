@@ -2,8 +2,8 @@
 # This file contains the implementation of the ARCADE-aware email message target.
 #
 # @author  Chris Page &lt;chris@starforge.co.uk&gt;
-# @version 1.0
-# @date    27 Oct 2011
+# @version 1.3
+# @date    7 Nov 2011
 # @copy    2011, Chris Page &lt;chris@starforge.co.uk&gt;
 #
 # This program is free software: you can redistribute it and/or modify
@@ -24,49 +24,49 @@ package Target::ArcadeMail;
 # A email target implementation that supports direct mailing or obtaining
 # recipient lists from ARCADE. Supported per-destination arguments are:
 #
-# to=&lt;address list&gt;  - specify a list of recipient addresses (comma separated)
-# reply-to=&lt;address&gt; - specify the address that replies should go to, if not
-#                            specified, replies will go to the From: address (the message owner).
-# cc=&lt;address list&gt;  - specify a list of cc recipients (comma separated)
-# bcc=&lt;address list&gt; - specify a list of bcc recipients (comma separated)
-# course=&lt;[cmd:]cid&gt; - the course code to query for additional bcc recipients. Leading
-#                            'COMP' will be ignored if provided. Multiple courseids may be
-#                            provided (either as comma separated values, or multiple courseid= )
-#                            to compound several courses together. Course ids may optionally be
-#                            preceeded by an ARCADE command to execute to fetch the student data.
-#                            If a command is specified, the result <b>must</b> have the student
-#                            degree in the second field, and the username in the last field.
+# - to=&lt;address list&gt;  - specify a list of recipient addresses (comma separated)
+# - reply-to=&lt;address&gt; - specify the address that replies should go to, if not
+#                              specified, replies will go to the From: address (the message owner).
+# - cc=&lt;address list&gt;  - specify a list of cc recipients (comma separated)
+# - bcc=&lt;address list&gt; - specify a list of bcc recipients (comma separated)
+# - course=&lt;[cmd:]cid&gt; - the course code to query for additional bcc recipients. Leading
+#                              'COMP' will be ignored if provided. Multiple courseids may be
+#                              provided (either as comma separated values, or multiple courseid= )
+#                              to compound several courses together. Course ids may optionally be
+#                              preceeded by an ARCADE command to execute to fetch the student data.
+#                              If a command is specified, the result <b>must</b> have the student
+#                              degree in the second field, and the username in the last field.
 #
 # Repeat arguments are concatenated, so these are equivalent:
 #
-# to=addressA;to=addressB
-# to=addressA,addressB
+# - to=addressA;to=addressB
+# - to=addressA,addressB
 #
 # The following arguments may only be specified once per destination:
 #
-# filter=&lt;regexp&gt;    - an optional filter to apply to degree results from ARCADE. This should
-#                            be the body of a regexp to match against the degree field for each
-#                            student fetched from ARCADE. If the regexp matches, the student is
-#                            added to the recipient list, otherwise they are skipped. If the first
-#                            character is !, the student is only added if the regexp does not match.
-#                            Note that the match is case sensitive!
-# debugmode=1|0            - if provided, and set to 1, emails are not sent normally. Instead,
-#                            a single email is sent to the user(s) specified in the reply-to for
-#                            the email listing the recipients the message would have gone to.
+# - filter=&lt;regexp&gt;    - an optional filter to apply to degree results from ARCADE. This should
+#                              be the body of a regexp to match against the degree field for each
+#                              student fetched from ARCADE. If the regexp matches, the student is
+#                              added to the recipient list, otherwise they are skipped. If the first
+#                              character is !, the student is only added if the regexp does not match.
+#                              Note that the match is case sensitive!
+# - debugmode=1|0            - if provided, and set to 1, emails are not sent normally. Instead,
+#                              a single email is sent to the user(s) specified in the reply-to for
+#                              the email listing the recipients the message would have gone to.
 #
 # In addition, the following settings are supported system-wide via mp_settings. The ARCADE_*
 # settings MUST BE SET if any destinations include courseid settings.
 #
-# Target::ArcadeMail::recipient_limit  - The maximum number of Cc:, Bcc:, or To: recipients per email.
-#                                        If necessary, multiple emails will be sent to keep the number
-#                                        of recipients below this limit. Defaults to 10 if not specified.
-# Target::ArcadeMail::ARCADE_field     - The email field to add ARCADE recipients to. Should be "to", "cc" or "bcc".
-# Target::ArcadeMail::ARCADE_host      - hostname of the ARCADE server to query.
-# Target::ArcadeMail::ARCADE_port      - port ARCADE is listening on.
-# Target::ArcadeMail::ARCADE_auth      - Auth data to send to ARCADE. Should be specialProtocol:serverUser:serverPassword
-# Target::ArcadeMail::ARCADE_commmand  - ARCADE command to use when looking up students. Generally
-#                                        should be: course regnumbers, degrees, tutgroups, tutors, names and usernames
-# Target::ArcadeMail::ARCADE_domain    - domain that users obtained from ARCADE should be in. eg: cs.man.ac.uk
+# - Target::ArcadeMail::recipient_limit  - The maximum number of Cc:, Bcc:, or To: recipients per email.
+#                                          If necessary, multiple emails will be sent to keep the number
+#                                          of recipients below this limit. Defaults to 10 if not specified.
+# - Target::ArcadeMail::ARCADE_field     - The email field to add ARCADE recipients to. Should be "to", "cc" or "bcc".
+# - Target::ArcadeMail::ARCADE_host      - hostname of the ARCADE server to query.
+# - Target::ArcadeMail::ARCADE_port      - port ARCADE is listening on.
+# - Target::ArcadeMail::ARCADE_auth      - Auth data to send to ARCADE. Should be specialProtocol:serverUser:serverPassword
+# - Target::ArcadeMail::ARCADE_commmand  - ARCADE command to use when looking up students. Generally
+#                                          should be: course regnumbers, degrees, tutgroups, tutors, names and usernames
+# - Target::ArcadeMail::ARCADE_domain    - domain that users obtained from ARCADE should be in. eg: cs.man.ac.uk
 
 use strict;
 use base qw(Target); # This class is a Target module

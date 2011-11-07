@@ -23,10 +23,10 @@ package Target::Twitter;
 ## @class Target::Twitter
 # A simple twitter target implementation. Supported arguments are:
 #
-# consumer_key=&lt;key&gt;
-# consumer_secret=&lt;key&gt;
-# access_token=&lt;key&gt;
-# access_token_secret=&lt;key&gt;
+# - consumer_key=&lt;key&gt;
+# - consumer_secret=&lt;key&gt;
+# - access_token=&lt;key&gt;
+# - access_token_secret=&lt;key&gt;
 #
 # All arguments are REQUIRED, otherwise the send will fail. Requires two
 # tables in the database:
