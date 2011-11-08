@@ -3,3 +3,4 @@
 <li>{L_MATRIX_HELP_ACTIVE}</li>
 <li>{L_MATRIX_HELP_INACTIVE}</li>
 </ul>
+<div>{L_MATRIX_HELP_FOLDING}</div>
