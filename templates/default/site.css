@@ -226,7 +226,7 @@ img.control {
 
 div.matrix {
     width: 100%;
-    max-height: 15em;
+    max-height: 15.5em;
     overflow: auto;
     overflow-x: auto;
     overflow-y: scroll;
@@ -407,9 +407,23 @@ img.link {
     display: none;
 }
 
-div.recipient {
-    padding-left: 13px;
-    background-origin: padding-box;
+span.recipient:hover {
+    cursor: pointer;
+}
+
+span.recipient.child {
+    padding-left: 18px;
+}
+
+span.recipient.parent {
+    padding-left: 3px;
+}
+
+img.treetoggle {
+    padding: 0px;
+    margin: 0px;
+    border: none;
+    cursor: pointer;
 }
 
 div.recipient.parent.open {

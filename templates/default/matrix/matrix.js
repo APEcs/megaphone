@@ -1,48 +1,54 @@
 
+/** Toggle the recipients on a given row.
+ *  
+ * @param element A div element corresponding to the name on the row to toggle.
+ */
 function toggleRecipient(element) 
 {
-    if(element.hasClass('parent')) {
-        var tdid   = element.get('id'); // The element is a td, the id will be recip_<id>
-        var rowid  = tdid.substr(6);    // Get the id we are interested in
-        var rowdiv = element.getElement('div');
+    var id = element.get('id');
+    var firstTD = $("recip_" + id.substr(5));
 
-        var isclosed = element.hasClass('closed');
-        if(isclosed) {
-            element.removeClass('closed');
-            element.addClass('open');
-            rowdiv.removeClass('closed');
-            rowdiv.addClass('open');
-        } else {
-            element.removeClass('open');
-            element.addClass('closed');
-            rowdiv.removeClass('open');
-            rowdiv.addClass('closed');
-        }
-        
-        // Handle folding of recipients...
-        $$('tr.reciprow').each(function(el, i) {
-             var id = el.get('id');
-
-             // Anything that starts with the rowid, but does not equal it, needs to be handled
-             if((id.substring(0, rowid.length) == rowid) && (id != rowid)) {
-                 if(isclosed) {
-                     el.setStyle('display', 'table-row');
-                 } else {
-                     el.setStyle('display', 'none');
-                 }
-             }
+    firstTD.getAllNext('td').each(function(el, i) {
+        el.getChildren('input').each(function(inel, ini) {
+            inel.checked = !inel.checked;
+            matrixClick(inel.get('class'));
         });
+    });
+}
 
-        var zebra = new ZebraTable();
-        zebra.zebraize($('matrix'));
+
+function toggleTree(element)
+{
+    var imgid  = element.get('id'); // The element is an img, the id will be tog_<id>
+    var rowid  = imgid.substr(4);    // Get the id we are interested in
+
+    var isclosed = element.hasClass('close');
+    if(isclosed) {
+        element.removeClass('close');
+        element.addClass('open');
+        element.set('src', 'templates/default/images/blockopen.png');
     } else {
-        element.getAllNext('td').each(function(el, i) {
-            el.getChildren('input').each(function(inel, ini) {
-                inel.checked = !inel.checked;
-                matrixClick(inel.get('class'));
-            });
-        });
+        element.removeClass('open');
+        element.addClass('close');
+        element.set('src', 'templates/default/images/blockclose.png');
     }
+
+    // Handle folding of recipients...
+    $$('tr.reciprow').each(function(el, i) {
+        var id = el.get('id');
+
+        // Anything that starts with the rowid, but does not equal it, needs to be handled
+        if((id.substring(0, rowid.length) == rowid) && (id != rowid)) {
+            if(isclosed) {
+                el.setStyle('display', 'table-row');
+            } else {
+                el.setStyle('display', 'none');
+            }
+        }
+    });
+
+    var zebra = new ZebraTable();
+    zebra.zebraize($('matrix'));   
 }
 
 
@@ -77,8 +83,12 @@ function initTargets()
 
 
 window.addEvent('domready', function() {
-    $$('td.recip').each(function(element, index) {
+    $$('span.recipient').each(function(element, index) {
         element.addEvent('click', function() { toggleRecipient(element) });
+    });
+
+    $$('img.treetoggle').each(function(element, index) {
+        element.addEvent('click', function() { toggleTree(element); });
     });
 
     initTargets();

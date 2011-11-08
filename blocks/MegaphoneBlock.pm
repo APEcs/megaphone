@@ -397,13 +397,15 @@ sub build_matrix_rows {
         }
 
         # Build CSS stuff to make the folding happen...
-        my $extraclass = "";
-        $extraclass .= "parent" if($recipients -> {$recip} -> {"children"});
-        $extraclass .= ($recipients -> {$recip} -> {"active_children"} ? " open" : " closed");
-
+        # Indent the row if it is a subgroup
         my $extrastyle = "";
         $extrastyle = "margin-left: ".($depth * 20)."px" if($depth);
 
+        # the name span needs different left padding depending on parent/child status
+        my $spanclass = "child";
+        $spanclass = "parent" if($recipients -> {$recip} -> {"children"});
+
+        # Should the row be open or closed, or completely hidden?
         my $rowclass = ($recipients -> {$recip} -> {"active_children"} ? " open" : " closed");
         my $rowstyle = ($showtree ? "" : "display: none");
 
@@ -412,16 +414,20 @@ sub build_matrix_rows {
         $myidlist .= "/" if($myidlist);
         $myidlist .= $recipients -> {$recip} -> {"id"};
 
+        # Work out whether we need a toggle icon or not
+        my $toggletree = $self -> {"template"} -> process_template($tem_cache -> {"toggletree_$spanclass"}, {"***idlist***" => $myidlist,
+                                                                                                             "***state***"  => ($recipients -> {$recip} -> {"active_children"} ? "open" : "close")});
+
         # Now squirt out the row
         $matrix .= $self -> {"template"} -> process_template($tem_cache -> {"reciptem"}, {"***idlist***"     => $myidlist,
                                                                                           "***rowclass***"   => $rowclass,
                                                                                           "***rowstyle***"   => $rowstyle,
-                                                                                          "***tdclass***"    => $extraclass,
+                                                                                          "***spanclass***"  => $spanclass,
                                                                                           "***name***"       => $recipients -> {$recip} -> {"name"},
                                                                                           "***id***"         => $recipients -> {$recip} -> {"id"},
                                                                                           "***targets***"    => $data,
-                                                                                          "***extraclass***" => $extraclass,
-                                                                                          "***extrastyle***" => $extrastyle});
+                                                                                          "***extrastyle***" => $extrastyle,
+                                                                                          "***toggletree***" => $toggletree});
 
         # Recurse if needed
         $matrix .= $self -> build_matrix_rows($recipients -> {$recip} -> {"children"}, $targets, $readonly, $tem_cache, $recipients -> {$recip} -> {"active_children"}, $myidlist, $depth + 1)
@@ -492,12 +498,14 @@ sub build_target_matrix {
 
     # Now we can build the matrix itself
     my $tem_cache = {};
-    $tem_cache -> {"reciptem"}        = $self -> {"template"} -> load_template("matrix/recipient.tem");
-    $tem_cache -> {"recipentrytem"}   = $self -> {"template"} -> load_template("matrix/reciptarg.tem");
-    $tem_cache -> {"recipacttem"}     = $self -> {"template"} -> load_template("matrix/reciptarg-active.tem");
-    $tem_cache -> {"recipinacttem"}   = $self -> {"template"} -> load_template("matrix/reciptarg-inactive.tem");
-    $tem_cache -> {"recipact_ontem"}  = $self -> {"template"} -> load_template("matrix/reciptarg-active_ticked.tem");
-    $tem_cache -> {"recipact_offtem"} = $self -> {"template"} -> load_template("matrix/reciptarg-active_unticked.tem");
+    $tem_cache -> {"reciptem"}          = $self -> {"template"} -> load_template("matrix/recipient.tem");
+    $tem_cache -> {"recipentrytem"}     = $self -> {"template"} -> load_template("matrix/reciptarg.tem");
+    $tem_cache -> {"recipacttem"}       = $self -> {"template"} -> load_template("matrix/reciptarg-active.tem");
+    $tem_cache -> {"recipinacttem"}     = $self -> {"template"} -> load_template("matrix/reciptarg-inactive.tem");
+    $tem_cache -> {"recipact_ontem"}    = $self -> {"template"} -> load_template("matrix/reciptarg-active_ticked.tem");
+    $tem_cache -> {"recipact_offtem"}   = $self -> {"template"} -> load_template("matrix/reciptarg-active_unticked.tem");
+    $tem_cache -> {"toggletree_parent"} = $self -> {"template"} -> load_template("matrix/toggletree_parent.tem");
+    $tem_cache -> {"toggletree_child"}  = $self -> {"template"} -> load_template("matrix/toggletree_child.tem");
 
     my $matrix = $self -> build_matrix_rows($recipients, $targets, $readonly, $tem_cache, 1);
 
