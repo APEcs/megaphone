@@ -883,7 +883,8 @@ sub generate_messagelist {
     # Preload the sort templates
     my $sorttems = {};
     foreach my $sorttype ("none", "asc", "desc") {
-        $sorttems -> {$sorttype} = $self -> {"template"} -> load_template("messagelist/sort_$sorttype.tem", {"***page***" => $pagenum});
+        $sorttems -> {$sorttype} = $self -> {"template"} -> load_template("messagelist/sort_$sorttype.tem", {"***page***" => $pagenum,
+                                                                                                             "***hide***" => $self -> set_hide_options($hideopts)});
     }
 
     # Work out the sort controls for each column
