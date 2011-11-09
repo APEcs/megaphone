@@ -44,15 +44,21 @@ package Target::ArcadeMail;
 #
 # The following arguments may only be specified once per destination:
 #
-# - filter=&lt;regexp&gt;    - an optional filter to apply to degree results from ARCADE. This should
-#                              be the body of a regexp to match against the degree field for each
-#                              student fetched from ARCADE. If the regexp matches, the student is
-#                              added to the recipient list, otherwise they are skipped. If the first
-#                              character is !, the student is only added if the regexp does not match.
-#                              Note that the match is case sensitive!
-# - debugmode=1|0            - if provided, and set to 1, emails are not sent normally. Instead,
-#                              a single email is sent to the user(s) specified in the reply-to for
-#                              the email listing the recipients the message would have gone to.
+# - degreefilter=&lt;regexp&gt; - an optional filter to apply to degree results from ARCADE. This should
+#                                 be the body of a regexp to match against the degree field for each
+#                                 student fetched from ARCADE. If the regexp matches, the student is
+#                                 added to the recipient list, otherwise they are skipped. If the first
+#                                 character is !, the student is only added if the regexp does not match.
+#                                 Note that the match is case sensitive!
+# - namefilter=&lt;regexp$gt;   - an optional filter to apply to usernames from ARCADE. This should be
+#                                 the body of a rexexp to match against the username field for each
+#                                 student fetched from ARCADE. If If the regexp matches, the student is
+#                                 added to the recipient list, otherwise they are skipped. If the first
+#                                 character is !, the student is only added if the regexp does not match.
+#                                 Note that the match is case sensitive!
+# - debugmode=1|0               - if provided, and set to 1, emails are not sent normally. Instead,
+#                                 a single email is sent to the user(s) specified in the reply-to for
+#                                 the email listing the recipients the message would have gone to.
 #
 # In addition, the following settings are supported system-wide via mp_settings. The ARCADE_*
 # settings MUST BE SET if any destinations include courseid settings.
@@ -657,6 +663,50 @@ sub arcade_command {
 }
 
 
+## @method @ get_arcade_filter($name)
+# Obtain the filter regexp and mode for the specified filter.
+#
+# @param name The name of the filter to obtain the regexp for
+# @return An array of two values: the filter regexp, and the filter mode
+#         (either "match" or "exclude")
+sub get_arcade_filter {
+    my $self = shift;
+    my $name = shift;
+
+    my $filter = $self -> {"args"} -> {$name};
+    my $fmode  = "match";
+    if($filter && $filter =~ /^!/) {
+        $filter = substr($filter, 1);
+        $fmode  = "exclude";
+    }
+
+    return ($filter, $fmode);
+}
+
+
+## @method $ arcade_filter_match($filter, $fmode, $data)
+# Determine whether the specified data passes the filtering rules provided.
+# If no filter rule is set, the data always passes it. Otherwise, this will
+# return true if the data matches the filter and the filter mode is "match",
+# or if it does not match the filter and the filter mode is "exclude".
+# Otherwise this returns false.
+#
+# @param filter The filter regexp to apply to the data.
+# @param fmode  The filter match mode. Should be "match" or "exclude".
+# @param data   The data to check against the filter.
+# @return true if the data passes the filter check, false otherwise.
+sub arcade_filter_match {
+    my $self   = shift;
+    my $filter = shift;
+    my $fmode  = shift;
+    my $data   = shift;
+
+    return (!$filter ||
+            ($fmode eq "match"   && $data =~ /$filter/) ||
+            ($fmode eq "exclude" && $data !~ /$filter/));
+}
+
+
 ## @method $ get_arcade_recipients($recip_queue, $mode)
 # Get the list of students recored in arcade for the current destination
 # (if appropriate). This will add students to the recipient queue with
@@ -675,13 +725,9 @@ sub get_arcade_recipients {
     # Do nothing if we have no courseid values specified
     return if(!$self -> {"args"} -> {"course"});
 
-    # Fix up the regexp if needed
-    my $filter = $self -> {"args"} -> {"filter"};
-    my $fmode  = "match";
-    if($filter && $filter =~ /^!/) {
-        $filter = substr($filter, 1);
-        $fmode  = "exclude";
-    }
+    # Obtain filtering definitions if needed
+    my ($degreefilter, $degreefmode) = $self -> get_arcade_filter("degreefilter");
+    my ($namefilter,   $namefmode  ) = $self -> get_arcade_filter("namefilter");
 
     # Now get a list of courses to check...
     my @courses = split(/,/, $self -> {"args"} -> {"course"});
@@ -714,16 +760,14 @@ sub get_arcade_recipients {
                 chomp($user);
                 my @fields = split(/\t/, $user);
 
-                # Skip users unless there is no filtering, or the filter mode is match and the degree matches,
-                # or the filter mode is exlude and the degree doesn't match.
-                next unless(!$filter ||
-                            ($fmode eq "match"   && $fields[1] =~ /$filter/) ||
-                            ($fmode eq "exclude" && $fields[1] !~ /$filter/));
-
                 my $username = $fields[scalar(@fields) - 1];
 
-                # If the username was obtained, add it to the recipient queue
+                # If the username was obtained, do filtering checks...
                 if($username) {
+                    # Skip users who do not pass filtering
+                    next unless($self -> arcade_filter_match($degreefilter, $degreefmode, $fields[1]) &&
+                                $self -> arcade_filter_match($namefilter  , $namefmode  , $username));
+
                     push(@{$recip_queue}, {"address" => $username.'@'.$self -> {"settings"} -> {"config"} -> {"Target::ArcadeMail::ARCADE_domain"},
                                            "mode"    => $mode});
                     ++$count;
