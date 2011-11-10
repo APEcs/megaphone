@@ -527,7 +527,7 @@ sub send {
                                                                                         "***replyto***"    => $outfields -> {"replyto"},
                                                                                         "***to***"         => $outfields -> {"replyto"},
                                                                                         "***recipients***" => $recipients,
-                                                                                        "***count***"      => $arcadeusers,
+                                                                                        "***count***"      => $arcadeusers || "No",
                                                                                         "***subject***"    => Encode::encode_utf8($outfields -> {"subject"}),
                                                                                         "***message***"    => Encode::encode_utf8($outfields -> {"message"}),
                                                                                         "***realname***"   => $user -> {"realname"},
