@@ -1,0 +1,23 @@
+                    <tbody id="target-Announce">
+                    <tr>
+                        <td class="subtitle" colspan="2">{L_MESSAGE_SEC_ANNOUNCE}:</td>
+                    </tr>
+                    <tr>
+                        <td class="label"><label for="open_date">{L_MESSAGE_ANN_OPEN}:</label></td>
+                        <td class="field"><input class="datepick" type="text" name="open_date" id="open_date" size="32" maxlength="40" value="***open_date***" readonly="raedonly" />
+                                          <input type="checkbox" name="open_ignore" id="open_ignore" ***open_ignore*** onchange="date_disable('open_date', 'open_ignore');" /><label for="open_ignore">{L_MESSAGE_ANN_OPENIGN}</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label"><label for="close_date">{L_MESSAGE_ANN_CLOSE}:</label></td>
+                        <td class="field"><input class="datepick" type="text" name="close_date" id="close_date" size="32" maxlength="40" value="***close_date***" readonly="raedonly" />
+                                          <input type="checkbox" name="close_ignore" id="close_ignore" ***close_ignore*** onchange="date_disable('open_date', 'open_ignore');" /><label for="close_ignore">{L_MESSAGE_ANN_CLOSEIGN}</label>
+                                          <script src="templates/default/target/announce/Locale.en-US.DatePicker.js" type="text/javascript"></script>
+                                          <script src="templates/default/target/announce/Picker.js" type="text/javascript"></script>
+                                          <script src="templates/default/target/announce/Picker.Attach.js" type="text/javascript"></script>
+                                          <script src="templates/default/target/announce/Picker.Date.js" type="text/javascript"></script>
+                                          <script src="templates/default/target/announce/announce.js" type="text/javascript"></script>
+                                          <link href="templates/default/target/announce/datepicker_dashboard/datepicker_dashboard.css" rel="stylesheet">
+                        </td>
+                    </tr>
+                    </tbody>
