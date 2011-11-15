@@ -1,29 +1,6 @@
-MESSAGE_TITLE      = Message
-MESSAGE_INTRO      = Enter the message you wish to send to students here. The information you enter here will be sent to the recipients and target systems you select, and recorded in a database for auditing and future reference. Fields in red are required.
-MESSAGE_DESTS      = Destinations
-MESSAGE_RECIPIENTS = Recipients
-MESSAGE_TARGETS    = Targets
-MESSAGE_CC         = CC
-MESSAGE_CCNOTE     = Note: CC may not be supported by all destinations.
-MESSAGE_BCC        = BCC
-MESSAGE_BCCNOTE    = Note: BCC may not be supported by all destinations.
-MESSAGE_PREFIX     = Subject Prefix
-MESSAGE_REPLYTO    = Reply-To
-MESSAGE_CUSTPREFIX = Custom prefix =&gt;
-MESSAGE_CUSTREPLYTO = Custom Reply-To =&gt;
-MESSAGE_SUBJECT    = Subject
-MESSAGE_SUBJWARN   = <span class="small">(Do not include a prefix in your subject, it will be added for you.)</span>
-MESSAGE_MESSAGE    = Message
-MESSAGE_DELAY      = Delay sending message for
-MESSAGE_SEND       = Send message
-MESSAGE_ADD_RECIP  = Add another recipient
-MESSAGE_DEL_RECIP  = Remove this recipient
-MESSAGE_NOTARGET   = Unable to send to this recipient via this system.
-MESSAGE_NOTSEND    = The message will not be sent to the recipient via this system.
-MESSAGE_SENDING    = The message will be sent to the recipient via this system.
-
-MESSAGE_SEC_EMAIL  = Email options
-MESSAGE_SEC_ALL    = Common options
+MESSAGE_TITLE         = Message
+MESSAGE_INTRO         = Enter the message you wish to send to students here. The information you enter here will be sent to the recipients and target systems you select, and recorded in a database for auditing and future reference. Fields in red are required.
+MESSAGE_SEND          = Send message
 
 MESSAGE_ERRORS        = Message validation failed. The following error(s) were encountered during validation:
 MESSAGE_ERR_NOMATRIX  = No destinations have been selected for your message.
@@ -37,15 +14,10 @@ MESSAGE_DONE_OPTIONS  = You can <a href="index.cgi?block={B_[msglist]}">view a l
 MESSAGE_EDITTITLE     = Edit a message
 MESSAGE_EDITINTRO     = Here you may edit the settings and contents of a previously written message. When you save this message, the delay send timer will be reset (if you have enabled delayed sending). Fields in red are required.
 MESSAGE_EDIT          = Update message
-MESSAGE_BADPREFIX     = <span class="error">Unable to locate selected prefix.</span>
-MESSAGE_BADREPLYTO    = <span class="error">Unable to locate selected replyto.</span>
-MESSAGE_WILLDELAY     = Message will be held for
-MESSAGE_NODELAY       = Message will be sent immediately.
 
 MESSAGE_CONFTITLE     = Confirm message
 MESSAGE_CONFIRM       = Confirm message
 MESSAGE_CONFINTRO     = <strong>Your message has not been sent yet!</strong> Please check through the contents of your message as shown here, and either click 'Send message' to confirm that it should be sent, or click 'Update message' to edit it.
-MESSAGE_CONFDELAY     = Delay sending
 
 MESSAGE_ABORT         = Abort message
 MESSAGE_CANCEL        = Cancel
@@ -56,6 +28,41 @@ MESSAGE_VIEWTITLE     = View message
 MESSAGE_VIEWINTRO     = Here you can see a copy of the message you have selected.
 MESSAGE_MSGLIST       = Return to the message list
 
+### Message sections
+# Each section of the message form should have its own block of variables here...
+
+MESSAGE_SEC_DESTS     = Destinations
+MESSAGE_NOTARGET      = Unable to send to this recipient via this system.
+MESSAGE_NOTSEND       = The message will not be sent to the recipient via this system.
+MESSAGE_SENDING       = The message will be sent to the recipient via this system.
+
+MESSAGE_SEC_ALL       = Common options
+MESSAGE_PREFIX        = Subject Prefix
+MESSAGE_SUBJECT       = Subject
+MESSAGE_SUBJWARN      = <span class="small">(Do not include a prefix in your subject, it will be added for you.)</span>
+MESSAGE_MESSAGE       = Message
+MESSAGE_DELAY         = Delay sending message for
+MESSAGE_WILLDELAY     = Message will be held for
+MESSAGE_NODELAY       = Message will be sent immediately.
+MESSAGE_CONFDELAY     = Delay sending
+
+## Target-specific sections follow
+
+MESSAGE_SEC_EMAIL     = Email options
+MESSAGE_CC            = CC
+MESSAGE_CCNOTE        = Note: CC may not be supported by all destinations.
+MESSAGE_BCC           = BCC
+MESSAGE_BCCNOTE       = Note: BCC may not be supported by all destinations.
+MESSAGE_REPLYTO       = Reply-To
+MESSAGE_CUSTPREFIX    = Custom prefix =&gt;
+MESSAGE_CUSTREPLYTO   = Custom Reply-To =&gt;
+MESSAGE_ADD_RECIP     = Add another recipient
+MESSAGE_DEL_RECIP     = Remove this recipient
+MESSAGE_BADPREFIX     = <span class="error">Unable to locate selected prefix.</span>
+MESSAGE_BADREPLYTO    = <span class="error">Unable to locate selected replyto.</span>
+
 MESSAGE_SEC_TWITTER   = Twitter options
 MESSAGE_TWITTER       = Long tweets
 MESSAGE_BADTWEETMODE  = <span class="error">Unable to locate selected tweet mode.</span>
+
+MESSAGE_SEC_ANNOUNCE  = Announcement options
