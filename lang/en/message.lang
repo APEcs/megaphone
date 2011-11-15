@@ -66,3 +66,8 @@ MESSAGE_TWITTER       = Long tweets
 MESSAGE_BADTWEETMODE  = <span class="error">Unable to locate selected tweet mode.</span>
 
 MESSAGE_SEC_ANNOUNCE  = Announcement options
+MESSAGE_ANN_OPEN      = Opening date
+MESSAGE_ANN_CLOSE     = Closing date
+MESSAGE_ANN_URL       = Link
+MESSAGE_ANN_OPENIGN   = Ignore (announcement is open when created)
+MESSAGE_ANN_CLOSEIGN  = Ignore (announcement must be closed manually)
