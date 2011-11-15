@@ -31,6 +31,7 @@ package Target::Twitter;
 # All arguments are REQUIRED, otherwise the send will fail. Requires two
 # tables in the database:
 #
+# @verbatim
 # CREATE TABLE `mp_messages_tweetmode` (
 #   `message_id` int(10) unsigned NOT NULL COMMENT 'ID of the message this is specifying the tweet mode for',
 #   `tweetmode_id` tinyint(3) unsigned NOT NULL COMMENT 'The selected tweet mode.',
@@ -47,6 +48,7 @@ package Target::Twitter;
 # INSERT INTO `mp_twitter_modes` (`id`, `mode`, `send_func`) VALUES
 # (1, 'Truncate to fit into one tweet', 'send_truncate'),
 # (2, 'Split into multiple tweets', 'send_split');
+# @endverbatim
 
 use strict;
 use base qw(Target); # This class is a Target module
