@@ -129,8 +129,12 @@ sub generate_message {
     my $args = shift;
     my $user = shift;
 
-    # This target has no special options.
-    return "";
+    return $self -> {"template"} -> load_template("target/announce/message.tem", {"***open_date***"    => $args -> {"announce"} -> {"open_date"} || "",
+                                                                                  "***close_date***"   => $args -> {"announce"} -> {"close_date"} || "",
+                                                                                  "***open_ignore***"  => (defined($args -> {"announce"} -> {"open_date"}) ? "" : 'checked="checked"'),
+                                                                                  "***close_ignore***" => (defined($args -> {"announce"} -> {"close_date"}) ? "" : 'checked="checked"'),
+                                                                                 });
+
 }
 
 
