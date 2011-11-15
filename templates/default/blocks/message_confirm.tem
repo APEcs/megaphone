@@ -6,7 +6,7 @@
                 <div class="cleared"></div>
                 <table class="formtable">
                     <tr>
-                        <td class="subtitle" colspan="2">{L_MESSAGE_DESTS}:</td>
+                        <td class="subtitle" colspan="2">{L_MESSAGE_SEC_DESTS}:</td>
                     </tr>
                     <tr>
                         <td class="label">&nbsp;</td>

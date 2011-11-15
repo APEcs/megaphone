@@ -6,7 +6,7 @@
                 <div class="cleared"></div>
                 <table class="formtable">
                     <tr>
-                        <td class="label top">{L_MESSAGE_DESTS}:</td>
+                        <td class="label top">{L_MESSAGE_SEC_DESTS}:</td>
                         <td class="field">***targmatrix***</td>
                     </tr>
 ***targethook***
