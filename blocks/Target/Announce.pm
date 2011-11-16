@@ -99,21 +99,17 @@ sub set_config {
     my $self = shift;
     my $args = shift;
 
-    $self -> {"args"} = $args;
+    my @argbits = split(/;/, $args);
 
-    my @args = split(/;/, $self -> {"args"});
-
-    $self -> {"args"} = [];
-    foreach my $arg (@args) {
-        my @argbits = split(/,/, $arg);
-
-        my $arghash = {};
-        foreach my $argbit (@argbits) {
-            my ($name, $value) = $argbit =~ /^(\w+)=(.*)$/;
-            $arghash -> {$name} = $value;
+    $self -> {"args"} = {};
+    foreach my $arg (@argbits) {
+        my ($name, $value) = $arg =~ /^(\w+)=(.*)$/;
+        # Concatenate arguments with the same name
+        if($self -> {"args"} -> {$name}) {
+            $self -> {"args"} -> {$name} .= ",$value";
+        } else {
+            $self -> {"args"} -> {$name} = $value;
         }
-
-        push(@{$self -> {"args"}}, $arghash);
     }
 }
 
@@ -129,12 +125,21 @@ sub generate_message {
     my $self = shift;
     my $args = shift;
     my $user = shift;
+    my ($format_open, $format_close);
 
-    return $self -> {"template"} -> load_template("target/announce/message.tem", {"***open_date***"     => $args -> {"announce"} -> {"open_date"} || "",
-                                                                                  "***close_date***"    => $args -> {"announce"} -> {"close_date"} || "",
-                                                                                  "***open_ignore***"   => (defined($args -> {"announce"} -> {"open_date"}) ? "" : 'checked="checked"'),
-                                                                                  "***close_ignore***"  => (defined($args -> {"announce"} -> {"close_date"}) ? "" : 'checked="checked"'),
-                                                                                  "***announce_link***" => (defined($args -> {"announce"} -> {"announce_link"}) ? $args -> {"announce"} -> {"announce_link"} : "http://"),
+    $format_open = $self -> {"template"} -> format_time($args -> {"announce"} -> {"open_date"}, "%d/%m/%Y %H:%M")
+        if($args -> {"announce"} -> {"open_date"});
+
+    $format_close = $self -> {"template"} -> format_time($args -> {"announce"} -> {"close_date"}, "%d/%m/%Y %H:%M")
+        if($args -> {"announce"} -> {"close_date"});
+
+    return $self -> {"template"} -> load_template("target/announce/message.tem", {"***open_date***"      => $args -> {"announce"} -> {"open_date"} || "",
+                                                                                  "***close_date***"     => $args -> {"announce"} -> {"close_date"} || "",
+                                                                                  "***open_date_fmt***"  => $format_open,
+                                                                                  "***close_date_fmt***" => $format_close,
+                                                                                  "***open_ignore***"    => (defined($args -> {"announce"} -> {"open_date"}) ? "" : 'checked="checked"'),
+                                                                                  "***close_ignore***"   => (defined($args -> {"announce"} -> {"close_date"}) ? "" : 'checked="checked"'),
+                                                                                  "***announce_link***"  => (defined($args -> {"announce"} -> {"announce_link"}) ? $args -> {"announce"} -> {"announce_link"} : "http://"),
                                                                                  });
 }
 
@@ -231,7 +236,36 @@ sub store_message {
     my $mess_id = shift;
     my $prev_id = shift;
 
-    # Does nothing
+    # Store the simple stuff first...
+    my $storeh = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"message_andata"}."
+                                              VALUES(?, ?, ?, ?)");
+    $storeh -> execute($mess_id,
+                       $args -> {"announce"} -> {"open_date"},
+                       $args -> {"announce"} -> {"close_date"},
+                       $args -> {"announce"} -> {"announce_link"})
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute announcement data insert query: ".$self -> {"dbh"} -> errstr);
+
+    my $catstoreh = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"message_ancats"}."
+                                                 VALUES(?, ?)");
+
+    # Now the categrories set for the announcement need to be recorded. Go
+    # through each selected destination, and if it corresponds to an announcement
+    # target, pull out its categories...
+    my $cathash = {};
+    foreach my $dest (@{$args -> {"targset"}}) {
+        my @cats = $self -> get_destination_categories($dest);
+
+        # if any categories were returned, add them to the database
+        foreach my $cat (@cats) {
+            # Avoid adding the same category twice
+            if(!$cathash -> {$cat}) {
+                $cathash -> {$cat} = 1;
+
+                $catstoreh -> execute($mess_id, $cat)
+                    or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute announcement category insert query: ".$self -> {"dbh"} -> errstr);
+            }
+        }
+    }
 }
 
 
@@ -247,7 +281,28 @@ sub get_message {
     my $msgid   = shift;
     my $message = shift;
 
-    # Does nothing.
+    # Pull in the dates and link...
+    my $fetch = $self -> {"dbh"} -> prepare("SELECT * FROM ".$self -> {"settings"} -> {"database"} -> {"message_andata"}."
+                                             WHERE message_id = ?");
+    $fetch -> execute($msgid)
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute announcement data query: ".$self -> {"dbh"} -> errstr);
+
+    $message -> {"announce"} = $fetch -> fetchrow_hashref();
+    die_log($self -> {"cgi"} -> remote_host(), "Unable to obtain announcement data for message $msgid")
+        if(!$message -> {"announce"});
+
+    # And now the category ids (probably not needed, but we have them anyway)
+    my $cath = $self -> {"dbh"} -> prepare("SELECT cat_id FROM ".$self -> {"settings"} -> {"database"} -> {"message_ancats"}."
+                                            WHERE message_id = ?");
+    $cath -> execute($msgid)
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute announcement category query: ".$self -> {"dbh"} -> errstr);
+
+    my $cats = [];
+    while(my $catr = $cath -> fetchrow_arrayref()) {
+        push(@{$cats}, $catr -> [0]);
+    }
+
+    $message -> {"announce"} -> {"categories"} = $cats;
 }
 
 
@@ -269,6 +324,8 @@ sub validate_message {
         if(defined($self -> {"cgi"} -> param($mode."_ignore"))) {
             $args -> {"announce"} -> {$mode."_date"} = undef; # set it explicitly to avoid ambiguity
         } else {
+            print STDERR $mode."_date contains '".$self -> {"cgi"} -> param($mode."_date")."'\n";
+
             $args -> {"announce"} -> {$mode."_date"} = is_defined_numeric($self -> {"cgi"}, $mode."_date");
 
             # If we have no value for the date, complain - it must be explicitly disabled if no value is needed
@@ -290,6 +347,10 @@ sub validate_message {
     $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error})
         if($error);
 
+    # If the field is just "http://", empty it as the user hasn't entered anything.
+    $args -> {"announce"} -> {"announce_link"} = ''
+        if($args -> {"announce"} -> {"announce_link"} =~ /^https?:\/\/$/i);
+
     # Check the link appears valid if specified. The regexp is a hideous, shambling abomination. I recommend averting your eyes.
     $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_BADLINK")})
         if($args -> {"announce"} -> {"announce_link"} &&
@@ -302,4 +363,76 @@ sub validate_message {
 # Note that this class is unusual in that it never actually 'sends' its messages; they
 # simply get recorded in the database and marked as "sent, visible" so that the php
 # script may pick up the message when called from the main website code.
+
+# ============================================================================
+#  Internal stuff
+
+## @method @ get_destination_categories($dest)
+# Obtain an array of announcement categories for the specified destination.
+# If the destination is not an Announce target, this returns an empty list.
+#
+# @param dest The destination to obtain the category list for.
+# @return An array of category ids, or an empty list if none are set.
+sub get_destination_categories {
+    my $self = shift;
+    my $dest = shift;
+    my @cats = ();
+
+    # Fetch the argument for the specified destination, provided that its
+    # target is this module
+    my $desth = $self -> {"dbh"} -> prepare("SELECT d.args
+                                             FROM ".$self -> {"settings"} -> {"database"} -> {"recip_targs"}." AS d,
+                                                  ".$self -> {"settings"} -> {"database"} -> {"targets"}." AS t
+                                             WHERE d.id = ?
+                                             AND t.id = d.target_id
+                                             AND t.module_id = ?");
+    $desth -> execute($dest, $self -> {"modid"})
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute destination argument lookup: ".$self -> {"dbh"} -> errstr);
+
+    # Take all the found targets (there should only be one, but better to be safe)
+    # and concatenate all their argument lists together...
+    my $arglist = "";
+    while(my $dest = $desth -> fetchrow_arrayref()) {
+        $arglist .= ";" if($arglist && $arglist !~ /;$/);
+        $arglist .= $dest -> [0];
+    }
+
+    # Break on parameter boundaries
+    my @args = split(/;/, $arglist);
+    foreach my $arg (@args) {
+        # Is this a category arg?
+        if($arg =~ /^category\s*=\s*/) {
+            # nuke the category, so we just have a list of categories left
+            $arg =~ s/^category\s*=\s*//;
+
+            # Split the categories up, and shove them into the cats array
+            my @argcats = split(/,/, $arg);
+            push(@cats, @argcats);
+        }
+    }
+
+    # Convert categories to category ids if needed
+    my $cath = $self -> {"dbh"} -> prepare("SELECT id
+                                            FROM ".$self -> {"settings"} -> {"database"} -> {"announce_cats"}."
+                                            WHERE category LIKE ?");
+    foreach my $cat (@cats) {
+        # Assume non-numerics are category names rather than ids
+        if($cat !~ /^\d+$/) {
+            $cath -> execute($cat)
+                or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute category lookup: ".$self -> {"dbh"} -> errstr);
+
+            my $catr = $cath -> fetchrow_arrayref();
+            die_log($self -> {"cgi"} -> remote_host(), "Destination '$dest' includes unknown category '$cat'. Unable to continue")
+                if(!$catr);
+
+            # Modify-in-place is a handy thing indeed...
+            $cat = $catr -> [0];
+        }
+    }
+
+    return @cats;
+}
+
+
+
 1;
