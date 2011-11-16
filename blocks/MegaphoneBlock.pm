@@ -341,7 +341,7 @@ sub build_active_destinations {
             if($recipients -> {$recip} -> {"children"});
 
         # And update the running count for the whole tree
-        $active += $recipients -> {$recip} -> {"active_children"};
+        $active += $recipients -> {$recip} -> {"active_children"} if($recipients -> {$recip} -> {"active_children"});
     }
 
     return $active;
