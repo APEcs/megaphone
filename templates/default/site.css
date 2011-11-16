@@ -175,7 +175,8 @@ table.notebox-warning {
 }
 
 table.formtable {
-/*    margin: 0px auto;*/
+    width: 100%;
+    padding-right: 48px;
 }
 
 table.formtable td.label {
