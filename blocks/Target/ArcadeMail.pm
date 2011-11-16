@@ -115,9 +115,7 @@ sub set_config {
     my $self = shift;
     my $args = shift;
 
-    $self -> {"args"} = $args;
-
-    my @argbits = split(/;/, $self -> {"args"});
+    my @argbits = split(/;/, $args);
 
     $self -> {"args"} = {};
     foreach my $arg (@argbits) {
