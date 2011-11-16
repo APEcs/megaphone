@@ -12,6 +12,12 @@
                         <td class="label"><label for="close_date">{L_MESSAGE_ANN_CLOSE}:</label></td>
                         <td class="field"><input class="datepick" type="text" name="close_date" id="close_date" size="32" maxlength="40" value="***close_date***" readonly="raedonly" />
                                           <input type="checkbox" name="close_ignore" id="close_ignore" ***close_ignore*** onchange="date_disable('open_date', 'open_ignore');" /><label for="close_ignore">{L_MESSAGE_ANN_CLOSEIGN}</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label"><label for="close_date">{L_MESSAGE_ANN_LINK}:</label></td>
+                        <td class="field"><input type="text" name="announce_link" id="announce_link" size="64" maxlength="255" value="***announce_link***" />&nbsp;{L_MESSAGE_ANN_LINKDESC}
+                                          <!-- date picker setup code... -->
                                           <script src="templates/default/target/announce/Locale.en-US.DatePicker.js" type="text/javascript"></script>
                                           <script src="templates/default/target/announce/Picker.js" type="text/javascript"></script>
                                           <script src="templates/default/target/announce/Picker.Attach.js" type="text/javascript"></script>
