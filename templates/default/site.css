@@ -24,6 +24,7 @@ body  {
   padding-left: 20px;
   padding-right: 20px;
   height: 80px;
+  min-width: 940px;
 }
 
 #siteLogo {
@@ -62,7 +63,7 @@ body  {
   text-align: right;
   float: right;
   margin: 5px 0 0 0;
-  width: 600px;
+  width: 550px;
 }
 
 #header #topright ul {
@@ -181,6 +182,7 @@ table.formtable td.label {
     font-weight: bold;
     text-align: right;
     min-width: 10em;
+    white-space: nowrap;
 }
 
 table.formtable td.field {
