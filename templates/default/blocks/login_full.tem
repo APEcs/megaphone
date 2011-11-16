@@ -15,7 +15,7 @@
                     </tr>
                     <tr>
                         <td class="label"></td>
-                        <td class="field"><input onchange="persistWarning()" name="persist" id="persist" type="checkbox" /><label for="persist">{L_LOGIN_REMEMBER} ({L_LOGIN_MAX} ***persistlen***)</label></td>
+                        <td class="field"><input onchange="persistWarning()" name="persist" id="persist" type="checkbox" /><label for="persist">{L_LOGIN_REMEMBER} ({L_LOGIN_MAX} ***persistlen*** {L_LOGIN_DAYS})</label></td>
                     </tr>
                     <tr>
                         <td class="label"></td>
@@ -27,6 +27,6 @@
                         <td class="nbox-image"><img src="templates/default/images/important.png" width="48" height="48" alt="important" /></td>
                         <td class="nbox-text">{L_PERSIST_WARNING}</td>
                     </tr>
-                </table>  
+                </table>
             </div>
         </div>
