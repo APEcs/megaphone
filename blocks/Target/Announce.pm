@@ -64,6 +64,7 @@ package Target::Announce;
 use strict;
 use base qw(Target); # This class is a Target module
 use Logging qw(die_log);
+use Utils qw(is_defined_numeric);
 
 # ============================================================================
 #  Constructor
@@ -129,12 +130,12 @@ sub generate_message {
     my $args = shift;
     my $user = shift;
 
-    return $self -> {"template"} -> load_template("target/announce/message.tem", {"***open_date***"    => $args -> {"announce"} -> {"open_date"} || "",
-                                                                                  "***close_date***"   => $args -> {"announce"} -> {"close_date"} || "",
-                                                                                  "***open_ignore***"  => (defined($args -> {"announce"} -> {"open_date"}) ? "" : 'checked="checked"'),
-                                                                                  "***close_ignore***" => (defined($args -> {"announce"} -> {"close_date"}) ? "" : 'checked="checked"'),
+    return $self -> {"template"} -> load_template("target/announce/message.tem", {"***open_date***"     => $args -> {"announce"} -> {"open_date"} || "",
+                                                                                  "***close_date***"    => $args -> {"announce"} -> {"close_date"} || "",
+                                                                                  "***open_ignore***"   => (defined($args -> {"announce"} -> {"open_date"}) ? "" : 'checked="checked"'),
+                                                                                  "***close_ignore***"  => (defined($args -> {"announce"} -> {"close_date"}) ? "" : 'checked="checked"'),
+                                                                                  "***announce_link***" => (defined($args -> {"announce"} -> {"announce_link"}) ? $args -> {"announce"} -> {"announce_link"} : "http://"),
                                                                                  });
-
 }
 
 
@@ -148,7 +149,7 @@ sub generate_message_edit {
     my $self = shift;
     my $args = shift;
 
-    return "";
+    return $self -> generate_message($args);
 }
 
 
@@ -164,7 +165,21 @@ sub generate_message_confirm {
     my $args      = shift;
     my $outfields = shift;
 
-    return "";
+    # Start off assuming that the open and close date controls are disabled.
+    $outfields -> {"open_date"}  = $self -> {"template"} -> replace_langvar("MESSAGE_ANN_OPENIGN");
+    $outfields -> {"close_date"} = $self -> {"template"} -> replace_langvar("MESSAGE_ANN_CLOSEIGN");
+
+    # Now replace them with real values if needed
+    $outfields -> {"open_date"} = $self -> {"template"} -> format_time($args -> {"announce"} -> {"open_date"})
+        if($args -> {"announce"} -> {"open_date"});
+
+    $outfields -> {"close_date"} = $self -> {"template"} -> format_time($args -> {"announce"} -> {"close_date"})
+        if($args -> {"announce"} -> {"close_date"});
+
+    return $self -> {"template"} -> load_template("target/announce/message_confirm.tem", {"***open_date***"     => $outfields -> {"open_date"},
+                                                                                          "***close_date***"    => $outfields -> {"close_date"},
+                                                                                          "***announce_link***" => $args -> {"announce"} -> {"announce_link"},
+                                                                                 });
 }
 
 
@@ -180,7 +195,7 @@ sub generate_message_abort {
     my $args      = shift;
     my $outfields = shift;
 
-    return "";
+    return $self -> generate_message_confirm($args, $outfields);
 }
 
 
@@ -196,7 +211,7 @@ sub generate_message_view {
     my $args      = shift;
     my $outfields = shift;
 
-    return "";
+    return $self -> generate_message_confirm($args, $outfields);
 }
 
 
@@ -245,8 +260,42 @@ sub get_message {
 sub validate_message {
     my $self = shift;
     my $args = shift;
+    my ($error, $errors) = ("", "");
 
-    return "";
+    my $errtem = $self -> {"template"} -> load_template("blocks/error_entry.tem");
+
+    # Check whether the open date has been set
+    foreach my $mode ("open", "close") {
+        if(defined($self -> {"cgi"} -> param($mode."_ignore"))) {
+            $args -> {"announce"} -> {$mode."_date"} = undef; # set it explicitly to avoid ambiguity
+        } else {
+            $args -> {"announce"} -> {$mode."_date"} = is_defined_numeric($self -> {"cgi"}, $mode."_date");
+
+            # If we have no value for the date, complain - it must be explicitly disabled if no value is needed
+            $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_NO".uc($mode))})
+                if(!$args -> {"announce"} -> {$mode."_date"});
+        }
+    }
+
+    # If we have start and end dates, check that end is later than start
+    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_BADDATES")})
+        if($args -> {"announce"} -> {"open_date"} && $args -> {"announce"} -> {"close_date"} &&
+           ($args -> {"announce"} -> {"open_date"} >= $args -> {"announce"} -> {"close_date"}));
+
+    # Link handling...
+    ($args -> {"announce"} -> {"announce_link"}, $error) = $self -> validate_string("announce_link", {"required" => 0,
+                                                                                                      "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_ANN_LINK"),
+                                                                                                      "minlen"   => 7,
+                                                                                                      "maxlen"   => 255});
+    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $error})
+        if($error);
+
+    # Check the link appears valid if specified. The regexp is a hideous, shambling abomination. I recommend averting your eyes.
+    $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_BADLINK")})
+        if($args -> {"announce"} -> {"announce_link"} &&
+           $args -> {"announce"} -> {"announce_link"} !~ m{^https?://[-\w]+(?:\.[-\w]+)+(?:/(?:[-\w]+/)*[-.\w]*(?:\?(?:[-\w~!\$+|.,*:;]|%[a-f\d]{2,4})+=(?:[-\w~!\$+|.,*:]|%[a-f\d]{2,4})*(?:&(?:[-\w~!\$+|.,*:;]|%[a-f\d]{2,4})+=(?:[-\w~!\$+|.,*:]|%[a-f\d]{2,4})*)*)?(?:\#(?:[-\w~!\$+|&.,*:;=]|%[a-f\d]{2,4})*)?)?$}io);
+
+    return $errors;
 }
 
 
