@@ -2,6 +2,11 @@ function date_disable(datefield, control) {
     var checked = $(control).get("checked");
 
     $(datefield).set("disabled", checked);
+
+    // clear the contents if the field is disabled
+    if(checked) {
+        $(datefield).set('value', '');
+    }
 }
 
 window.addEvent('domready', function() {
