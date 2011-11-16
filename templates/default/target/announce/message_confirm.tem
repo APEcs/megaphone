@@ -1,0 +1,17 @@
+                    <tbody id="target-Announce">
+                    <tr>
+                        <td class="subtitle" colspan="2">{L_MESSAGE_SEC_ANNOUNCE}:</td>
+                    </tr>
+                    <tr>
+                        <td class="label"><label for="open_date">{L_MESSAGE_ANN_OPEN}:</label></td>
+                        <td class="field">***open_date***</td>
+                    </tr>
+                    <tr>
+                        <td class="label"><label for="close_date">{L_MESSAGE_ANN_CLOSE}:</label></td>
+                        <td class="field">***close_date***</td>
+                    </tr>
+                    <tr>
+                        <td class="label"><label for="close_date">{L_MESSAGE_ANN_LINK}:</label></td>
+                        <td class="field">***announce_link***</td>
+                    </tr>
+                    </tbody>
