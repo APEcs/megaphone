@@ -68,6 +68,10 @@ MESSAGE_BADTWEETMODE  = <span class="error">Unable to locate selected tweet mode
 MESSAGE_SEC_ANNOUNCE  = Announcement options
 MESSAGE_ANN_OPEN      = Opening date
 MESSAGE_ANN_CLOSE     = Closing date
-MESSAGE_ANN_URL       = Link
-MESSAGE_ANN_OPENIGN   = Ignore (announcement is open when created)
-MESSAGE_ANN_CLOSEIGN  = Ignore (announcement must be closed manually)
+MESSAGE_ANN_LINK      = Extra information
+MESSAGE_ANN_LINKDESC  = <span class="small">(Optional link to more information. Must include the http:// or https://)</span>
+MESSAGE_ANN_OPENIGN   = Disabled <span class="small">(announcement is open when created)</span>
+MESSAGE_ANN_CLOSEIGN  = Disabled <span class="small">(announcement must be closed manually)</span>
+MESSAGE_ERR_NOOPEN    = No announcement open date specified, but open date is not disabled. You must specify an open date, or disable the field.
+MESSAGE_ERR_NOCLOSE   = No announcement close date specified, but close date is not disabled. You must specify an close date, or disable the field.
+MESSAGE_ERR_BADDATES  = The announcement close date must be later than the open date.
