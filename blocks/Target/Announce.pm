@@ -360,6 +360,30 @@ sub validate_message {
 }
 
 
+## @method $ generate_messagelist_visibility($message)
+# Generate the fragment to display in the 'visibility' column of the user
+# message list for the specified message.
+#
+# @param message The message being processed.
+# @return A string containing the HTML fragment to show in the visibility column.
+sub generate_messagelist_visibility {
+    my $self    = shift;
+    my $message = shift;
+
+    my $now = time();
+
+    # If the message is not visible, it is closed by definition, otherwise it is
+    # only open if the current time falls within open <= now < close
+    if(!$message -> {"visible"} ||
+       ($message -> {"announce"} -> {"open_date"} && ($now < $message -> {"announce"} -> {"open_date"})) ||
+       ($message -> {"announce"} -> {"close_date"} && ($now >= $message -> {"announce"} -> {"close_date"}))) {
+        return $self -> {"template"} -> load_template("target/announce/msglist_closed.tem");
+    } else {
+        return $self -> {"template"} -> load_template("target/announce/msglist_open.tem");
+    }
+}
+
+
 # Note that this class is unusual in that it never actually 'sends' its messages; they
 # simply get recorded in the database and marked as "sent, visible" so that the php
 # script may pick up the message when called from the main website code.
