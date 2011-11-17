@@ -1,1 +1,1 @@
-<li><img src="templates/default/images/msgstates/invisible.png" width="16" height="16" alt="invisible" /></li>
+<li><img src="templates/default/images/msgstates/invisible.png" width="16" height="16" alt="invisible" title="{L_MSGLIST_INVISIBLE}" /></li>

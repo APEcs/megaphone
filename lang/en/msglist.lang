@@ -20,6 +20,9 @@ MSGLIST_SEND    = Send this message immediately
 MSGLIST_HIDEMSG = Hide this message.
 MSGLIST_SHOWMSG = Show this message.
 
+MSGLIST_ISVISIBLE = This message is currently visible to all users.
+MSGLIST_INVISIBLE = This message is only visible to you.
+
 MSGLIST_HIDETHIS = Click to hide messages with this status
 MSGLIST_SHOWTHIS = Click to show messages with this status
 MSGLIST_SHOWHIDE = Show/hide status
@@ -47,3 +50,6 @@ NAVBOX_NEWMSG = Compose a new message
 
 MSGLIST_FAILPOPUP = This message could not be sent to one or more destinations. The errors recorded are show here, contact moodlesupport@cs.man.ac.uk if you can not resolve these errors yourself.<br/><br/>Errors:
 MSGLIST_FAILED_TITLE = Send failed
+
+MSGLIST_ANNOUNCE_OPEN   = This message is currently viewable as an announcement.
+MSGLIST_ANNOUNCE_CLOSED = This message is a closed announcement.

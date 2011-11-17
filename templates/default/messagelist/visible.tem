@@ -1,1 +1,1 @@
-<li><img src="templates/default/images/msgstates/visible.png" width="16" height="16" alt="visible" /></li>
+<li><img src="templates/default/images/msgstates/visible.png" width="16" height="16" alt="visible" title="{L_MSGLIST_ISVISIBLE}" /></li>
