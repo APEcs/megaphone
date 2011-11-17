@@ -875,6 +875,12 @@ sub generate_messagelist {
             $visfrag .= $self -> {"targets"} -> {$targ} -> {"module"} -> generate_messagelist_visibility($message);
         }
 
+        # And the same for the operations
+        my $opsfrag = "";
+        foreach my $targ (sort keys(%{$message -> {"targused"}})) {
+            $opsfrag .= $self -> {"targets"} -> {$targ} -> {"module"} -> generate_messagelist_ops($message);
+        }
+
         $rows .= $self -> {"template"} -> process_template($rowtem, {"***id***"      => $message -> {"id"},
                                                                      "***status***"  => $message -> {"status"},
                                                                      "***subject***" => $message -> {"subject"},
@@ -883,7 +889,8 @@ sub generate_messagelist {
                                                                      "***vishook***" => $visfrag,
                                                                      "***sent***"    => $message -> {"status"} eq "sent" ? $self -> {"template"} -> format_time($message -> {"sent"}) : $self -> build_sent_info($message),
                                                                      "***ops***"     => $self -> {"template"} -> process_template($optems -> {$message -> {"status"}}, {"***id***"       => $message -> {"id"},
-                                                                                                                                                                        "***showhide***" => $self -> {"template"} -> process_template($viscont[$message -> {"visible"}], {"***id***" => $message -> {"id"}})
+                                                                                                                                                                        "***showhide***" => $self -> {"template"} -> process_template($viscont[$message -> {"visible"}], {"***id***" => $message -> {"id"}}),
+                                                                                                                                                                        "***opshook***"  => $opsfrag,
                                                                                                                                                                        }),
                                                                     });
     }
@@ -928,6 +935,11 @@ sub generate_messagelist {
                                                                                   "***sortvisible***" => $sortcols -> {"visible"},
                                                                                   "***messages***"    => $rows});
 }
+
+
+# ============================================================================
+#  Message-based dispatcher
+
 
 
 # ============================================================================
