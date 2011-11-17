@@ -862,14 +862,22 @@ sub generate_messagelist {
                                                                                           "***way***"  => $way,
                                                                                           "***hide***" => $self -> set_hide_options($hideopts),
                                                                                           "***page***" => $pagenum}));
+
     # Process the rows...
     my $rows = "";
     foreach my $message (@spliced) {
+        # Ask targets for any additional visibility fragments
+        my $visfrag = "";
+        foreach my $targ (sort keys(%{$message -> {"targused"}})) {
+            $visfrag .= $self -> {"targets"} -> {$targ} -> {"module"} -> generate_messagelist_visibility($message);
+        }
+
         $rows .= $self -> {"template"} -> process_template($rowtem, {"***id***"      => $message -> {"id"},
                                                                      "***status***"  => $message -> {"status"},
                                                                      "***subject***" => $message -> {"subject"},
                                                                      "***updated***" => $self -> {"template"} -> format_time($message -> {"updated"}),
                                                                      "***visible***" => $vistem[$message -> {"visible"}],
+                                                                     "***vishook***" => $visfrag,
                                                                      "***sent***"    => $message -> {"status"} eq "sent" ? $self -> {"template"} -> format_time($message -> {"sent"}) : $self -> build_sent_info($message),
                                                                      "***ops***"     => $self -> {"template"} -> process_template($optems -> {$message -> {"status"}}, {"***id***"       => $message -> {"id"},
                                                                                                                                                                         "***showhide***" => $self -> {"template"} -> process_template($viscont[$message -> {"visible"}], {"***id***" => $message -> {"id"}})
