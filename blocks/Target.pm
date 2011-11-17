@@ -169,6 +169,21 @@ sub validate_message {
     return "";
 }
 
+
+## @method $ generate_messagelist_visibility($message)
+# Generate the fragment to display in the 'visibility' column of the user
+# message list for the specified message.
+#
+# @param message The message being processed.
+# @return A string containing the HTML fragment to show in the visibility column.
+sub generate_messagelist_visibility {
+    my $self    = shift;
+    my $message = shift;
+
+    return "";
+}
+
+
 # ============================================================================
 #  Message send functions
 
