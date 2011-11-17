@@ -866,6 +866,9 @@ sub generate_messagelist {
     # Process the rows...
     my $rows = "";
     foreach my $message (@spliced) {
+        # Get the full message data now that we know it'll be being used.
+        $message = $self -> get_message($message -> {"id"});
+
         # Ask targets for any additional visibility fragments
         my $visfrag = "";
         foreach my $targ (sort keys(%{$message -> {"targused"}})) {
