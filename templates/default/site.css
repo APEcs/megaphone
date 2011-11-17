@@ -315,6 +315,16 @@ table.messagelist th {
     white-space: nowrap;
 }
 
+table.messagelist td ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+table.messagelist td li {
+  display: inline;
+}
+
 ul#states li {
     padding-bottom: 0.5em;
 }
