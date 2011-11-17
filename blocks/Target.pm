@@ -184,6 +184,51 @@ sub generate_messagelist_visibility {
 }
 
 
+## @method $ generate_messagelist_ops($message)
+# Generate the fragment to display in the 'ops' column of the user
+# message list for the specified message.
+#
+# @param message The message being processed.
+# @return A string containing the HTML fragment to show in the ops column.
+sub generate_messagelist_ops {
+    my $self    = shift;
+    my $message = shift;
+
+    return "";
+}
+
+
+## @method $ known_op($op)
+# Determine whether the target module can understand the specified operation.
+# This function allows UserMessages to determine which Target modules understand
+# operations added by targets during generate_messagelist_ops().
+#
+# @param op The name of the operation to check.
+# @return true if the Target module can understand the operation, false otherwise.
+sub known_op {
+    my $self = shift;
+    my $op   = shift;
+
+    return 0;
+}
+
+
+## @method $ process_op($op, $message)
+# Perform the specified operation on a message. This allows Target modules to
+# implement the operations added as part of generate_messagelist_ops().
+#
+# @param op      The operation to perform.
+# @param message A reference to a hash containing the message data.
+# @return A string containing a status update message to show above the list.
+sub process_op {
+    my $self    = shift;
+    my $op      = shift;
+    my $message = shift;
+
+    return "";
+}
+
+
 # ============================================================================
 #  Message send functions
 
