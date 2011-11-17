@@ -3,6 +3,6 @@
     <td><a href="index.cgi?block={B_[msglist]}&amp;msgid=***id***&amp;sort=***sort***&amp;way=***way***&amp;page=***page***&amp;hide=***hide***&amp;viewmsg">***subject***</a></td>
     <td>***updated***</td>
     <td>***sent***</td>
-    <td>***visible***</td>
+    <td><ul>***visible******vishook***</ul></td>
     <td>***ops***</td>
 </tr>
