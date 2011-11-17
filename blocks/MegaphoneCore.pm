@@ -126,7 +126,7 @@ sub page_display {
             ($user, $login_errors) = $self -> validate_login();
 
             # If we have a user, create the new session
-            $self -> {"session"} -> create_session($user -> {"user_id"}, $self -> {"cgi"} -> {"persist"}) if($user);
+            $self -> {"session"} -> create_session($user -> {"user_id"}, $self -> {"cgi"} -> param("persist")) if($user);
 
         # We already have a user, get their data as we need it later...
         } else {

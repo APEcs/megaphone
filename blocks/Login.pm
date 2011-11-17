@@ -164,7 +164,7 @@ sub page_display {
         # No errors, user is valid...
         } else {
             # create the new logged-in session
-            $self -> {"session"} -> create_session($user -> {"user_id"}, $self -> {"cgi"} -> {"persist"}) if($user);
+            $self -> {"session"} -> create_session($user -> {"user_id"}, $self -> {"cgi"} -> param("persist")) if($user);
 
             # Do we have realname/rolename for the user? If so, send the loggedin message...
             if($user -> {"realname"} && $user -> {"rolename"}) {
