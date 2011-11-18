@@ -940,6 +940,33 @@ sub generate_messagelist {
 # ============================================================================
 #  Message-based dispatcher
 
+## @method @ target_dispatch()
+# Determine whether any targets can handle the requested operation, and
+# if so perform the operation and return the output.
+#
+# @return A string containing the updated page content, or undef if none of
+#         the targets can handle the operation, and a flag indicating whether
+#         the returned message is an error (true) or not (false).
+sub target_dispatch {
+    my $self = shift;
+
+    # Get the message id...
+    my $msgid = is_defined_numeric($self -> {"cgi"}, "msgid");
+    return ($self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_NOMSGID")), 1) if(!$msgid);
+
+    # Get the message data
+    my $message = $self -> get_message($msgid);
+    return ($self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_BADMSGID")), 1) if(!$message);
+
+    # Check each target the message was sent to to see whether it understands the operation
+    foreach my $targ (sort keys(%{$message -> {"targused"}})) {
+        if($self -> {"targets"} -> {$targ} -> {"module"} -> known_op()) {
+            return $self -> {"targets"} -> {$targ} -> {"module"} -> known_op();
+        }
+    }
+
+    return (undef, 0);
+}
 
 
 # ============================================================================
@@ -1084,7 +1111,10 @@ sub page_display {
 
         # No recognised operations in progress - send the basic list and user details box
         } else {
-            $content = $self -> generate_basic_messagepage($user);
+            my ($msg, $err) = $self -> target_dispatch();
+            return $msg if($err);
+
+            $content = $self -> generate_basic_messagepage($user, $msg);
         }
 
     # User has not logged in, force them to

@@ -211,17 +211,18 @@ sub known_op {
 }
 
 
-## @method $ process_op($message)
+## @method @ process_op($message)
 # Perform the query-stringspecified operation on a message. This allows Target
 # modules to implement the operations added as part of generate_messagelist_ops().
 #
 # @param message A reference to a hash containing the message data.
-# @return A string containing a status update message to show above the list.
+# @return A string containing a status update message to show above the list, and
+#         a flag specifying whether the returned string is an error message or not.
 sub process_op {
     my $self    = shift;
     my $message = shift;
 
-    return "";
+    return ("", 0);
 }
 
 
