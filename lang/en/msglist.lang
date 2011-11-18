@@ -53,3 +53,5 @@ MSGLIST_FAILED_TITLE = Send failed
 
 MSGLIST_ANNOUNCE_OPEN   = This message is currently viewable as an announcement.
 MSGLIST_ANNOUNCE_CLOSED = This message is a closed announcement.
+MSGLIST_ANNOUNCE_CLOSE  = Close this announcement immediately.
+MSGLIST_ANN_CLOSEDNOW   = The selected announcement has been closed, and it is no longer visible on the School website.
