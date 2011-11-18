@@ -878,7 +878,11 @@ sub generate_messagelist {
         # And the same for the operations
         my $opsfrag = "";
         foreach my $targ (sort keys(%{$message -> {"targused"}})) {
-            $opsfrag .= $self -> {"targets"} -> {$targ} -> {"module"} -> generate_messagelist_ops($message);
+            $opsfrag .= $self -> {"targets"} -> {$targ} -> {"module"} -> generate_messagelist_ops($message, {"***id***"   => $message -> {"id"},
+                                                                                                             "***sort***" => $sort,
+                                                                                                             "***way***"  => $way,
+                                                                                                             "***hide***" => $self -> set_hide_options($hideopts),
+                                                                                                             "***page***" => $pagenum});
         }
 
         $rows .= $self -> {"template"} -> process_template($rowtem, {"***id***"      => $message -> {"id"},
@@ -952,7 +956,7 @@ sub target_dispatch {
 
     # Get the message id...
     my $msgid = is_defined_numeric($self -> {"cgi"}, "msgid");
-    return ($self -> generate_fatal($self -> {"template"} -> replace_langvar("FATAL_NOMSGID")), 1) if(!$msgid);
+    return ("", 0) if(!$msgid); # No message id? Assume that the're no operation then.
 
     # Get the message data
     my $message = $self -> get_message($msgid);
@@ -961,7 +965,7 @@ sub target_dispatch {
     # Check each target the message was sent to to see whether it understands the operation
     foreach my $targ (sort keys(%{$message -> {"targused"}})) {
         if($self -> {"targets"} -> {$targ} -> {"module"} -> known_op()) {
-            return $self -> {"targets"} -> {$targ} -> {"module"} -> known_op();
+            return $self -> {"targets"} -> {$targ} -> {"module"} -> process_op($message);
         }
     }
 

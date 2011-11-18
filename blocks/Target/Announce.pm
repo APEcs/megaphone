@@ -65,6 +65,7 @@ use strict;
 use base qw(Target); # This class is a Target module
 use Logging qw(die_log);
 use Utils qw(is_defined_numeric);
+use POSIX qw(floor);
 
 # ============================================================================
 #  Constructor
@@ -319,18 +320,20 @@ sub validate_message {
 
     my $errtem = $self -> {"template"} -> load_template("blocks/error_entry.tem");
 
-    # Check whether the open date has been set
+    # Check whether the open or close date has been set
     foreach my $mode ("open", "close") {
         if(defined($self -> {"cgi"} -> param($mode."_ignore"))) {
             $args -> {"announce"} -> {$mode."_date"} = undef; # set it explicitly to avoid ambiguity
         } else {
-            print STDERR $mode."_date contains '".$self -> {"cgi"} -> param($mode."_date")."'\n";
-
             $args -> {"announce"} -> {$mode."_date"} = is_defined_numeric($self -> {"cgi"}, $mode."_date");
 
             # If we have no value for the date, complain - it must be explicitly disabled if no value is needed
             $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_NO".uc($mode))})
                 if(!$args -> {"announce"} -> {$mode."_date"});
+
+            # round down to nearest minute if it is set
+            $args -> {"announce"} -> {$mode."_date"} = int(floor($args -> {"announce"} -> {$mode."_date"} / 60) * 60)
+                if($args -> {"announce"} -> {$mode."_date"});
         }
     }
 
@@ -370,17 +373,64 @@ sub generate_messagelist_visibility {
     my $self    = shift;
     my $message = shift;
 
-    my $now = time();
-
-    # If the message is not visible, it is closed by definition, otherwise it is
-    # only open if the current time falls within open <= now < close
-    if(!$message -> {"visible"} ||
-       ($message -> {"announce"} -> {"open_date"} && ($now < $message -> {"announce"} -> {"open_date"})) ||
-       ($message -> {"announce"} -> {"close_date"} && ($now >= $message -> {"announce"} -> {"close_date"}))) {
-        return $self -> {"template"} -> load_template("target/announce/msglist_closed.tem");
-    } else {
+    if($self -> announcement_is_open($message)) {
         return $self -> {"template"} -> load_template("target/announce/msglist_open.tem");
+    } else {
+        return $self -> {"template"} -> load_template("target/announce/msglist_closed.tem");
     }
+}
+
+
+## @method $ generate_messagelist_ops($message, $args)
+# Generate the fragment to display in the 'ops' column of the user
+# message list for the specified message.
+#
+# @param message The message being processed.
+# @param args    Additional arguments to use when filling in fragment templates.
+# @return A string containing the HTML fragment to show in the ops column.
+sub generate_messagelist_ops {
+    my $self    = shift;
+    my $message = shift;
+    my $args    = shift;
+
+    if($self -> announcement_is_open($message)) {
+        return $self -> {"template"} -> load_template("target/announce/msgop_close.tem", $args);
+    }
+    return "";
+}
+
+
+## @method $ known_op()
+# Determine whether the target module can understand the operation specified
+# in the query string. This function allows UserMessages to determine which
+# Target modules understand operations added by targets during generate_messagelist_ops().
+#
+# @return true if the Target module can understand the operation, false otherwise.
+sub known_op {
+    my $self = shift;
+
+    # Only support one operation: "close announcement".
+    return defined($self -> {"cgi"} -> param("closeann"));
+}
+
+
+## @method @ process_op($message)
+# Perform the query-stringspecified operation on a message. This allows Target
+# modules to implement the operations added as part of generate_messagelist_ops().
+#
+# @param message A reference to a hash containing the message data.
+# @return A string containing a status update message to show above the list, and
+#         a flag specifying whether the returned string is an error message or not.
+sub process_op {
+    my $self    = shift;
+    my $message = shift;
+
+    if(defined($self -> {"cgi"} -> param("closeann"))) {
+        $self -> close_announcement($message);
+
+        return ($self -> {"template"} -> load_template("target/announce/closed.tem"), 0);
+    }
+    return ("", 0);
 }
 
 
@@ -458,5 +508,47 @@ sub get_destination_categories {
 }
 
 
+## @method $ announcement_is_open($message)
+# Determine whether the specified message represents a currently open
+# announcement.
+#
+# @param message A reference to a hash containing the message data.
+# @return true if the message is open, false otherwise.
+sub announcement_is_open {
+    my $self    = shift;
+    my $message = shift;
+
+    my $now = time();
+
+    # If the message is not visible, it is closed by definition, otherwise it is
+    # only open if the current time falls within open <= now < close
+    return 0 if(!$message -> {"visible"} ||
+                ($message -> {"announce"} -> {"open_date"} && ($now < $message -> {"announce"} -> {"open_date"})) ||
+                ($message -> {"announce"} -> {"close_date"} && ($now >= $message -> {"announce"} -> {"close_date"})));
+
+    return 1;
+}
+
+
+## @method void close_announcement($message)
+# Close the announcement specified. This will set the timestamp on the announcement
+# to one second before this function was called (to avoid race conditions with the
+# UI).
+#
+# @param message A reference to a hash containing the announcement message.
+sub close_announcement {
+    my $self    = shift;
+    my $message = shift;
+
+    my $closeh = $self -> {"dbh"} -> prepare("UPDATE ".$self -> {"settings"} -> {"database"} -> {"message_andata"}."
+                                              SET close_date = ?
+                                              WHERE message_id = ?");
+    # Update the message hash, so that anyone using it again sees the close date set
+    $message -> {"announce"} -> {"close_date"} = time() - 1;
+
+    # and update the database..
+    $closeh -> execute($message -> {"announce"} -> {"close_date"}, $message -> {"id"})
+        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute announcement data update query: ".$self -> {"dbh"} -> errstr);
+}
 
 1;
