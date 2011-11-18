@@ -1,7 +1,7 @@
         <div class="message">
             <h2>{L_FATAL_TITLE}</h2>
             <div class="mbody">
-                <img src="templates/default/images/warning.png" width="48" height="48" alt="error" class="fltrt" />
+                <img src="templates/default/images/important.png" width="48" height="48" alt="error" class="fltrt" />
                 <div>{L_FATAL_MESSAGE}</div>
                 <div class="error">***error***</div>
             </div>
