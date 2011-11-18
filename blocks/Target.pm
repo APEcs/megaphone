@@ -184,15 +184,17 @@ sub generate_messagelist_visibility {
 }
 
 
-## @method $ generate_messagelist_ops($message)
+## @method $ generate_messagelist_ops($message, $args)
 # Generate the fragment to display in the 'ops' column of the user
 # message list for the specified message.
 #
 # @param message The message being processed.
+# @param args    Additional arguments to use when filling in fragment templates.
 # @return A string containing the HTML fragment to show in the ops column.
 sub generate_messagelist_ops {
     my $self    = shift;
     my $message = shift;
+    my $args    = shift;
 
     return "";
 }
