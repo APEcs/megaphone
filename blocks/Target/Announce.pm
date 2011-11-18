@@ -21,7 +21,10 @@
 package Target::Announce;
 
 ## @class Target::Announce
-# An Announcement System target implementation. Supported arguments are:
+# An Announcement System target implementation. This class implements a Target
+# that allows messages to be displayed on the SoCS website in various annoucement
+# boxes tailored to specific groups of users (UGT, PGT, PGR, Staff, etc).
+# Supported destination arguments are:
 #
 # - category=&lt;cat&gt;
 #
@@ -441,7 +444,7 @@ sub process_op {
 # ============================================================================
 #  Internal stuff
 
-## @method @ get_destination_categories($dest)
+## @method private @ get_destination_categories($dest)
 # Obtain an array of announcement categories for the specified destination.
 # If the destination is not an Announce target, this returns an empty list.
 #
@@ -508,7 +511,7 @@ sub get_destination_categories {
 }
 
 
-## @method $ announcement_is_open($message)
+## @method private $ announcement_is_open($message)
 # Determine whether the specified message represents a currently open
 # announcement.
 #
@@ -530,7 +533,7 @@ sub announcement_is_open {
 }
 
 
-## @method void close_announcement($message)
+## @method private void close_announcement($message)
 # Close the announcement specified. This will set the timestamp on the announcement
 # to one second before this function was called (to avoid race conditions with the
 # UI).

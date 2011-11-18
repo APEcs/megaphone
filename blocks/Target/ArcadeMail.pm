@@ -568,7 +568,7 @@ sub send {
 # ============================================================================
 #  Internal stuff
 
-## @method $ build_replyto($default)
+## @method private $ build_replyto($default)
 # Generate the options to show for the replyto dropdown.
 #
 # @param default The option to have selected by default.
@@ -603,7 +603,7 @@ sub build_replyto {
 }
 
 
-## @method $ arcade_connect()
+## @method private $ arcade_connect()
 # Open a connection to the ARCADE system and return a socket to
 # perform operations through.
 #
@@ -627,7 +627,7 @@ sub arcade_connect {
 }
 
 
-## @method $ arcade_command($command, $course)
+## @method private $ arcade_command($command, $course)
 # Send a command to the ARCADE server, and return the response.
 #
 # @param command The command to send to ARCADE.
@@ -661,7 +661,7 @@ sub arcade_command {
 }
 
 
-## @method @ get_arcade_filter($name)
+## @method private @ get_arcade_filter($name)
 # Obtain the filter regexp and mode for the specified filter.
 #
 # @param name The name of the filter to obtain the regexp for
@@ -682,7 +682,7 @@ sub get_arcade_filter {
 }
 
 
-## @method $ arcade_filter_match($filter, $fmode, $data)
+## @method private $ arcade_filter_match($filter, $fmode, $data)
 # Determine whether the specified data passes the filtering rules provided.
 # If no filter rule is set, the data always passes it. Otherwise, this will
 # return true if the data matches the filter and the filter mode is "match",
@@ -705,7 +705,7 @@ sub arcade_filter_match {
 }
 
 
-## @method $ get_arcade_recipients($recip_queue, $mode)
+## @method private $ get_arcade_recipients($recip_queue, $mode)
 # Get the list of students recored in arcade for the current destination
 # (if appropriate). This will add students to the recipient queue with
 # the specified destination mode ('to', 'cc', or 'bcc')

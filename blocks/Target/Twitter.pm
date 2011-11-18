@@ -348,7 +348,7 @@ sub send {
 # ============================================================================
 #  Internal stuff
 
-## @method $ build_twittermode($default)
+## @method private $ build_twittermode($default)
 # Generate the options to show for the twittermode dropdown.
 #
 # @param default The option to have selected by default.

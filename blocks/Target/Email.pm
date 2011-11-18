@@ -454,7 +454,7 @@ sub send {
 # ============================================================================
 #  Internal stuff
 
-## @method $ build_replyto($default)
+## @method private $ build_replyto($default)
 # Generate the options to show for the replyto dropdown.
 #
 # @param default The option to have selected by default.
