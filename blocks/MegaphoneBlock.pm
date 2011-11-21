@@ -283,9 +283,10 @@ sub build_recipient_tree {
     my $recipients;
     # Store each recipient, and recursively determine whether it has children
     while(my $recip = $reciph -> fetchrow_hashref()) {
-        $recipients -> {$recip -> {"position"}} -> {"id"}       = $recip -> {"id"};
-        $recipients -> {$recip -> {"position"}} -> {"name"}     = $recip -> {"name"};
-        $recipients -> {$recip -> {"position"}} -> {"children"} = $self -> build_recipient_tree($recip -> {"id"});
+        $recipients -> {$recip -> {"position"}} -> {"id"}        = $recip -> {"id"};
+        $recipients -> {$recip -> {"position"}} -> {"name"}      = $recip -> {"name"};
+        $recipients -> {$recip -> {"position"}} -> {"shortname"} = $recip -> {"shortname"};
+        $recipients -> {$recip -> {"position"}} -> {"children"}  = $self -> build_recipient_tree($recip -> {"id"});
     }
 
     # This'll either be a tree of recipients, or undef for nothing here at all...
@@ -424,6 +425,7 @@ sub build_matrix_rows {
                                                                                           "***rowstyle***"   => $rowstyle,
                                                                                           "***spanclass***"  => $spanclass,
                                                                                           "***name***"       => $recipients -> {$recip} -> {"name"},
+                                                                                          "***shortname***"  => $recipients -> {$recip} -> {"shortname"},
                                                                                           "***id***"         => $recipients -> {$recip} -> {"id"},
                                                                                           "***targets***"    => $data,
                                                                                           "***extrastyle***" => $extrastyle,

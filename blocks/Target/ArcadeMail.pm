@@ -501,6 +501,9 @@ sub send {
     $outfields -> {"message"} = decode_entities($message -> {"message"});
     $outfields -> {"subject"} = decode_entities($outfields -> {"subject"});
 
+    # Work out who the message has gone to
+    my $sentto = $self -> get_message_recipients($message, 1);
+
     # If we have debugging enabled, the message should just go to the reply-to address
     my $error;
     if($self -> {"args"} -> {"debugmode"}) {
@@ -531,6 +534,7 @@ sub send {
                                                                                         "***realname***"   => $user -> {"realname"},
                                                                                         "***rolename***"   => $user -> {"rolename"},
                                                                                         "***signature***"  => decode_entities($signature),
+                                                                                        "***sentto***"     => $sentto,
                                                              });
         }
     } else {
@@ -557,6 +561,7 @@ sub send {
                                                                                    "***realname***"  => $user -> {"realname"},
                                                                                    "***rolename***"  => $user -> {"rolename"},
                                                                                    "***signature***" => decode_entities($signature),
+                                                                                   "***sentto***"    => $sentto,
                                                              });
         }
     }
@@ -776,5 +781,39 @@ sub get_arcade_recipients {
 
     return $count;
 };
+
+
+## @method private $ get_message_recipients($message, $shortnames)
+# Obtain a list of Megaphone recipients this message has been sent to.
+# This returns a bar separated list of names of Megaphone recipients
+# that this message has been sent to.
+#
+# @param message    The message to obtain recipient names for.
+# @param shortnames If set to true, the list contains short names
+#                   rather than full recipient names.
+sub get_message_recipients {
+    my $self       = shift;
+    my $message    = shift;
+    my $shortnames = shift;
+
+    my $reciph = $self -> {"dbh"} -> prepare("SELECT r.name, r.shortname
+                                              FROM ".$self -> {"settings"} -> {"database"} -> {"recipients"}." AS r,
+                                                   ".$self -> {"settings"} -> {"database"} -> {"recip_targs"}." AS d
+                                              WHERE r.id = d.recipient_id
+                                              AND d.id = ?");
+    my $reciplist = "";
+    foreach my $recip (@{$message -> {"targset"}}) {
+        $reciph -> execute($recip)
+            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute recipient query: ".$self -> {"dbh"} -> errstr);
+
+        my $recipnames = $reciph -> fetchrow_hashref();
+        if($recipnames) {
+            $reciplist .= "|" if($reciplist);
+            $reciplist .= ($shortnames ? $recipnames -> {"shortname"} : $recipnames -> {"name"});
+        }
+    }
+
+    return $reciplist;
+}
 
 1;
