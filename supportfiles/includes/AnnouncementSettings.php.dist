@@ -1,0 +1,13 @@
+<?php
+
+if(!defined('ANNOUNCEMENTS')) {
+    exit;
+}
+
+// Fill in the following settings for the database connection.
+$agDBserver   = "";
+$agDBdatabase = "";
+$agDBusername = "";
+$agDBpassword = "";
+
+?>
