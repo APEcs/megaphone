@@ -373,7 +373,7 @@ sub build_matrix_rows {
     my $depth      = shift || 0;
 
     my $matrix = "";
-    foreach my $recip (sort keys(%{$recipients})) {
+    foreach my $recip (sort {$a <=> $b } keys(%{$recipients})) {
         my $data = "";
 
         # Each row should consist of an entry for each target...
