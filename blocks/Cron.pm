@@ -59,5 +59,4 @@ sub page_display {
                                                                "***content***"   => $body});
 }
 
-
-
+1;
