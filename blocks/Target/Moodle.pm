@@ -142,7 +142,7 @@ sub send {
     my $fallback = 0;
     if(!$moodleuser) {
         $fallback = 1;
-        $moodleuser = $self -> get_moodle_user($self -> {"settings"} -> {"config"} -> {"Target::Moodle:fallback_user"})
+        $moodleuser = $self -> get_moodle_userid($self -> {"settings"} -> {"config"} -> {"Target::Moodle:fallback_user"})
             or die_log($self -> {"cgi"} -> remote_host(), "Target::Moodle: Unable to obtain a moodle user (username and fallback failed)");
     }
 
