@@ -75,8 +75,9 @@ $settings -> load_db_config($dbh, $settings -> {"database"} -> {"settings"});
 start_log($settings -> {"config"} -> {"logfile"}) if($settings -> {"config"} -> {"logfile"});
 
 # Create the template handler object
-my $template = Template -> new(basedir => path_join($settings -> {"config"} -> {"base"}, "templates"),
-                               mailcmd => '/usr/sbin/sendmail -t -f '.$settings -> {"config"} -> {"Core:envelope_address"})
+my $template = Template -> new(basedir   => path_join($settings -> {"config"} -> {"base"}, "templates"),
+                               blockname => 1,
+                               mailcmd   => '/usr/sbin/sendmail -t -f '.$settings -> {"config"} -> {"Core:envelope_address"})
     or die_log($out -> remote_host(), "Unable to create template handling object: ".$Template::errstr);
 
 # Create the authenticator
@@ -103,11 +104,11 @@ my $modules = Modules -> new(cgi      => $out,
     or die_log($out -> remote_host(), "Unable to create module handling object: ".$Modules::errstr);
 
 # Obtain the page moduleid, fall back on the default if this fails
-my $pageblock = is_defined_numeric($out, "block");
-$pageblock = $settings -> {"config"} -> {"default_block"} if(!$pageblock); # This ensures $pagemodue is defined and non-zero
+my $pageblock = $out -> param("block");
+$pageblock = $settings -> {"config"} -> {"default_block"} if(!$pageblock); # This ensures $pageblock is defined and non-zero
 
 # Obtain an instance of the page module
-my $pageobj = $modules -> new_module_byblockid($pageblock)
+my $pageobj = $modules -> new_module($pageblock)
     or die_log($out -> remote_host(), "Unable to load page module $pageblock: ".$Modules::errstr);
 
 # And call the page generation function of the page module
