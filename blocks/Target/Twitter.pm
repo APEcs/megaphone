@@ -233,9 +233,10 @@ sub get_message {
         or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute twitter lookup query: ".$self -> {"dbh"} -> errstr);
 
     my $tweetr = $tweeth -> fetchrow_hashref();
-    die_log($self -> {"cgi"} -> remote_host(), "No tweet mode set for message: ".$self -> {"dbh"} -> errstr) if(!$tweetr);
+    # die_log($self -> {"cgi"} -> remote_host(), "No tweet mode set for message $msgid: ".$self -> {"dbh"} -> errstr) if(!$tweetr);
 
-    $message -> {"tweet_mode"} = $tweetr -> {"tweetmode_id"};
+    # Fallback on mode 1 if the tweet mode data is not found. Should not happen, but safer than outright dying.
+    $message -> {"tweet_mode"} = $tweetr ? $tweetr -> {"tweetmode_id"} : 1;
 }
 
 
