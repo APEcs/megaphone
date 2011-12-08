@@ -42,6 +42,21 @@ body  {
     text-decoration: none;
 }
 
+#noteLogo {
+    background-image: url("images/noticeboard.png");
+    background-position: center left ;
+    background-repeat: no-repeat;
+    float: left;
+    width: 320px;
+    margin: 10px 0;
+    padding: 15px 0 0 69px;
+}
+
+#noteLogo h1 a {
+    color: black;
+    text-decoration: none;
+}
+
 #siteSub {
     color: #777;
     display: inline;
