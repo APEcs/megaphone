@@ -142,7 +142,7 @@ sub valid_user {
     my $username = shift;
     my $password = shift;
 
-    $self -> {"lasterr"} = "Logins are not supported by this system."
+    $self -> {"lasterr"} = "Logins are not supported by this system.";
     return undef;
 }
 
