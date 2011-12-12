@@ -10,12 +10,12 @@
     <script type='text/javascript' src="templates/default/mootools-more.js"></script>
 
     <!-- popup stuff, reuses my MediaWiki extension resources -->
-    <link href="TWPopup/popup.css" rel="stylesheet" type="text/css" />
-    <script type='text/javascript' src="TWPopup/webtoolkit.base64.js"></script>
-    <script type='text/javascript' src="TWPopup/popup.js"></script>
+    <link href="templates/default/TWPopup/popup.css" rel="stylesheet" type="text/css" />
+    <script type='text/javascript' src="templates/default/TWPopup/webtoolkit.base64.js"></script>
+    <script type='text/javascript' src="templates/default/TWPopup/popup.js"></script>
 
     <!-- automatic table colouring -->
-    <script type='text/javascript' src="zebratables/zebra.js"></script>
+    <script type='text/javascript' src="templates/default/zebratables/zebra.js"></script>
 
     <!-- any site-specific javascriptery and styles -->
     <script type='text/javascript' src="templates/default/site.js"></script>
@@ -52,7 +52,15 @@
                 <td class="nbox-text">{L_PAGE_IEISCRAP}</td>
             </tr>
         </table>
-***sitewarn***
+        <div id="viewbar">
+            <ul>
+                <li><img src="templates/default/images/noticeboard/ctrlbar_list.png"    class="viewtoggle" width="18" height="22" alt="list" title="{L_NBOARD_LISTMODE}" />
+                    <img src="templates/default/images/noticeboard/ctrlbar_divider.png" class="divider"    width="3"  height="22" alt="" /></li>
+                <li><img src="templates/default/images/noticeboard/ctrlbar_cal.png"     class="viewtoggle" width="18" height="22" alt="calendar" title="{L_NBOARD_CALMODE}" />
+                    <img src="templates/default/images/noticeboard/ctrlbar_divider.png" class="divider"    width="3"  height="22" alt="" /></li>
+                <li>&nbsp;***viewtitle***</li>
+            </ul>
+        </div>
 ***content***
     </div> <!-- #mainContent -->
 

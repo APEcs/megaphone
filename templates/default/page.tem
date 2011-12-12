@@ -10,12 +10,12 @@
     <script type='text/javascript' src="templates/default/mootools-more.js"></script>
 
     <!-- popup stuff, reuses my MediaWiki extension resources -->
-    <link href="TWPopup/popup.css" rel="stylesheet" type="text/css" />
-    <script type='text/javascript' src="TWPopup/webtoolkit.base64.js"></script>
-    <script type='text/javascript' src="TWPopup/popup.js"></script>
+    <link href="templates/default/TWPopup/popup.css" rel="stylesheet" type="text/css" />
+    <script type='text/javascript' src="templates/default/TWPopup/webtoolkit.base64.js"></script>
+    <script type='text/javascript' src="templates/default/TWPopup/popup.js"></script>
 
     <!-- automatic table colouring -->
-    <script type='text/javascript' src="zebratables/zebra.js"></script>
+    <script type='text/javascript' src="templates/default/zebratables/zebra.js"></script>
 
     <!-- any site-specific javascriptery and styles -->
     <script type='text/javascript' src="templates/default/site.js"></script>
