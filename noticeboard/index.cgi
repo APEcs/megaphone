@@ -1,5 +1,9 @@
 #!/usr/bin/perl -wT
 
+## @file
+# The front-end script for the noticeboard page. This acts as both
+# the front page for user requests, and the ajax handler.
+
 use strict;
 use lib qw(/var/www/webperl);
 use lib qw(../modules);
