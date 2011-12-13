@@ -3,9 +3,10 @@
 <head profile="http://www.w3.org/2005/10/profile">
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>{L_PAGE_TITLE}: ***title***</title>
+    <title>{L_NBOARD_TITLE}</title>
 
     <!-- mootools for effects and javascript sanity -->
+    <link href="templates/default/spinner.css" rel="stylesheet" type="text/css" />
     <script type='text/javascript' src="templates/default/mootools-core.js"></script>
     <script type='text/javascript' src="templates/default/mootools-more.js"></script>
 
@@ -17,9 +18,16 @@
     <!-- automatic table colouring -->
     <script type='text/javascript' src="templates/default/zebratables/zebra.js"></script>
 
+    <!-- Dave Walsh's LightFace modal dialog -->
+    <link href="templates/default/lightface/LightFace.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="templates/default/lightface/Lightface.js"></script>
+    <script type="text/javascript" src="templates/default/lightface/Lightface.Requestjs"></script>
+
     <!-- any site-specific javascriptery and styles -->
     <script type='text/javascript' src="templates/default/site.js"></script>
     <link href="templates/default/site.css" rel="stylesheet" type="text/css" />
+
+    <script type='text/javascript' src="templates/default/noticeboard.js"></script>
 
     <!--[if IE]>
     <style type="text/css">
@@ -58,10 +66,19 @@
                     <img src="templates/default/images/noticeboard/ctrlbar_divider.png" class="divider"    width="3"  height="22" alt="" /></li>
                 <li><img src="templates/default/images/noticeboard/ctrlbar_cal.png"     class="viewtoggle" width="18" height="22" alt="calendar" title="{L_NBOARD_CALMODE}" />
                     <img src="templates/default/images/noticeboard/ctrlbar_divider.png" class="divider"    width="3"  height="22" alt="" /></li>
-                <li>&nbsp;***viewtitle***</li>
+                <li id="viewtitle">&nbsp;</li>
             </ul>
         </div>
-***content***
+        <div id="messages">
+            <div id="senders">
+            </div>
+            <div id="views">
+                <div id="calendar">
+                </div>
+                <div id="msglist">
+                </div>
+            </div>
+        </div>
     </div> <!-- #mainContent -->
 
     <div class="cleared"></div>
