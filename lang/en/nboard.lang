@@ -1,0 +1,5 @@
+NBOARD_TITLE    = Noticeboard
+NBOARD_SUBTITLE = School of Computer Science message archive
+
+NBOARD_LISTMODE = List view
+NBOARD_CALMODE  = Calendar view
