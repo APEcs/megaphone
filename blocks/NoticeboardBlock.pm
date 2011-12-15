@@ -160,7 +160,7 @@ sub get_month_messages {
     my $maxtimestamp = timelocal(59, 59, 23, Days_In_Month($year, $month), $month - 1, $year);
 
     # query to pull out the messages...
-    my $msgh = $self -> {"dbh"} -> prepare("SELECT m.id, m.subject, m.sent, u.realname
+    my $msgh = $self -> {"dbh"} -> prepare("SELECT m.id, m.subject, m.sent, u.user_id, u.realname
                                             FROM ".$self -> {"settings"} -> {"database"} -> {"messages"}." AS m,
                                                  ".$self -> {"settings"} -> {"database"} -> {"users"}." AS u
                                             WHERE u.user_id = m.user_id
