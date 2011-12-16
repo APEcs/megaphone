@@ -27,8 +27,9 @@ package NoticeboardBlock;
 use strict;
 use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
 
-use Date::Pcalc qw(Days_In_Month);
+use Date::Pcalc qw(Days_in_Month);
 use Time::Local;
+use Utils qw(is_defined_numeric);
 
 # ============================================================================
 #  Month and year lookup and verification functions
@@ -99,7 +100,7 @@ sub get_date_bymsgid {
     $timestamp = $message -> [0] if($message && $message -> [0]);
 
     # Get the month and year, and fix them so that they are sane
-    my @date (localtime($timestamp))[4, 5];
+    my @date = (localtime($timestamp))[4, 5];
     $date[0] += 1; $date[1] += 1900;
 
     return @date;
@@ -135,7 +136,7 @@ sub get_date {
     my $setyear = is_defined_numeric($self -> {"cgi"}, "year");
     $year = $setyear if($setyear && $self -> valid_year($year));
 
-    return ($setmonth, $setyear);
+    return ($month, $year);
 }
 
 
@@ -157,7 +158,7 @@ sub get_month_messages {
     # Work out the start and end timestamps. Note that this should go from 00:00 on the first
     # of the month, to 23:59:59 on the last of the month.
     my $mintimestamp = timelocal(0, 0, 0, 1, $month - 1, $year);
-    my $maxtimestamp = timelocal(59, 59, 23, Days_In_Month($year, $month), $month - 1, $year);
+    my $maxtimestamp = timelocal(59, 59, 23, Days_in_Month($year, $month), $month - 1, $year);
 
     # query to pull out the messages...
     my $msgh = $self -> {"dbh"} -> prepare("SELECT m.id, m.subject, m.sent, u.user_id, u.realname
@@ -183,6 +184,23 @@ sub get_month_messages {
     }
 
     return $messages;
+}
+
+# ============================================================================
+#  General interface functions
+
+## @method $ generate($month, $year)
+# Generate the content to show in this classes area of the Noticeboard UI.
+#
+# @param month The month to generate the content for.
+# @param year  The year to generate the content for.
+# @return A string containing the generated content.
+sub generate {
+    my $self  = shift;
+    my $month = shift;
+    my $year  = shift;
+
+    return "";
 }
 
 1;
