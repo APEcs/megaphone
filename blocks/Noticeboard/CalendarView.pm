@@ -39,13 +39,13 @@ my @day_names = ( "CALVIEW_SUN",
 # ============================================================================
 #  Calendar functions
 
-## @method $ generate_calendar($month, $year)
+## @method $ generate($month, $year)
 # Generate the content to show in the calendar view area of the Noticeboard UI.
 #
 # @param month The month of the calendar to generate.
 # @param year  The year of the calendar to generate.
 # @return A string containing the generated calendar.
-sub generate_calendar {
+sub generate {
     my $self  = shift;
     my $month = shift;
     my $year  = shift;
@@ -91,7 +91,7 @@ sub generate_calendar {
                         $msg -> {"subject"} = substr($msg -> {"subject"}, 0, $self -> {"settings"} -> {"config"} -> {"Noticeboard::subject_truncate"})."..."
                             if($self -> {"settings"} -> {"config"} -> {"Noticeboard::subject_truncate"} && length($msg -> {"subject"}) > $self -> {"settings"} -> {"config"} -> {"Noticeboard::subject_truncate"});
 
-                        $msglist .= $self -> {"template"} -> replace_langvar($msgtem, {"***id***"   => $msg -> {"id"},
+                        $msglist .= $self -> {"template"} -> process_template($msgtem, {"***id***"   => $msg -> {"id"},
                                                                                        "***uid***"  => $msg -> {"user_id"},
                                                                                        "***subj***" => $msg -> {"subject"},
                                                                                        "***name***" => $msg -> {"realname"}});
@@ -121,7 +121,9 @@ sub page_display {
 
     my ($month, $year) = $self -> get_date();
 
-    return $self -> generate_calendar($month, $year);
+    print $self -> {"cgi"} -> header(-charset => 'utf-8');
+    print $self -> generate($month, $year);
+    exit;
 }
 
 
