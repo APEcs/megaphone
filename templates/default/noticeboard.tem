@@ -20,8 +20,8 @@
 
     <!-- Dave Walsh's LightFace modal dialog -->
     <link href="templates/default/lightface/LightFace.css" rel="stylesheet" type="text/css" />
-    <script type="text/javascript" src="templates/default/lightface/Lightface.js"></script>
-    <script type="text/javascript" src="templates/default/lightface/Lightface.Requestjs"></script>
+    <script type="text/javascript" src="templates/default/lightface/LightFace.js"></script>
+    <script type="text/javascript" src="templates/default/lightface/LightFace.Requestjs"></script>
 
     <!-- any site-specific javascriptery and styles -->
     <script type='text/javascript' src="templates/default/site.js"></script>
