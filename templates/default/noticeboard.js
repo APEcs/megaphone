@@ -33,3 +33,34 @@ function $get(key,url) {
         return results;
     }
 }
+
+
+function update_calendar(queryfrag) {
+    var calupdate = new Request.HTML({url: 'index.cgi?block=calview'+queryfrag,
+                                      update: $('calendar'),
+                                      method: 'get',
+                                      useSpinner: true,
+                                      spinnerOptions: {message: 'Loading...',
+                                                      }
+                                     });
+    calupdate.send();
+}
+
+
+function update_views() {
+    var msgid = $get('msgid');
+    var month = $get('month');
+    var year  = $get('year');
+    var queryfrag = '';
+
+    if(msgid) queryfrag += '&msgid='+msgid;
+    if(month) queryfrag += '&month='+month;
+    if(year)  queryfrag += '&year='+year;
+
+    update_calendar(queryfrag);
+
+}
+
+window.addEvent('domready', function() {
+    update_views();
+});
