@@ -88,8 +88,8 @@ sub generate {
                 if($messages -> [$day]) {
                     foreach my $msg (@{$messages -> [$day]}) {
                         # Truncate the message subject if needed
-                        $msg -> {"subject"} = substr($msg -> {"subject"}, 0, $self -> {"settings"} -> {"config"} -> {"Noticeboard::subject_truncate"})."..."
-                            if($self -> {"settings"} -> {"config"} -> {"Noticeboard::subject_truncate"} && length($msg -> {"subject"}) > $self -> {"settings"} -> {"config"} -> {"Noticeboard::subject_truncate"});
+                        $msg -> {"subject"} = substr($msg -> {"subject"}, 0, $self -> {"settings"} -> {"config"} -> {"CalendarView::subject_truncate"})."..."
+                            if($self -> {"settings"} -> {"config"} -> {"CalendarView::subject_truncate"} && length($msg -> {"subject"}) > $self -> {"settings"} -> {"config"} -> {"CalendarView::subject_truncate"});
 
                         $msglist .= $self -> {"template"} -> process_template($msgtem, {"***id***"   => $msg -> {"id"},
                                                                                        "***uid***"  => $msg -> {"user_id"},
