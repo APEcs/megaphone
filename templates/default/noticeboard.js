@@ -62,5 +62,5 @@ function update_views() {
 }
 
 window.addEvent('domready', function() {
-    update_views();
+/*    update_views();*/
 });

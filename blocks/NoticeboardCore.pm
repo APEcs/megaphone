@@ -25,7 +25,7 @@ package NoticeboardCore;
 # the user with a calendar and message list from which they may view
 # messages.
 use strict;
-use base qw(Block); # This class extends Block
+use base qw(NoticeboardBlock); # This class extends Block
 use Logging qw(die_log);
 use Utils qw(is_defined_numeric);
 
@@ -37,8 +37,15 @@ use Utils qw(is_defined_numeric);
 sub page_display {
     my $self = shift;
 
+    my ($month, $year) = $self -> get_date();
+
+    # Load the support modules
+    my $calendar = $self -> {"module"} -> new_module("calview");
+
     # very simple template load, doesn't need anything fancy here...
-    return $self -> {"template"} -> load_template("noticeboard.tem", {"***extrahead***" => ""});
+    return $self -> {"template"} -> load_template("noticeboard.tem", {"***extrahead***" => "",
+                                                                      "***calview***"   => $calendar -> generate($month, $year),
+                                                                     });
 }
 
 1;
