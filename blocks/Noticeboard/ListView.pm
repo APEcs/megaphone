@@ -26,6 +26,8 @@ package Noticeboard::ListView;
 use strict;
 use base qw(NoticeboardBlock); # This class extends NoticeboardBlock
 
+use Time::Local;
+
 # ============================================================================
 #  Calendar functions
 
@@ -49,8 +51,21 @@ sub generate {
     my $days = "";
 
     foreach my $day (@{$messages}) {
-        next if(!$day); # We might get undefs here, so skip them
+        next if(!$day || ref($day) ne "ARRAY"); # We might get undefs here, so skip them, and skip anything that isn't an arrayref
 
+        my $msglist = "";
+        foreach my $msg (@{$day}) {
+            # Truncate the message subject if needed
+            $msg -> {"subject"} = substr($msg -> {"subject"}, 0, $self -> {"settings"} -> {"config"} -> {"ListView::subject_truncate"})."..."
+                if($self -> {"settings"} -> {"config"} -> {"ListView::subject_truncate"} && length($msg -> {"subject"}) > $self -> {"settings"} -> {"config"} -> {"ListView::subject_truncate"});
+
+            $msglist .= $self -> {"template"} -> process_template($msgtem, {"***id***"   => $msg -> {"id"},
+                                                                            "***uid***"  => $msg -> {"user_id"},
+                                                                            "***subj***" => $msg -> {"subject"},
+                                                                            "***name***" => $msg -> {"realname"}});
+        }
+
+        $days .= $self -> {"template"} -> process_template($daytem, {"***day***" => $self -> {"template"} -> format_time(timegm(0, 0, 0, $day, $month - 1, $year), $self -> {"settings"} -> {"config"} -> {"ListView::day_format"}),
 
 
 
