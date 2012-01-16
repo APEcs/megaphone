@@ -1,4 +1,12 @@
 
+function getTargetClass(element)
+{
+    var classes   = element.get('class');
+    var classPatt = /target\-\w+/;
+
+    return classPatt.exec(classes);
+}
+
 /** Toggle the recipients on a given row.
  *  
  * @param element A div element corresponding to the name on the row to toggle.
@@ -11,7 +19,8 @@ function toggleRecipient(element)
     firstTD.getAllNext('td').each(function(el, i) {
         el.getChildren('input').each(function(inel, ini) {
             inel.checked = !inel.checked;
-            matrixClick(inel.get('class'));
+            var className = getTargetClass(inel);
+            matrixClick(className[0]);
         });
     });
 }
@@ -57,7 +66,7 @@ function matrixClick(target)
     var checked = 0;
 
     // don't bother doing anything if there is no matching target
-    if($(target)) {
+    if(target && $(target)) {
         
         // count how many checked checkboxes there are with the target class
         $$('input.'+target).each(function(element, index) {

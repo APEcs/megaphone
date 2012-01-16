@@ -558,6 +558,22 @@ sub build_prefix {
 }
 
 
+## @method $ build_user_presets($user)
+# Generate the 'user-specific presets' line for inclusion in the message form.
+#
+# @return A string containing the user's preset options, or an empty string if
+#         the user has no presets.
+sub build_user_presets {
+    my $self = shift;
+    my $user = shift;
+
+    # No user preset? No string content...
+    return "" if(!$user -> {"presethtml"});
+
+    return $self -> {"template"} -> load_template("blocks/message_presets.tem", {"***presets***" => $user -> {"presethtml"}});
+}
+
+
 # ============================================================================
 #  Validation functions
 
@@ -764,6 +780,9 @@ sub generate_message_editform {
     my $hidden = shift;
     my $error  = shift;
 
+    # Get the user
+    my $user = $self -> {"session"} -> {"auth"} -> get_user_byid($self -> {"session"} -> {"sessuser"});
+
     # Wrap the error message in a message box if we have one.
     $error = $self -> {"template"} -> load_template("blocks/error_box.tem", {"***message***" => $error})
         if($error);
@@ -776,6 +795,7 @@ sub generate_message_editform {
 
     # And build the message block itself. Kinda big and messy, this...
     my $body = $self -> {"template"} -> load_template("blocks/message_edit.tem", {"***error***"        => $error,
+                                                                                  "***presets***"      => $self -> build_user_presets($user),
                                                                                   "***prefix_other***" => $args -> {"prefix_other"},
                                                                                   "***subject***"      => $args -> {"subject"},
                                                                                   "***message***"      => $args -> {"message"},

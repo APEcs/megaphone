@@ -49,7 +49,6 @@ sub generate_message {
     # Get the user, even if they're anonymous
     my $user = $self -> {"session"} -> {"auth"} -> get_user_byid($self -> {"session"} -> {"sessuser"});
 
-
     # Wrap the error message in a message box if we have one.
     $error = $self -> {"template"} -> load_template("blocks/error_box.tem", {"***message***" => $error})
         if($error);
@@ -62,6 +61,7 @@ sub generate_message {
 
     # And build the message block itself. Kinda big and messy, this...
     return $self -> {"template"} -> load_template("blocks/message.tem", {"***error***"        => $error,
+                                                                         "***presets***"      => $self -> build_user_presets($user),
                                                                          "***prefix_other***" => $args -> {"prefix_other"},
                                                                          "***subject***"      => $args -> {"subject"},
                                                                          "***message***"      => $args -> {"message"},

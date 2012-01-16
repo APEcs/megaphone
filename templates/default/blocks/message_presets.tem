@@ -1,0 +1,9 @@
+                    <tbody id="presets">
+                    <tr>
+                        <td class="subtitle" colspan="2">{L_MESSAGE_SEC_PRESETS}:</td>
+                    </tr>
+                    <tr>
+                        <td class="label">&nbsp;</td>
+                        <td class="field">***presets***</td>
+                    </tr>
+                    </tbody>

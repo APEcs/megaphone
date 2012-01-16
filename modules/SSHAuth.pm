@@ -107,7 +107,7 @@ sub get_user_byid {
     my $user = $userh -> fetchrow_hashref();
 
     # We have a 'real' user, but are they listed in the authorised users?
-    my $type = $self -> _authorised_user($user -> {"username"});
+    my ($type, $html) = $self -> _authorised_user($user -> {"username"});
     return undef if(!defined($type));
 
     # Authorised user!
@@ -161,7 +161,7 @@ sub valid_user {
     return undef unless($self -> _ssh_valid_user($username, $password));
 
     # User is valid, are they authorised?
-    my $usertype = $self -> _authorised_user($username);
+    my ($usertype, $userhtml) = $self -> _authorised_user($username);
     if(!defined($usertype)) {
         $self -> {"lasterr"} = "You are not authorised to use this web application. If you feel this is incorrect, please contact moodlesupport.";
         return undef;
@@ -175,9 +175,9 @@ sub valid_user {
 
     # No record for this user, need to make one...
     my $newuser = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"users"}."
-                                               (username, user_type, created, updated)
-                                               VALUES(?, ?, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())");
-    $newuser -> execute($username, $usertype)
+                                               (username, user_type, presethtml, created, updated)
+                                               VALUES(?, ?, ?, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())");
+    $newuser -> execute($username, $usertype, $userhtml)
         or die_log($self -> {"cgi"} -> remote_host(), "FATAL: Unable to create new user record: ".$self -> {"dbh"} -> errstr);
 
     $user =  $self -> _get_user_byusername($username);
@@ -265,7 +265,7 @@ sub _ssh_valid_user {
 }
 
 
-## @method $ _authorised_user($username)
+## @method @ _authorised_user($username)
 # Determine whether the user is allowed to use the web application.
 # This will check the username against the authorised users table, and if the
 # user is present this will return their user type. If the user is not listed
@@ -273,21 +273,21 @@ sub _ssh_valid_user {
 # access!
 #
 # @param username The username to check.
-# @return the user's initial type if found, undef otherwise.
+# @return the user's initial type and preset html if found, undef otherwise.
 sub _authorised_user {
     my $self     = shift;
     my $username = shift;
 
-    my $userh = $self -> {"dbh"} -> prepare("SELECT user_type FROM ".$self -> {"settings"} -> {"database"} -> {"authorised"}."
+    my $userh = $self -> {"dbh"} -> prepare("SELECT user_type, presethtml FROM ".$self -> {"settings"} -> {"database"} -> {"authorised"}."
                                              WHERE username LIKE ?");
     $userh -> execute($username)
         or die_log($self -> {"cgi"} -> remote_host(), "Unable to look up user authorisation: ".$self -> {"dbh"} -> errstr);
 
     # If we have a user entry, return their type
     my $user = $userh -> fetchrow_arrayref();
-    return $user -> [0] if($user);
+    return ($user -> [0], $user -> [1]) if($user);
 
-    return undef;
+    return (undef, undef);
 }
 
 1;

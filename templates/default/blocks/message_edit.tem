@@ -5,6 +5,7 @@
 ***error***
                 <div>{L_MESSAGE_EDITINTRO}</div>
                 <table class="formtable">
+***presets***
                     <tbody id="dests">
                     <tr>
                         <td class="subtitle required" colspan="2">{L_MESSAGE_SEC_DESTS}:</td>

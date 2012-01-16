@@ -30,6 +30,7 @@ MESSAGE_MSGLIST       = Return to the message list
 
 ### Message sections
 # Each section of the message form should have its own block of variables here...
+MESSAGE_SEC_PRESETS   = User Presets
 
 MESSAGE_SEC_DESTS     = Destinations
 MESSAGE_NOTARGET      = Unable to send to this recipient via this system.
