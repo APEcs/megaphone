@@ -10,6 +10,14 @@
                         <td class="field">***close_date***</td>
                     </tr>
                     <tr>
+                        <td class="label"><label for="show_close">{L_MESSAGE_ANN_SHOWCLOSE}:</label></td>
+                        <td class="field">***show_close***</td>
+                    </tr>
+                    <tr>
                         <td class="label"><label for="close_date">{L_MESSAGE_ANN_LINK}:</label></td>
                         <td class="field">***announce_link***</td>
+                    </tr>
+                    <tr>
+                        <td class="label"><label for="close_date_pick">{L_MESSAGE_ANN_SHOWLINK}:</label></td>
+                        <td class="field">***show_link***</td>
                     </tr>

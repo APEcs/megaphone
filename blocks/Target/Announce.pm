@@ -55,14 +55,15 @@ package Target::Announce;
 #   KEY `message_id` (`message_id`,`cat_id`)
 # ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='Attaches one or more categories to a message to allow for ea';
 #
-# CREATE TABLE `mp_messages_announcedata` (
-#   `message_id` int(10) unsigned NOT NULL COMMENT 'ID of the message this forms annoucement data for',
-#   `open_date` int(10) unsigned DEFAULT NULL COMMENT 'Unix timestamp of the annoucement going visible. NULL means immediately.',
-#   `close_date` int(10) unsigned DEFAULT NULL COMMENT 'Unix timestamp of the message being hidden. NULL means it must be manually hidden.',
-#   `link` varchar(255) DEFAULT NULL COMMENT 'Optional URL to associate with the annoucement.',
-#   KEY `message_id` (`message_id`)
-# ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='Annoucement-specific data for a message.';
-# @endverbatim
+# CREATE TABLE IF NOT EXISTS `mp_messages_announcedata` (
+#  `message_id` int(10) unsigned NOT NULL COMMENT 'ID of the message this forms annoucement data for',
+#  `open_date` int(10) unsigned DEFAULT NULL COMMENT 'Unix timestamp of the annoucement going visible. NULL means immediately.',
+#  `close_date` int(10) unsigned DEFAULT NULL COMMENT 'Unix timestamp of the message being hidden. NULL means it must be manually hidden.',
+#  `show_close` tinyint(1) unsigned NOT NULL COMMENT 'Should the close date be shown?',
+#  `announce_link` varchar(255) DEFAULT NULL COMMENT 'Optional URL to associate with the annoucement.',
+#  `show_link` tinyint(1) unsigned NOT NULL COMMENT 'Should the link be shown, or replaced with "link"?',
+#  KEY `message_id` (`message_id`)
+#) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='Annoucement-specific data for a message.';
 
 use strict;
 use base qw(Target); # This class is a Target module
@@ -86,6 +87,13 @@ sub new {
 
     # If there are any arguments to convert, split and store
     $self -> set_config($self -> {"args"}) if($self && $self -> {"args"});
+
+    $self -> {"linkopts"}  = { "0" => $self -> {"template"} -> replace_langvar("MESSAGE_ANN_SHOWLINK0"),
+                               "1" => $self -> {"template"} -> replace_langvar("MESSAGE_ANN_SHOWLINK1"),
+    };
+    $self -> {"closeopts"} = { "0" => $self -> {"template"} -> replace_langvar("MESSAGE_ANN_SHOWCLSE0"),
+                               "1" => $self -> {"template"} -> replace_langvar("MESSAGE_ANN_SHOWCLSE1"),
+    };
 
     return $self;
 }
@@ -118,6 +126,48 @@ sub set_config {
 }
 
 
+## @method $ generate_link_option($selected)
+# Generate the dropdown through which the user may select whether to show the
+# link or to replace it with "link".
+#
+# @param selected The selected option (0 = show full, 1 = show 'link')
+# @return A string containing the link options.
+sub generate_link_option {
+    my $self     = shift;
+    my $selected = shift;
+    my $options  = "";
+
+    foreach my $id (sort(keys(%{$self -> {"linkopts"}}))) {
+        $options .= '<option value="'.$id.'"';
+        $options .= ' selected="selected"' if($id == $selected);
+        $options .= '>'.$self -> {"linkopts"} -> {$id}."</option>\n";
+    }
+
+    return $options;
+}
+
+
+## @method $ generate_close_option($selected)
+# Generate the dropdown through which the user may select whether to show the
+# close date or not;
+#
+# @param selected The selected option (0 = hide, 1 = show)
+# @return A string containing the show options.
+sub generate_close_option {
+    my $self     = shift;
+    my $selected = shift;
+    my $options  = "";
+
+    foreach my $id (sort(keys(%{$self -> {"closeopts"}}))) {
+        $options .= '<option value="'.$id.'"';
+        $options .= ' selected="selected"' if($id == $selected);
+        $options .= '>'.$self -> {"closeopts"} -> {$id}."</option>\n";
+    }
+
+    return $options;
+}
+
+
 ## @method $ generate_message($args, $user)
 # Generate the string to insert into the message.tem target hook region for
 # this target.
@@ -143,7 +193,9 @@ sub generate_message {
                                                                                   "***close_date_fmt***" => $format_close,
                                                                                   "***open_ignore***"    => (defined($args -> {"announce"} -> {"open_date"}) ? "" : 'checked="checked"'),
                                                                                   "***close_ignore***"   => (defined($args -> {"announce"} -> {"close_date"}) ? "" : 'checked="checked"'),
+                                                                                  "***show_close***"     => $self -> generate_close_option($args -> {"announce"} -> {"show_close"}),
                                                                                   "***announce_link***"  => (defined($args -> {"announce"} -> {"announce_link"}) ? $args -> {"announce"} -> {"announce_link"} : "http://"),
+                                                                                  "***show_link***"      => $self -> generate_link_option($args -> {"announce"} -> {"show_link"}),
                                                                                  });
 }
 
@@ -185,9 +237,14 @@ sub generate_message_confirm {
     $outfields -> {"close_date"} = $self -> {"template"} -> format_time($args -> {"announce"} -> {"close_date"})
         if($args -> {"announce"} -> {"close_date"});
 
+    $outfields -> {"show_close"} = $self -> {"closeopts"} -> {$args -> {"announce"} -> {"show_close"}};
+    $outfields -> {"show_link"}  = $self -> {"linkopts"}  -> {$args -> {"announce"} -> {"show_link"}};
+
     return $self -> {"template"} -> load_template("target/announce/message_confirm.tem", {"***open_date***"     => $outfields -> {"open_date"},
                                                                                           "***close_date***"    => $outfields -> {"close_date"},
+                                                                                          "***show_close***"    => $outfields -> {"show_close"},
                                                                                           "***announce_link***" => $args -> {"announce"} -> {"announce_link"},
+                                                                                          "***show_link***"     => $outfields -> {"show_link"},
                                                                                  });
 }
 
@@ -242,11 +299,13 @@ sub store_message {
 
     # Store the simple stuff first...
     my $storeh = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"message_andata"}."
-                                              VALUES(?, ?, ?, ?)");
+                                              VALUES(?, ?, ?, ?, ?, ?)");
     $storeh -> execute($mess_id,
                        $args -> {"announce"} -> {"open_date"},
                        $args -> {"announce"} -> {"close_date"},
-                       $args -> {"announce"} -> {"announce_link"})
+                       $args -> {"announce"} -> {"show_close"},
+                       $args -> {"announce"} -> {"announce_link"},
+                       $args -> {"announce"} -> {"show_link"})
         or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute announcement data insert query: ".$self -> {"dbh"} -> errstr);
 
     my $catstoreh = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"message_ancats"}."
@@ -345,6 +404,9 @@ sub validate_message {
         if($args -> {"announce"} -> {"open_date"} && $args -> {"announce"} -> {"close_date"} &&
            ($args -> {"announce"} -> {"open_date"} >= $args -> {"announce"} -> {"close_date"}));
 
+    # Show the close date?
+    $args -> {"announce"} -> {"show_close"} = $self -> {"cgi"} -> param("show_close") ? 1 : 0;
+
     # Link handling...
     ($args -> {"announce"} -> {"announce_link"}, $error) = $self -> validate_string("announce_link", {"required" => 0,
                                                                                                       "nicename" => $self -> {"template"} -> replace_langvar("MESSAGE_ANN_LINK"),
@@ -361,6 +423,9 @@ sub validate_message {
     $errors .= $self -> {"template"} -> process_template($errtem, {"***error***" => $self -> {"template"} -> replace_langvar("MESSAGE_ERR_BADLINK")})
         if($args -> {"announce"} -> {"announce_link"} &&
            $args -> {"announce"} -> {"announce_link"} !~ m{^https?://[-\w]+(?:\.[-\w]+)+(?:/(?:[-\w]+/)*[-.\w]*(?:\?(?:[-\w~!\$+|.,*:;]|%[a-f\d]{2,4})+=(?:[-\w~!\$+|.,*:]|%[a-f\d]{2,4})*(?:&(?:[-\w~!\$+|.,*:;]|%[a-f\d]{2,4})+=(?:[-\w~!\$+|.,*:]|%[a-f\d]{2,4})*)*)?(?:\#(?:[-\w~!\$+|&.,*:;=]|%[a-f\d]{2,4})*)?)?$}io);
+
+    # Link show mode
+    $args -> {"announce"} -> {"show_link"} = $self -> {"cgi"} -> param("show_link") ? 1 : 0;
 
     return $errors;
 }

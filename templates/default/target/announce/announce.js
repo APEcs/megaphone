@@ -10,6 +10,17 @@ function date_disable(datefield, control) {
     }
 }
 
+function show_disable(showfield, control) {
+    var checked = $(control).get("checked");
+    
+    if(checked) {
+        $(showfield).set("disabled", true);
+        $(showfield).set("checked", false); 
+    } else {
+        $(showfield).set("disabled", false);
+    }
+}
+
 window.addEvent('domready', function() {
     Locale.use('en-GB')
     new Picker.Date($('open_date_pick'), { 
@@ -35,4 +46,5 @@ window.addEvent('domready', function() {
 
     date_disable('open_date', 'open_ignore');
     date_disable('close_date', 'close_ignore');
+    show_disable('show_close', 'close_ignore');                
 });

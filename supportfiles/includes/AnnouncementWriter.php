@@ -51,7 +51,7 @@ class AnnouncementWriter
             echo "<h4 style=\"display: inline;\">".$entry['subject']."</h4>";
 
             if(!empty($entry['announce_link'])) {
-                echo "<span style=\"font-size: smaller;\">(<a href=\"".$entry['announce_link']."\">".$entry['announce_link']."</a>)</span>";
+                echo "&nbsp;<span style=\"font-size: smaller;\">(<a href=\"".$entry['announce_link']."\">".($entry['show_link'] ? $entry['announce_link'] : "link")."</a>)</span>";
             }
 
             echo "<span style=\"float : right; font-size : smaller;\">";
@@ -63,7 +63,7 @@ class AnnouncementWriter
             echo $this -> make_brief_message($entry['message'], $entry['message_id']);
             echo $this -> make_full_message($entry['message'], $entry['message_id']);
 
-            if(!empty($entry['close_date'])) {
+            if(!empty($entry['close_date']) && $entry['show_close']) {
                 echo "<p><span style=\"font-size: smaller;\">Closing date:".date($this -> timefmt, $entry['close_date'])."</span></p>";
             }
             print "</div></div>";
