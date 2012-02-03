@@ -50,13 +50,16 @@ class AnnouncementWriter
             // Subject is enforced by Megaphone.
             echo "<h4 style=\"display: inline;\">".$entry['subject']."</h4>";
 
-            if(!empty($entry['announce_link'])) {
-                echo "&nbsp;<span style=\"font-size: smaller;\">(<a href=\"".$entry['announce_link']."\">".($entry['show_link'] ? $entry['announce_link'] : "link")."</a>)</span>";
+            if(!empty($entry['announce_link']) && !$entry['show_link']) {
+                echo "&nbsp;<span style=\"font-size: smaller;\">(<a href=\"".$entry['announce_link']."\">link</a>)</span>";
             }
 
             echo "<span style=\"float : right; font-size : smaller;\">";
             echo "(".date($this -> timefmt, $entry['sent']).$this -> make_signature($entry['realname'], $entry['email']).")";
             echo "</span>";
+            if(!empty($entry['announce_link']) && $entry['show_link']) {
+                echo "<div style=\"font-size: smaller; padding-left: 2em;\">(<a href=\"".$entry['announce_link']."\">".$entry['announce_link']."</a>)</div>";
+            }
             echo "</p>";
 
             // Message is also enforced by megaphone
