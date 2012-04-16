@@ -26,7 +26,6 @@ package MegaphoneCore;
 # and handles everything up to getting the message sent or into the queue.
 use strict;
 use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
-use Logging qw(die_log);
 use Utils qw(is_defined_numeric);
 
 

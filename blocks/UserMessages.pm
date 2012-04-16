@@ -28,7 +28,6 @@ use strict;
 use base qw(MegaphoneBlock); # This class extends MegaphoneBlock
 use HTML::Entities;
 use MIME::Base64;   # Needed for base64 encoding of popup bodies.
-use Logging qw(die_log);
 use Utils qw(is_defined_numeric);
 
 
@@ -693,7 +692,7 @@ sub generate_abort_form {
         my $prefixh = $self -> {"dbh"} -> prepare("SELECT prefix FROM ".$self -> {"settings"} -> {"database"} -> {"prefixes"}."
                                                    WHERE id = ?");
         $prefixh -> execute($message -> {"prefix_id"})
-            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute prefix query: ".$self -> {"dbh"} -> errstr);
+            or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute prefix query: ".$self -> {"dbh"} -> errstr);
 
         my $prefixr = $prefixh -> fetchrow_arrayref();
         $outfields -> {"prefix"} = $prefixr ? $prefixr -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADPREFIX");
@@ -752,7 +751,7 @@ sub generate_view_form {
         my $prefixh = $self -> {"dbh"} -> prepare("SELECT prefix FROM ".$self -> {"settings"} -> {"database"} -> {"prefixes"}."
                                                    WHERE id = ?");
         $prefixh -> execute($message -> {"prefix_id"})
-            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute prefix query: ".$self -> {"dbh"} -> errstr);
+            or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute prefix query: ".$self -> {"dbh"} -> errstr);
 
         my $prefixr = $prefixh -> fetchrow_arrayref();
         $outfields -> {"prefix"} = $prefixr ? $prefixr -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADPREFIX");
@@ -802,7 +801,7 @@ sub generate_messagelist {
                                              FROM ".$self -> {"settings"} -> {"database"} -> {"messages"}."
                                              WHERE user_id = ?");
     $messh -> execute($self -> {"session"} -> {"sessuser"})
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message lookup query: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message lookup query: ".$self -> {"dbh"} -> errstr);
 
     # Pull the hide options
     my $hideopts = $self -> get_hide_options();

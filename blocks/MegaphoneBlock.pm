@@ -28,8 +28,6 @@ use strict;
 use base qw(Block); # This class extends Block
 use MIME::Base64;   # Needed for base64 encoding of popup bodies.
 use HTML::Entities;
-use Logging qw(die_log);
-use Data::Dumper;
 
 # ============================================================================
 #  Constructor
@@ -50,7 +48,7 @@ sub new {
         my $targh = $self -> {"dbh"} -> prepare("SELECT name, module_id FROM ".$self -> {"settings"} -> {"database"} -> {"targets"}."
                                                  ORDER BY id");
         $targh -> execute()
-            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute target list query: ".$self -> {"dbh"} -> errstr);
+            or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute target list query: ".$self -> {"dbh"} -> errstr);
 
         # Prevent recursive calls to the module handler...
         $self -> {"module"} -> {"istarget"} = 1;
@@ -59,7 +57,7 @@ sub new {
         while(my $targ = $targh -> fetchrow_hashref()) {
             $self -> {"targets"} -> {$targ -> {"module_id"}} = {"name"   => $targ -> {"name"},
                                                                 "module" => $self -> {"module"} -> new_module_byid($targ -> {"module_id"})};
-            die_log($self -> {"cgi"} -> remote_host(), "Unable to load target module ".$targ -> {"module_id"}.":".$Modules::errstr)
+            $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to load target module ".$targ -> {"module_id"}.":".$Modules::errstr)
                 if(!$self -> {"targets"} -> {$targ -> {"module_id"}} -> {"module"});
 
             # Make calling modules in the correct order during hook calls later easier
@@ -103,18 +101,18 @@ sub store_message {
                       $args -> {"subject"},
                       $args -> {"message"},
                       $args -> {"delaysend"})
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message insert: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message insert: ".$self -> {"dbh"} -> errstr);
 
     # Get the id of the newly created message. This is messy, but DBI's last_insert_id() is flaky as hell
     my $messid = $self -> {"dbh"} -> {"mysql_insertid"};
-    die_log($self -> {"cgi"} -> remote_host(), "Unable to get ID of new message. This should not happen.") if(!$messid);
+    $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to get ID of new message. This should not happen.") if(!$messid);
 
     # Now we can store the cc, bcc, and destinations
     my $desth = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"messages_dests"}."
                                              VALUES(?, ?)");
     foreach my $destid (@{$args -> {"targset"}}) {
         $desth -> execute($messid, $destid)
-            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute destination insert: ".$self -> {"dbh"} -> errstr);
+            or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute destination insert: ".$self -> {"dbh"} -> errstr);
     }
 
     # Call Target modules to store their data.
@@ -139,7 +137,7 @@ sub get_message {
     my $msgh = $self -> {"dbh"} -> prepare("SELECT * FROM ".$self -> {"settings"} -> {"database"} -> {"messages"}."
                                             WHERE id = ?");
     $msgh -> execute($msgid)
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message lookup query: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message lookup query: ".$self -> {"dbh"} -> errstr);
 
     my $message = $msgh -> fetchrow_hashref();
     return undef if(!$message);
@@ -154,7 +152,7 @@ sub get_message {
                                              AND m.id = d.dest_id
                                              AND t.id = m.target_id");
     $targh -> execute($msgid)
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute destination lookup query: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute destination lookup query: ".$self -> {"dbh"} -> errstr);
 
     while(my $targ = $targh -> fetchrow_hashref()) {
         # Store the used destination, and the id of the module that implements the target
@@ -187,7 +185,7 @@ sub set_message_status {
                                                SET status = ?, updated = UNIX_TIMESTAMP()
                                                WHERE id = ?");
     $updateh -> execute($status, $msgid)
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message update query: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message update query: ".$self -> {"dbh"} -> errstr);
 }
 
 
@@ -208,7 +206,7 @@ sub set_message_visible {
                                                SET updated = UNIX_TIMESTAMP(), visible = ?
                                                WHERE id = ?");
     $updateh -> execute($visible, $msgid)
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message update query: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message update query: ".$self -> {"dbh"} -> errstr);
 }
 
 
@@ -230,7 +228,7 @@ sub update_message {
 
     # Check that the message can be edited.
     my $message = $self -> get_message($msgid);
-    die_log($self -> {"cgi"} -> remote_host(), "Attempt to edit message $msgid when it is in an uneditable state. Giving up in disgust.")
+    $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Attempt to edit message $msgid when it is in an uneditable state. Giving up in disgust.")
         if($message -> {"status"} eq "edited");
 
     # Switch the old message to 'edited' status if needed (we don't want to change aborted, failed, or sent messages)
@@ -250,14 +248,14 @@ sub update_userdetails {
     my $self = shift;
     my $args = shift;
 
-    die_log($self -> {"cgi"} -> remote_host(), "Realname is not set. This should not happen!") unless($args -> {"realname"});
-    die_log($self -> {"cgi"} -> remote_host(), "Rolename is not set. This should not happen!") unless($args -> {"rolename"});
+    $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Realname is not set. This should not happen!") unless($args -> {"realname"});
+    $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Rolename is not set. This should not happen!") unless($args -> {"rolename"});
 
     my $updateh = $self -> {"dbh"} -> prepare("UPDATE ".$self -> {"settings"} -> {"database"} -> {"users"}."
                                                SET email = ?, realname = ?, rolename = ?, signature = ?, updated = UNIX_TIMESTAMP()
                                                WHERE user_id = ?");
     $updateh -> execute($args -> {"email"}, $args -> {"realname"}, $args -> {"rolename"}, $args -> {"signature"}, $args -> {"user_id"})
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute user details update: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute user details update: ".$self -> {"dbh"} -> errstr);
 }
 
 
@@ -278,7 +276,7 @@ sub build_recipient_tree {
                                                WHERE parent = ?
                                                ORDER BY position");
     $reciph -> execute($parent)
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to obtain list of targets: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to obtain list of targets: ".$self -> {"dbh"} -> errstr);
 
     my $recipients;
     # Store each recipient, and recursively determine whether it has children
@@ -318,7 +316,7 @@ sub build_active_destinations {
         # check the current recipient against all targets
         foreach my $target (@{$targets}) {
             $matrixh -> execute($recipients -> {$recip} -> {"id"}, $target -> {"id"})
-                or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute target/recipient map query: ".$self -> {"dbh"} -> errstr);
+                or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute target/recipient map query: ".$self -> {"dbh"} -> errstr);
 
             # is the recipient/target pair supported as a destination?
             my $matrow = $matrixh -> fetchrow_arrayref();
@@ -459,7 +457,7 @@ sub build_target_matrix {
     $activelist = [] if(!$activelist);
 
     # No, I mean /really/ make sure...
-    die_log($self -> {"cgi"} -> remote_host(), "activelist parameter to build_target_matrix is not an array reference. This should not happen.")
+    $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "activelist parameter to build_target_matrix is not an array reference. This should not happen.")
         if(ref($activelist) ne "ARRAY");
 
     # Convert the list to a hash for faster lookup
@@ -473,7 +471,7 @@ sub build_target_matrix {
 
     # We should prefetch the targets as we need to process them repeatedly during the matrix generation
     $targeth -> execute()
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to obtain list of targets: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to obtain list of targets: ".$self -> {"dbh"} -> errstr);
 
     my $targets = $targeth -> fetchall_arrayref({}); # Fetch all the targets as a reference to an array of hash references.
 
@@ -536,7 +534,7 @@ sub build_prefix {
     my $prefixh = $self -> {"dbh"} -> prepare("SELECT * FROM ".$self -> {"settings"} -> {"database"} -> {"prefixes"}."
                                                ORDER BY id");
     $prefixh -> execute()
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute prefix lookup: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute prefix lookup: ".$self -> {"dbh"} -> errstr);
 
     # now build the prefix list...
     my $prefixlist = "";
@@ -691,7 +689,7 @@ sub validate_message {
     $args -> {"targused"} = {};
     foreach my $targ (@targset) {
         $matrixh -> execute($targ)
-            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute recipient/target validation check: ".$self -> {"dbh"} -> errstr);
+            or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute recipient/target validation check: ".$self -> {"dbh"} -> errstr);
 
         # do we have a match?
         my $dest = $matrixh -> fetchrow_hashref();
@@ -849,7 +847,7 @@ sub generate_message_confirmform {
         my $prefixh = $self -> {"dbh"} -> prepare("SELECT prefix FROM ".$self -> {"settings"} -> {"database"} -> {"prefixes"}."
                                                    WHERE id = ?");
         $prefixh -> execute($args -> {"prefix_id"})
-            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute prefix query: ".$self -> {"dbh"} -> errstr);
+            or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute prefix query: ".$self -> {"dbh"} -> errstr);
 
         my $prefixr = $prefixh -> fetchrow_arrayref();
         $outfields -> {"prefix"} = $prefixr ? $prefixr -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADPREFIX");
@@ -1060,15 +1058,15 @@ sub send_message {
 
     # Get the message data, so we know what to do with it
     my $message = $self -> get_message($msgid);
-    die_log($self -> {"cgi"} -> remote_host(), "Unable to fetch message data for message $msgid. This should not happen.") if(!$message);
+    $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to fetch message data for message $msgid. This should not happen.") if(!$message);
 
     # We can only work with "pending" messages
-    die_log($self -> {"cgi"} -> remote_host(), "Attempt to send a message that is not in a sendable state. This should not happen.")
+    $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Attempt to send a message that is not in a sendable state. This should not happen.")
         unless($message -> {"status"} eq "pending");
 
     # check that the message is sendable
     my $remain = $self -> delay_remain($message);
-    die_log($self -> {"cgi"} -> remote_host(), "Illegal attempt to send message ".$message -> {"id"}.": message is not sendable!") if(!defined($remain));
+    $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Illegal attempt to send message ".$message -> {"id"}.": message is not sendable!") if(!defined($remain));
 
     # Do nothing if the remain is > 0 and we're not being forced to send
     return 0 unless($force || $remain <= 0);
@@ -1083,14 +1081,14 @@ sub send_message {
     my $errors = "";
     foreach my $destid (@{$message -> {"targset"}}) {
         $desth -> execute($destid)
-            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute destination lookup: ".$self -> {"dbh"} -> errstr);
+            or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute destination lookup: ".$self -> {"dbh"} -> errstr);
 
         my $dest = $desth -> fetchrow_hashref();
-        die_log($self -> {"cgi"} -> remote_host(), "No matching destination for message ".$message -> {"id"}.", dest $destid") if(!$dest);
+        $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "No matching destination for message ".$message -> {"id"}.", dest $destid") if(!$dest);
 
         # Get the module to handle the destination
         my $targetmod = $self -> {"targets"} -> {$dest -> {"module_id"}} -> {"module"};
-        die_log($self -> {"cgi"} -> remote_host(), "No target module for message ".$message -> {"id"}.", dest $destid") if(!$targetmod);
+        $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "No target module for message ".$message -> {"id"}.", dest $destid") if(!$targetmod);
 
         # Update the config as needed
         $targetmod -> set_config($dest -> {"args"});
@@ -1110,7 +1108,7 @@ sub send_message {
     $updateh -> execute($errors ? 'failed' : 'sent',
                         $errors ? $errors : undef,
                         $message -> {"id"})
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message update query: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message update query: ".$self -> {"dbh"} -> errstr);
 
     return 1;
 }

@@ -36,7 +36,6 @@ package Target::Email;
 
 use strict;
 use base qw(Target); # This class is a Target module
-use Logging qw(die_log);
 use HTML::Entities;
 
 # ============================================================================
@@ -183,7 +182,7 @@ sub generate_message_confirm {
         my $replytoh = $self -> {"dbh"} -> prepare("SELECT email FROM ".$self -> {"settings"} -> {"database"} -> {"replytos"}."
                                                    WHERE id = ?");
         $replytoh -> execute($args -> {"replyto_id"})
-            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto query: ".$self -> {"dbh"} -> errstr);
+            or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto query: ".$self -> {"dbh"} -> errstr);
 
         my $replytor = $replytoh -> fetchrow_arrayref();
         $outfields -> {"replyto"} = $replytor ? $replytor -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADREPLYTO");
@@ -250,14 +249,14 @@ sub store_message {
             next if(!$address); # skip ""
 
             $insh -> execute($mess_id, $address)
-                or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute $mode insert: ".$self -> {"dbh"} -> errstr);
+                or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute $mode insert: ".$self -> {"dbh"} -> errstr);
         }
     }
 
     my $replytoh = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"messages_reply"}."
                                                 VALUES(?, ?, ?)");
     $replytoh -> execute($mess_id, $args -> {"replyto_id"}, $args -> {"replyto_other"})
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto insert: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto insert: ".$self -> {"dbh"} -> errstr);
 }
 
 
@@ -278,7 +277,7 @@ sub get_message {
         my $cch = $self -> {"dbh"} -> prepare("SELECT address FROM ".$self -> {"settings"} -> {"database"} -> {"messages_$mode"}."
                                                WHERE message_id = ?");
         $cch -> execute($msgid)
-            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute $mode lookup query: ".$self -> {"dbh"} -> errstr);
+            or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute $mode lookup query: ".$self -> {"dbh"} -> errstr);
 
         $message -> {$mode} = [];
         while(my $cc = $cch -> fetchrow_arrayref()) {
@@ -289,10 +288,10 @@ sub get_message {
     my $replyh = $self -> {"dbh"} -> prepare("SELECT * FROM ".$self -> {"settings"} -> {"database"} ->  {"messages_reply"}."
                                               WHERE message_id = ?");
     $replyh -> execute($msgid)
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto lookup query: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto lookup query: ".$self -> {"dbh"} -> errstr);
 
     my $replyr = $replyh -> fetchrow_hashref();
-    die_log($self -> {"cgi"} -> remote_host(), "No reply-to set for message: ".$self -> {"dbh"} -> errstr) if(!$replyr);
+    $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "No reply-to set for message: ".$self -> {"dbh"} -> errstr) if(!$replyr);
 
     $message -> {"replyto_id"}    = $replyr -> {"replyto_id"};
     $message -> {"replyto_other"} = $replyr -> {"replyto_other"};
@@ -387,7 +386,7 @@ sub send {
 
     # Get the user's data
     my $user = $self -> {"session"} -> {"auth"} -> get_user_byid($message -> {"user_id"});
-    die_log($self -> {"cgi"} -> remote_host(), "Unable to get user details for message ".$message -> {"id"}) if(!$user);
+    $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to get user details for message ".$message -> {"id"}) if(!$user);
 
     # work out the bcc/cc fields....
     foreach my $mode ("cc", "bcc") {
@@ -407,7 +406,7 @@ sub send {
         my $replytoh = $self -> {"dbh"} -> prepare("SELECT email FROM ".$self -> {"settings"} -> {"database"} -> {"replytos"}."
                                                    WHERE id = ?");
         $replytoh -> execute($message -> {"replyto_id"})
-            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto query: ".$self -> {"dbh"} -> errstr);
+            or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto query: ".$self -> {"dbh"} -> errstr);
 
         my $replytor = $replytoh -> fetchrow_arrayref();
         $outfields -> {"replyto"} = $replytor ? $replytor -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADREPLYTO");
@@ -420,7 +419,7 @@ sub send {
         my $prefixh = $self -> {"dbh"} -> prepare("SELECT prefix FROM ".$self -> {"settings"} -> {"database"} -> {"prefixes"}."
                                                    WHERE id = ?");
         $prefixh -> execute($message -> {"prefix_id"})
-            or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute prefix query: ".$self -> {"dbh"} -> errstr);
+            or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute prefix query: ".$self -> {"dbh"} -> errstr);
 
         my $prefixr = $prefixh -> fetchrow_arrayref();
         $outfields -> {"prefix"} = $prefixr ? $prefixr -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADPREFIX");
@@ -447,7 +446,7 @@ sub send {
                                                                               "***rolename***"  => $user -> {"rolename"},
                                                                               "***signature***" => decode_entities($signature),
                                                         });
-    die_log($self -> {"cgi"} -> remote_host(), $error) if($error);
+    $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), $error) if($error);
 }
 
 
@@ -467,7 +466,7 @@ sub build_replyto {
     my $replytoh = $self -> {"dbh"} -> prepare("SELECT * FROM ".$self -> {"settings"} -> {"database"} -> {"replytos"}."
                                                ORDER BY id");
     $replytoh -> execute()
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto lookup: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute replyto lookup: ".$self -> {"dbh"} -> errstr);
 
     # now build the replyto list...
     my $replytolist = "";

@@ -52,7 +52,6 @@ package Target::Twitter;
 
 use strict;
 use base qw(Target); # This class is a Target module
-use Logging qw(die_log);
 use Net::Twitter::Lite;
 use Data::Dumper;
 
@@ -149,7 +148,7 @@ sub generate_message_confirm {
     my $twitterh = $self -> {"dbh"} -> prepare("SELECT mode FROM ".$self -> {"settings"} -> {"database"} -> {"twittermodes"}."
                                                    WHERE id = ?");
     $twitterh -> execute($args -> {"tweet_mode"})
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute twitter query: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute twitter query: ".$self -> {"dbh"} -> errstr);
 
     my $twitterr = $twitterh -> fetchrow_arrayref();
     $outfields -> {"twittermode"} = $twitterr ? $twitterr -> [0] : $self -> {"template"} -> replace_langvar("MESSAGE_BADTWEETMODE");
@@ -211,7 +210,7 @@ sub store_message {
     my $twitterh = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"messages_tweet"}."
                                                 VALUES(?, ?)");
     $twitterh -> execute($mess_id, $args -> {"tweet_mode"})
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute twitter insert: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute twitter insert: ".$self -> {"dbh"} -> errstr);
 }
 
 
@@ -230,10 +229,10 @@ sub get_message {
     my $tweeth = $self -> {"dbh"} -> prepare("SELECT * FROM ".$self -> {"settings"} -> {"database"} ->  {"messages_tweet"}."
                                               WHERE message_id = ?");
     $tweeth -> execute($msgid)
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute twitter lookup query: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute twitter lookup query: ".$self -> {"dbh"} -> errstr);
 
     my $tweetr = $tweeth -> fetchrow_hashref();
-    # die_log($self -> {"cgi"} -> remote_host(), "No tweet mode set for message $msgid: ".$self -> {"dbh"} -> errstr) if(!$tweetr);
+    # $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "No tweet mode set for message $msgid: ".$self -> {"dbh"} -> errstr) if(!$tweetr);
 
     # Fallback on mode 1 if the tweet mode data is not found. Should not happen, but safer than outright dying.
     $message -> {"tweet_mode"} = $tweetr ? $tweetr -> {"tweetmode_id"} : 1;
@@ -336,10 +335,10 @@ sub send {
     my $funch = $self -> {"dbh"} -> prepare("SELECT send_func FROM ".$self -> {"settings"} -> {"database"} -> {"twittermodes"}."
                                              WHERE id = ?");
     $funch -> execute($message -> {"tweet_mode"})
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute tweet mode lookup: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute tweet mode lookup: ".$self -> {"dbh"} -> errstr);
 
     my $mode = $funch -> fetchrow_arrayref();
-    die_log($self -> {"cgi"} -> remote_host(), "Illegal tweet mode set for message") if(!$mode);
+    $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Illegal tweet mode set for message") if(!$mode);
 
     # Call the function to do the send...
     $sendmethods -> {$mode -> [0]} -> ($self, $message);
@@ -362,7 +361,7 @@ sub build_twittermode {
     my $twittermodeh = $self -> {"dbh"} -> prepare("SELECT * FROM ".$self -> {"settings"} -> {"database"} -> {"twittermodes"}."
                                                     ORDER BY id");
     $twittermodeh -> execute()
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute twittermode lookup: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute twittermode lookup: ".$self -> {"dbh"} -> errstr);
 
     # now build the twittermode list...
     my $twittermodelist = "";

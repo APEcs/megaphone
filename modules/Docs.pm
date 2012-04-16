@@ -239,4 +239,7 @@
 #   args column.
 #
 # Once you have completed these steps, your new target will be available to users.
+#
+# @todo Move this documentation out into markdown files.
+#
 1;

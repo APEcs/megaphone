@@ -67,7 +67,6 @@ package Target::Announce;
 
 use strict;
 use base qw(Target); # This class is a Target module
-use Logging qw(die_log);
 use Utils qw(is_defined_numeric);
 use POSIX qw(floor);
 
@@ -306,7 +305,7 @@ sub store_message {
                        $args -> {"announce"} -> {"show_close"},
                        $args -> {"announce"} -> {"announce_link"},
                        $args -> {"announce"} -> {"show_link"})
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute announcement data insert query: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute announcement data insert query: ".$self -> {"dbh"} -> errstr);
 
     my $catstoreh = $self -> {"dbh"} -> prepare("INSERT INTO ".$self -> {"settings"} -> {"database"} -> {"message_ancats"}."
                                                  VALUES(?, ?)");
@@ -325,7 +324,7 @@ sub store_message {
                 $cathash -> {$cat} = 1;
 
                 $catstoreh -> execute($mess_id, $cat)
-                    or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute announcement category insert query: ".$self -> {"dbh"} -> errstr);
+                    or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute announcement category insert query: ".$self -> {"dbh"} -> errstr);
             }
         }
     }
@@ -348,17 +347,17 @@ sub get_message {
     my $fetch = $self -> {"dbh"} -> prepare("SELECT * FROM ".$self -> {"settings"} -> {"database"} -> {"message_andata"}."
                                              WHERE message_id = ?");
     $fetch -> execute($msgid)
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute announcement data query: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute announcement data query: ".$self -> {"dbh"} -> errstr);
 
     $message -> {"announce"} = $fetch -> fetchrow_hashref();
-    die_log($self -> {"cgi"} -> remote_host(), "Unable to obtain announcement data for message $msgid")
+    $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to obtain announcement data for message $msgid")
         if(!$message -> {"announce"});
 
     # And now the category ids (probably not needed, but we have them anyway)
     my $cath = $self -> {"dbh"} -> prepare("SELECT cat_id FROM ".$self -> {"settings"} -> {"database"} -> {"message_ancats"}."
                                             WHERE message_id = ?");
     $cath -> execute($msgid)
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute announcement category query: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute announcement category query: ".$self -> {"dbh"} -> errstr);
 
     my $cats = [];
     while(my $catr = $cath -> fetchrow_arrayref()) {
@@ -529,7 +528,7 @@ sub get_destination_categories {
                                              AND t.id = d.target_id
                                              AND t.module_id = ?");
     $desth -> execute($dest, $self -> {"modid"})
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute destination argument lookup: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute destination argument lookup: ".$self -> {"dbh"} -> errstr);
 
     # Take all the found targets (there should only be one, but better to be safe)
     # and concatenate all their argument lists together...
@@ -561,10 +560,10 @@ sub get_destination_categories {
         # Assume non-numerics are category names rather than ids
         if($cat !~ /^\d+$/) {
             $cath -> execute($cat)
-                or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute category lookup: ".$self -> {"dbh"} -> errstr);
+                or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute category lookup: ".$self -> {"dbh"} -> errstr);
 
             my $catr = $cath -> fetchrow_arrayref();
-            die_log($self -> {"cgi"} -> remote_host(), "Destination '$dest' includes unknown category '$cat'. Unable to continue")
+            $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Destination '$dest' includes unknown category '$cat'. Unable to continue")
                 if(!$catr);
 
             # Modify-in-place is a handy thing indeed...
@@ -616,7 +615,7 @@ sub close_announcement {
 
     # and update the database..
     $closeh -> execute($message -> {"announce"} -> {"close_date"}, $message -> {"id"})
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute announcement data update query: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute announcement data update query: ".$self -> {"dbh"} -> errstr);
 }
 
 1;

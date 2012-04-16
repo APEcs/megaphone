@@ -41,7 +41,7 @@ sub page_display {
                                              WHERE status = 'pending'
                                              ORDER BY updated ASC");
     $pendh -> execute()
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message lookup: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message lookup: ".$self -> {"dbh"} -> errstr);
 
     my $body = '<div class="cron">Checking messages.<br/>';
     while(my $msgrow = $pendh -> fetchrow_arrayref()) {

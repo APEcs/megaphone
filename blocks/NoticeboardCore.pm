@@ -26,7 +26,6 @@ package NoticeboardCore;
 # messages.
 use strict;
 use base qw(NoticeboardBlock); # This class extends Block
-use Logging qw(die_log);
 use Utils qw(is_defined_numeric);
 
 # ============================================================================

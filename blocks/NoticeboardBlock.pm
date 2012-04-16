@@ -46,7 +46,7 @@ sub get_minmax_years {
     my $msgh = $self -> {"dbh"} -> prepare("SELECT MIN(sent),MAX(sent) FROM ".$self -> {"settings"} -> {"database"} -> {"messages"}."
                                             WHERE send IS NOT NULL");
     $msgh -> execute()
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message lookup query: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message lookup query: ".$self -> {"dbh"} -> errstr);
 
     my $dates = $msgh -> fetchrow_arrayref();
     my $minyear = 1900 + (localtime($dates -> [0]))[5];
@@ -94,7 +94,7 @@ sub get_date_bymsgid {
     my $msgh = $self -> {"dbh"} -> prepare("SELECT sent FROM ".$self -> {"settings"} -> {"database"} -> {"messages"}."
                                             WHERE id = ?");
     $msgh -> execute($id)
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message lookup query: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message lookup query: ".$self -> {"dbh"} -> errstr);
 
     my $message = $msgh -> fetchrow_arrayref();
     $timestamp = $message -> [0] if($message && $message -> [0]);
@@ -171,7 +171,7 @@ sub get_month_messages {
                                             AND m.sent <= ?
                                             ORDER BY m.sent");
     $msgh -> execute($mintimestamp, $maxtimestamp)
-        or die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message lookup query: ".$self -> {"dbh"} -> errstr);
+        or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute message lookup query: ".$self -> {"dbh"} -> errstr);
 
     my $messages;
     # Store any messages posted during the month...
