@@ -47,7 +47,7 @@ function toggleTree(element)
         var id = el.get('id');
 
         // Anything that starts with the rowid, but does not equal it, needs to be handled
-        if((id.substring(0, rowid.length) == rowid) && (id != rowid)) {
+        if((id.substr(1, rowid.length) == rowid) && (id != ("r"+rowid))) {
             if(isclosed) {
                 el.setStyle('display', 'table-row');
             } else {

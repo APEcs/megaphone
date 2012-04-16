@@ -410,7 +410,7 @@ sub build_matrix_rows {
 
         # Can't update the original idlist, or we'll concatenate ids we shouldn't
         my $myidlist = $idlist || "";
-        $myidlist .= "/" if($myidlist);
+        $myidlist .= "_" if($myidlist);
         $myidlist .= $recipients -> {$recip} -> {"id"};
 
         # Work out whether we need a toggle icon or not

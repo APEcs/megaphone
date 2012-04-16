@@ -1,4 +1,4 @@
-    <tr id="***idlist***" style="***rowstyle***" class="reciprow ***rowclass***">
+    <tr id="r***idlist***" style="***rowstyle***" class="reciprow ***rowclass***">
         <td class="recip" id="recip_***idlist***"><div style="***extrastyle***">***toggletree***<span id="rdiv_***idlist***" class="recipient ***spanclass***">***name*** (***shortname***)</span></div></td>
 ***targets***
     </tr>
