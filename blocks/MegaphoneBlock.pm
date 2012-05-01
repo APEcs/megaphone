@@ -648,7 +648,7 @@ sub validate_login {
     return (undef, $self -> {"template"} -> process_template($errtem, {"***reason***" => $error})) if($error);
 
     # Username and password appear to be present and contain sane characters. Try to log the user in...
-    my $user = $self -> {"session"} -> {"auth"} -> valid_user($args -> {"username"}, $args -> {"password"});
+    my $user = $self -> {"session"} -> valid_user($args -> {"username"}, $args -> {"password"});
 
     # User is valid!
     return ($user, undef) if($user);
