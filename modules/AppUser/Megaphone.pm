@@ -135,7 +135,7 @@ sub _set_user_details {
         my $userset = $self -> {"dbh"} -> prepare("UPDATE ".$self -> {"settings"} -> {"database"} -> {"users"}."
                                                    SET user_type = ?, presethtml = ?
                                                    WHERE user_id = ?");
-        $userset -> execute($type, $html, $user -> {"userid"})
+        $userset -> execute($type, $html, $user -> {"user_id"})
             or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "FATAL: Unable to updated new user record: ".$self -> {"dbh"} -> errstr);
 
         # Record the new settings
