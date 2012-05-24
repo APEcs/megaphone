@@ -527,7 +527,7 @@ sub get_destination_categories {
                                              WHERE d.id = ?
                                              AND t.id = d.target_id
                                              AND t.module_id = ?");
-    $desth -> execute($dest, $self -> {"modid"})
+    $desth -> execute($dest, $self -> {"id"})
         or $self -> {"logger"} -> die_log($self -> {"cgi"} -> remote_host(), "Unable to execute destination argument lookup: ".$self -> {"dbh"} -> errstr);
 
     # Take all the found targets (there should only be one, but better to be safe)
