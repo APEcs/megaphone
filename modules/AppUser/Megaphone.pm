@@ -54,7 +54,7 @@ sub pre_authenticate {
 }
 
 
-## @method $ post_authenticate($username, $auth)
+## @method $ post_authenticate($username, $password, $auth)
 # Perform any system-specific post-authentication tasks on the specified
 # user's data. This function allows each system to tailor post-auth tasks
 # to the requirements of the system.
@@ -66,6 +66,7 @@ sub pre_authenticate {
 #       desirable, subclasses may wish to override this function completely.
 #
 # @param username The username of the user to perform post-auth tasks on.
+# @param password The password of the user.
 # @param auth     A reference to the auth object calling this.
 # @return A reference to a hash containing the user's data on success,
 #         undef otherwise. If this returns undef, an error message will be
@@ -73,10 +74,11 @@ sub pre_authenticate {
 sub post_authenticate {
     my $self     = shift;
     my $username = shift;
+    my $password = shift;
     my $auth     = shift;
 
     # Call the superclass method to handle making sure the user exists
-    my $user = $self -> SUPER::post_authenticate($username, $auth);
+    my $user = $self -> SUPER::post_authenticate($username, $password, $auth);
 
     # Otherwise make sure the user is set up
     return $self -> _set_user_details($user);

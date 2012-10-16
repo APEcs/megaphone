@@ -133,7 +133,7 @@ sub set_config {
 # @return A string containing the link options.
 sub generate_link_option {
     my $self     = shift;
-    my $selected = shift;
+    my $selected = shift || 0;
     my $options  = "";
 
     foreach my $id (sort(keys(%{$self -> {"linkopts"}}))) {
@@ -154,7 +154,7 @@ sub generate_link_option {
 # @return A string containing the show options.
 sub generate_close_option {
     my $self     = shift;
-    my $selected = shift;
+    my $selected = shift || 0;
     my $options  = "";
 
     foreach my $id (sort(keys(%{$self -> {"closeopts"}}))) {
