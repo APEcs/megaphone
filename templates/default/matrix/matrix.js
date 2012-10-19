@@ -8,10 +8,10 @@ function getTargetClass(element)
 }
 
 /** Toggle the recipients on a given row.
- *  
+ *
  * @param element A div element corresponding to the name on the row to toggle.
  */
-function toggleRecipient(element) 
+function toggleRecipient(element)
 {
     var id = element.get('id');
     var firstTD = $("recip_" + id.substr(5));
@@ -47,7 +47,7 @@ function toggleTree(element)
         var id = el.get('id');
 
         // Anything that starts with the rowid, but does not equal it, needs to be handled
-        if((id.substr(1, rowid.length) == rowid) && (id != ("r"+rowid))) {
+        if((id.substring(1, id.indexOf("_")) == rowid) && (id != ("r"+rowid))) {
             if(isclosed) {
                 el.setStyle('display', 'table-row');
             } else {
@@ -57,7 +57,7 @@ function toggleTree(element)
     });
 
     var zebra = new ZebraTable();
-    zebra.zebraize($('matrix'));   
+    zebra.zebraize($('matrix'));
 }
 
 
@@ -67,7 +67,7 @@ function matrixClick(target)
 
     // don't bother doing anything if there is no matching target
     if(target && $(target)) {
-        
+
         // count how many checked checkboxes there are with the target class
         $$('input.'+target).each(function(element, index) {
             if(element.checked) ++checked;
@@ -83,7 +83,7 @@ function matrixClick(target)
 }
 
 
-function initTargets() 
+function initTargets()
 {
     matrixTargList.each(function(targ, index) {
         matrixClick("target-"+targ);
@@ -102,6 +102,3 @@ window.addEvent('domready', function() {
 
     initTargets();
 });
-
-        
-        
